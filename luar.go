@@ -29,7 +29,7 @@ const registryPrefix = "github.com/layeh/gopher-luar."
 //  Chan            *LUserData        __call
 //  Interface       *LUserData
 //  Func            *lua.LFunction
-//  Map             *LUserData        __index, __newindex, __len
+//  Map             *LUserData        __index, __newindex, __len, __call
 //  Ptr             *LUserData        (depends on pointed-to type)
 //  Slice           *LUserData        __index, __len
 //  String          LString
