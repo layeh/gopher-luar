@@ -25,7 +25,7 @@
 //  L.SetGlobal("ch", New(L, ch))
 //  ---
 //  ch()         -- equivalent to v, ok := ch
-//  ch("hello")  -- equivalent to ch <- hello
+//  ch("hello")  -- equivalent to ch <- "hello"
 //
 // TODO: close channels from Lua
 //
