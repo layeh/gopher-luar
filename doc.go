@@ -47,8 +47,9 @@
 //
 // Map types
 //
-// Map types have a meta table with __len, __index, and __newindex defined.
-// This allows map values to be fetched and stored.
+// Map types have a meta table with __len, __index, __newindex, and __call
+// defined. The first three meta methods allow map values to be fetched and
+// stored, while the last creates an iterator over the map.
 //
 // Example:
 //  places := map[string]string{
@@ -60,8 +61,6 @@
 //  print(#places)       -- prints "2"
 //  print(places.NA)     -- prints "North America"
 //  print(places["EU"])  -- prints "European Union"
-//
-// TODO: implement __call for creating an iterator
 //
 // Slice types
 //

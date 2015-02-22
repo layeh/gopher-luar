@@ -16,6 +16,7 @@ func getMapMetaTable(L *lua.LState) lua.LValue {
 	newTable.RawSetH(lua.LString("__index"), L.NewFunction(mapIndex))
 	newTable.RawSetH(lua.LString("__newindex"), L.NewFunction(mapNewIndex))
 	newTable.RawSetH(lua.LString("__len"), L.NewFunction(mapLen))
+	newTable.RawSetH(lua.LString("__call"), L.NewFunction(mapCall))
 	L.G.Registry.RawSetH(lua.LString(key), newTable)
 	return newTable
 }
@@ -51,4 +52,22 @@ func mapNewIndex(L *lua.LState) int {
 	mapValue := lValueToReflect(lValue, value.Type().Elem())
 	value.SetMapIndex(key, mapValue)
 	return 0
+}
+
+func mapCall(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	value := reflect.ValueOf(ud.Value)
+	keys := value.MapKeys()
+	i := 0
+	fn := func(L *lua.LState) int {
+		if i >= len(keys) {
+			return 0
+		}
+		L.Push(New(L, keys[i].Interface()))
+		L.Push(New(L, value.MapIndex(keys[i]).Interface()))
+		i++
+		return 2
+	}
+	L.Push(L.NewFunction(fn))
+	return 1
 }

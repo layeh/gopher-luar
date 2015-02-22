@@ -198,6 +198,38 @@ func Example_5() {
 	// nil	false
 }
 
+func Example_6() {
+	const code = `
+	local sorted = {}
+	for k, v in countries() do
+		table.insert(sorted, v)
+	end
+	table.sort(sorted)
+	for i = 1, #sorted do
+		print(sorted[i])
+	end
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	countries := map[string]string{
+		"JP": "Japan",
+		"CA": "Canada",
+		"FR": "France",
+	}
+
+	L.SetGlobal("countries", luar.New(L, countries))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// Canada
+	// France
+	// Japan
+}
+
 func ExampleNewType() {
 	L := lua.NewState()
 	defer L.Close()
