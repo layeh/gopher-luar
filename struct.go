@@ -6,19 +6,6 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func getStructMetaTable(L *lua.LState) lua.LValue {
-	key := registryPrefix + "struct"
-	table := L.G.Registry.RawGetH(lua.LString(key))
-	if table != lua.LNil {
-		return table
-	}
-	newTable := L.NewTable()
-	newTable.RawSetH(lua.LString("__index"), L.NewFunction(structIndex))
-	newTable.RawSetH(lua.LString("__newindex"), L.NewFunction(structNewIndex))
-	L.G.Registry.RawSetH(lua.LString(key), newTable)
-	return newTable
-}
-
 func structIndex(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	name := L.CheckString(2)

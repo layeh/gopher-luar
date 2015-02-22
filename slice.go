@@ -6,19 +6,6 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func getSliceMetaTable(L *lua.LState) lua.LValue {
-	key := registryPrefix + "slice"
-	table := L.G.Registry.RawGetH(lua.LString(key))
-	if table != lua.LNil {
-		return table
-	}
-	newTable := L.NewTable()
-	newTable.RawSetH(lua.LString("__index"), L.NewFunction(sliceIndex))
-	newTable.RawSetH(lua.LString("__len"), L.NewFunction(sliceLen))
-	L.G.Registry.RawSetH(lua.LString(key), newTable)
-	return newTable
-}
-
 func sliceLen(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := reflect.ValueOf(ud.Value)

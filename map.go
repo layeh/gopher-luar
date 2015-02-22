@@ -6,21 +6,6 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func getMapMetaTable(L *lua.LState) lua.LValue {
-	key := registryPrefix + "map"
-	table := L.G.Registry.RawGetH(lua.LString(key))
-	if table != lua.LNil {
-		return table
-	}
-	newTable := L.NewTable()
-	newTable.RawSetH(lua.LString("__index"), L.NewFunction(mapIndex))
-	newTable.RawSetH(lua.LString("__newindex"), L.NewFunction(mapNewIndex))
-	newTable.RawSetH(lua.LString("__len"), L.NewFunction(mapLen))
-	newTable.RawSetH(lua.LString("__call"), L.NewFunction(mapCall))
-	L.G.Registry.RawSetH(lua.LString(key), newTable)
-	return newTable
-}
-
 func mapLen(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := reflect.ValueOf(ud.Value)

@@ -6,7 +6,54 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-const registryPrefix = "github.com/layeh/gopher-luar."
+var typeMetatable map[string]map[string]lua.LGFunction
+
+func init() {
+	typeMetatable = map[string]map[string]lua.LGFunction{
+		"chan": {
+			"__call": chanCall,
+		},
+		"map": {
+			"__index":    mapIndex,
+			"__newindex": mapNewIndex,
+			"__len":      mapLen,
+			"__call":     mapCall,
+		},
+		"ptr": {
+			"__index":    ptrIndex,
+			"__newindex": ptrNewIndex,
+		},
+		"slice": {
+			"__index": sliceIndex,
+			"__len":   sliceLen,
+		},
+		"struct": {
+			"__index":    structIndex,
+			"__newindex": structNewIndex,
+		},
+		"type": {
+			"__call": typeCall,
+		},
+	}
+}
+
+func ensureMetatable(L *lua.LState) *lua.LTable {
+	const metatableKey = lua.LString("github.com/layeh/gopher-luar")
+	v := L.G.Registry.RawGetH(metatableKey)
+	if v != lua.LNil {
+		return v.(*lua.LTable)
+	}
+	newTable := L.NewTable()
+	for typeName, typeMethods := range typeMetatable {
+		typeTable := L.NewTable()
+		for methodName, methodFunc := range typeMethods {
+			typeTable.RawSetH(lua.LString(methodName), L.NewFunction(methodFunc))
+		}
+		newTable.RawSetH(lua.LString(typeName), typeTable)
+	}
+	L.G.Registry.RawSetH(metatableKey, newTable)
+	return newTable
+}
 
 // New creates and returns a new lua.LValue for the given value.
 //
@@ -39,6 +86,8 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	if value == nil {
 		return lua.LNil
 	}
+	table := ensureMetatable(L)
+
 	val := reflect.ValueOf(value)
 	switch val.Kind() {
 	case reflect.Bool:
@@ -52,12 +101,12 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	case reflect.Array:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getSliceMetaTable(L)
+		ud.Metatable = table.RawGetH(lua.LString("slice"))
 		return ud
 	case reflect.Chan:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getChanMetaTable(L)
+		ud.Metatable = table.RawGetH(lua.LString("chan"))
 		return ud
 	case reflect.Func:
 		return getLuaFuncWrapper(L, val)
@@ -68,24 +117,24 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	case reflect.Map:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getMapMetaTable(L)
+		ud.Metatable = table.RawGetH(lua.LString("map"))
 		return ud
 	case reflect.Ptr:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getPtrMetaTable(L)
+		ud.Metatable = table.RawGetH(lua.LString("ptr"))
 		return ud
 	case reflect.Slice:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getSliceMetaTable(L)
+		ud.Metatable = table.RawGetH(lua.LString("slice"))
 		return ud
 	case reflect.String:
 		return lua.LString(val.String())
 	case reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getStructMetaTable(L)
+		ud.Metatable = table.RawGetH(lua.LString("struct"))
 		return ud
 	case reflect.UnsafePointer:
 		ud := L.NewUserData()
@@ -100,10 +149,12 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 // When the lua.LValue is called, a new value will be created that is the
 // same type as value's type.
 func NewType(L *lua.LState, value interface{}) lua.LValue {
+	table := ensureMetatable(L)
+
 	valueType := reflect.TypeOf(value)
 	ud := L.NewUserData()
 	ud.Value = valueType
-	ud.Metatable = getTypeMetaTable(L)
+	ud.Metatable = table.RawGetH(lua.LString("type"))
 	return ud
 }
 

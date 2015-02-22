@@ -6,19 +6,6 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func getPtrMetaTable(L *lua.LState) lua.LValue {
-	key := registryPrefix + "ptr"
-	table := L.G.Registry.RawGetH(lua.LString(key))
-	if table != lua.LNil {
-		return table
-	}
-	newTable := L.NewTable()
-	newTable.RawSetH(lua.LString("__index"), L.NewFunction(ptrIndex))
-	newTable.RawSetH(lua.LString("__newindex"), L.NewFunction(ptrNewIndex))
-	L.G.Registry.RawSetH(lua.LString(key), newTable)
-	return newTable
-}
-
 func ptrIndex(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := reflect.ValueOf(ud.Value).Elem()

@@ -6,18 +6,6 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func getChanMetaTable(L *lua.LState) lua.LValue {
-	key := registryPrefix + "chan"
-	table := L.G.Registry.RawGetH(lua.LString(key))
-	if table != lua.LNil {
-		return table
-	}
-	newTable := L.NewTable()
-	newTable.RawSetH(lua.LString("__call"), L.NewFunction(chanCall))
-	L.G.Registry.RawSetH(lua.LString(key), newTable)
-	return newTable
-}
-
 func chanCall(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := reflect.ValueOf(ud.Value)
