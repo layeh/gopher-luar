@@ -12,14 +12,14 @@ func getLuaFuncWrapper(L *lua.LState, fn reflect.Value) *lua.LFunction {
 		top := L.GetTop()
 		expected := fnType.NumIn()
 		variadic := fnType.IsVariadic()
-		if (!variadic && top != expected) || (variadic && top < expected - 1) {
+		if (!variadic && top != expected) || (variadic && top < expected-1) {
 			panic("invalid number of function arguments")
 		}
 		args := make([]reflect.Value, top)
 		for i := 0; i < L.GetTop(); i++ {
 			var hint reflect.Type
 			if variadic && i >= expected-1 {
-				hint = fnType.In(expected-1).Elem()
+				hint = fnType.In(expected - 1).Elem()
 			} else {
 				hint = fnType.In(i)
 			}
