@@ -1,4 +1,4 @@
-// Package luar provides custom type reflection to gopher-lua.
+// Package gopher-luar provides custom type reflection to gopher-lua.
 //
 // Notice
 //
@@ -42,8 +42,6 @@
 //  L.SetGlobal("fn", New(L, fn))
 //  ---
 //  print(fn("Tim", 5)) -- prints "Hello Tim, age 5"
-//
-// TODO: variadic functions
 //
 // Map types
 //

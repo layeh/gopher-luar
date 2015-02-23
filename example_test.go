@@ -230,6 +230,38 @@ func Example_6() {
 	// Japan
 }
 
+func Example_7() {
+	const code = `
+	fn("a", 1, 2, 3)
+	fn("b")
+	fn("c", 4)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	fn := func(str string, extra ...int) {
+		fmt.Printf("%s\n", str)
+		for _, x := range extra {
+			fmt.Printf("%d\n", x)
+		}
+	}
+
+	L.SetGlobal("fn", luar.New(L, fn))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// a
+	// 1
+	// 2
+	// 3
+	// b
+	// c
+	// 4
+}
+
 func ExampleNewType() {
 	L := lua.NewState()
 	defer L.Close()
