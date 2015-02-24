@@ -86,6 +86,9 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	if value == nil {
 		return lua.LNil
 	}
+	if lval, ok := value.(lua.LValue); ok {
+		return lval
+	}
 	table := ensureMetatable(L)
 
 	val := reflect.ValueOf(value)

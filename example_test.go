@@ -262,6 +262,42 @@ func Example_7() {
 	// 4
 }
 
+func Example_8() {
+	const code = `
+	for _, x in ipairs(fn(1, 2, 3)) do
+		print(x)
+	end
+	for _, x in ipairs(fn()) do
+		print(x)
+	end
+	for _, x in ipairs(fn(4)) do
+		print(x)
+	end
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	fn := func(x ...float64) *lua.LTable {
+		tbl := L.NewTable()
+		for i := len(x) - 1; i >= 0; i-- {
+			tbl.Insert(len(x)-i, lua.LNumber(x[i]))
+		}
+		return tbl
+	}
+
+	L.SetGlobal("fn", luar.New(L, fn))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// 3
+	// 2
+	// 1
+	// 4
+}
+
 func ExampleNewType() {
 	L := lua.NewState()
 	defer L.Close()
