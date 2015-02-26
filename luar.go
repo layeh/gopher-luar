@@ -24,8 +24,9 @@ func init() {
 			"__newindex": ptrNewIndex,
 		},
 		"slice": {
-			"__index": sliceIndex,
-			"__len":   sliceLen,
+			"__index":    sliceIndex,
+			"__newindex": sliceNewIndex,
+			"__len":      sliceLen,
 		},
 		"struct": {
 			"__index":    structIndex,

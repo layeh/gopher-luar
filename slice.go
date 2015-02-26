@@ -8,9 +8,22 @@ import (
 
 func sliceLen(L *lua.LState) int {
 	ud := L.CheckUserData(1)
-	value := reflect.ValueOf(ud.Value)
-	L.Push(lua.LNumber(value.Len()))
+	slice := reflect.ValueOf(ud.Value)
+	L.Push(lua.LNumber(slice.Len()))
 	return 1
+}
+
+func sliceNewIndex(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	index := L.CheckInt(2)
+	value := L.CheckAny(3)
+
+	slice := reflect.ValueOf(ud.Value)
+	if index < 1 || index > slice.Len() {
+		L.ArgError(2, "index out-of-range")
+	}
+	slice.Index(index - 1).Set(lValueToReflect(value, slice.Type().Elem()))
+	return 0
 }
 
 func sliceIndex(L *lua.LState) int {

@@ -61,6 +61,7 @@ func Example_2() {
 	for i = 1, #things do
 		print(things[i])
 	end
+	things[1] = "cookie"
 
 	print()
 
@@ -93,6 +94,7 @@ func Example_2() {
 		panic(err)
 	}
 
+	fmt.Println(things[0])
 	fmt.Println(thangs["GHI"])
 	// Output:
 	// cake
@@ -104,6 +106,7 @@ func Example_2() {
 	// 123
 	// 456
 	// nil
+	// cookie
 	// 789
 }
 

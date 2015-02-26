@@ -70,8 +70,6 @@
 // Slice types have a meta table with __len and __index, which allows for
 // accessing slice items.
 //
-// TODO: slice modification
-//
 // Struct types
 //
 // Struct types have a meta table with __index and __newindex. This allows
