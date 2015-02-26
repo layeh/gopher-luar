@@ -14,6 +14,7 @@ func init() {
 		"chan": {
 			"__index":    chanIndex,
 			"__tostring": chanToString,
+			"__eq":       baseEqual,
 		},
 		"map": {
 			"__index":    mapIndex,
@@ -21,17 +22,20 @@ func init() {
 			"__len":      mapLen,
 			"__call":     mapCall,
 			"__tostring": baseToString,
+			"__eq":       baseEqual,
 		},
 		"ptr": {
 			"__index":    ptrIndex,
 			"__newindex": ptrNewIndex,
 			"__tostring": ptrToString,
+			"__eq":       baseEqual,
 		},
 		"slice": {
 			"__index":    sliceIndex,
 			"__newindex": sliceNewIndex,
 			"__len":      sliceLen,
 			"__tostring": baseToString,
+			"__eq":       baseEqual,
 		},
 		"struct": {
 			"__index":    structIndex,
@@ -51,6 +55,13 @@ func baseToString(L *lua.LState) int {
 
 	str := fmt.Sprintf("userdata: luar: %s %+v (%p)", value.Type(), value.Interface(), ud.Value)
 	L.Push(lua.LString(str))
+	return 1
+}
+
+func baseEqual(L *lua.LState) int {
+	ud1 := L.CheckUserData(1)
+	ud2 := L.CheckUserData(2)
+	L.Push(lua.LBool(ud1.Value == ud2.Value))
 	return 1
 }
 

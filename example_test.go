@@ -356,6 +356,36 @@ func Example_10() {
 	// 0	10
 }
 
+func Example_11() {
+	const code = `
+	print(p1 == p1)
+	print(p1 == p1_alias)
+	print(p1 == p2)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p1 := Person{
+		Name: "Tim",
+	}
+	p2 := Person{
+		Name: "John",
+	}
+
+	L.SetGlobal("p1", luar.New(L, &p1))
+	L.SetGlobal("p1_alias", luar.New(L, &p1))
+	L.SetGlobal("p2", luar.New(L, &p2))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// true
+	// true
+	// false
+}
+
 func ExampleNewType() {
 	L := lua.NewState()
 	defer L.Close()
