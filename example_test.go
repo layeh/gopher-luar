@@ -332,6 +332,30 @@ func Example_9() {
 	// world
 }
 
+func Example_10() {
+	const code = `
+	ints = newInts(1)
+	print(#ints, ints:capacity())
+
+	ints = newInts(0, 10)
+	print(#ints, ints:capacity())
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	type ints []int
+
+	L.SetGlobal("newInts", luar.NewType(L, ints{}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// 1	1
+	// 0	10
+}
+
 func ExampleNewType() {
 	L := lua.NewState()
 	defer L.Close()
