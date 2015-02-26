@@ -74,6 +74,7 @@ func ensureMetatable(L *lua.LState) *lua.LTable {
 	newTable := L.NewTable()
 	for typeName, typeMethods := range typeMetatable {
 		typeTable := L.NewTable()
+		typeTable.RawSetH(lua.LString("__metatable"), lua.LTrue)
 		for methodName, methodFunc := range typeMethods {
 			typeTable.RawSetH(lua.LString(methodName), L.NewFunction(methodFunc))
 		}
