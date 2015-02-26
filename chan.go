@@ -1,10 +1,20 @@
 package luar
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
+
+func chanToString(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	value := reflect.ValueOf(ud.Value)
+
+	str := fmt.Sprintf("userdata: luar: %s (%p)", value.Type(), ud.Value)
+	L.Push(lua.LString(str))
+	return 1
+}
 
 func chanSend(L *lua.LState) int {
 	ud := L.CheckUserData(1)

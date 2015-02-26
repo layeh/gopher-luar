@@ -1,6 +1,7 @@
 package luar
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
@@ -11,31 +12,46 @@ var typeMetatable map[string]map[string]lua.LGFunction
 func init() {
 	typeMetatable = map[string]map[string]lua.LGFunction{
 		"chan": {
-			"__index": chanIndex,
+			"__index":    chanIndex,
+			"__tostring": chanToString,
 		},
 		"map": {
 			"__index":    mapIndex,
 			"__newindex": mapNewIndex,
 			"__len":      mapLen,
 			"__call":     mapCall,
+			"__tostring": baseToString,
 		},
 		"ptr": {
 			"__index":    ptrIndex,
 			"__newindex": ptrNewIndex,
+			"__tostring": ptrToString,
 		},
 		"slice": {
 			"__index":    sliceIndex,
 			"__newindex": sliceNewIndex,
 			"__len":      sliceLen,
+			"__tostring": baseToString,
 		},
 		"struct": {
 			"__index":    structIndex,
 			"__newindex": structNewIndex,
+			"__tostring": baseToString,
 		},
 		"type": {
-			"__call": typeCall,
+			"__call":     typeCall,
+			"__tostring": typeToString,
 		},
 	}
+}
+
+func baseToString(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	value := reflect.ValueOf(ud.Value)
+
+	str := fmt.Sprintf("userdata: luar: %s %+v (%p)", value.Type(), value.Interface(), ud.Value)
+	L.Push(lua.LString(str))
+	return 1
 }
 
 func ensureMetatable(L *lua.LState) *lua.LTable {
