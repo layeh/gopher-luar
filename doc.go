@@ -81,8 +81,21 @@
 //
 // Struct types
 //
-// Struct types have a meta table with __index and __newindex. This allows
-// accessing struct fields, setting struct fields, and calling struct methods.
+// Struct types can have their fields accessed and modified and their methods
+// called.
+//
+// Example:
+//  type Person {
+//    Name string
+//  }
+//  func (p Person) SayHello() {
+//    fmt.Printf("Hello, %s\n", p.Name)
+//  }
+//
+//  tim := Person{"Tim"}
+//  L.SetGlobal("tim", New(L, tim))
+//  ---
+//  tim:SayHello()
 //
 // Type types
 //

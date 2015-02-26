@@ -6,6 +6,22 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
+func structMethod(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	name := L.CheckString(lua.UpvalueIndex(1))
+
+	L.Remove(1)
+
+	value := reflect.ValueOf(ud.Value)
+	if value.Kind() == reflect.Ptr {
+		method := value.MethodByName(name)
+		return funcEvaluate(L, method)
+	}
+
+	method := value.MethodByName(name)
+	return funcEvaluate(L, method)
+}
+
 func structIndex(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	name := L.CheckString(2)
@@ -13,14 +29,14 @@ func structIndex(L *lua.LState) int {
 	value := reflect.ValueOf(ud.Value)
 	if value.Kind() == reflect.Ptr {
 		if method := value.MethodByName(name); method.IsValid() {
-			L.Push(getLuaFuncWrapper(L, method))
+			L.Push(L.NewClosure(structMethod, lua.LString(name)))
 			return 1
 		}
 		value = value.Elem()
 	}
 
 	if method := value.MethodByName(name); method.IsValid() {
-		L.Push(getLuaFuncWrapper(L, method))
+		L.Push(L.NewClosure(structMethod, lua.LString(name)))
 		return 1
 	}
 

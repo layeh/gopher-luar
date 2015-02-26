@@ -21,11 +21,12 @@ func Example_1() {
 	const code = `
 	print(user1.Name)
 	print(user1.Age)
-	print(user1.Hello())
+	print(user1:Hello())
 
 	print(user2.Name)
 	print(user2.Age)
-	print(user2.Hello())
+	hello = user2.Hello
+	print(hello(user2))
 	`
 
 	L := lua.NewState()

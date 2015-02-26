@@ -113,7 +113,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		ud.Metatable = table.RawGetH(lua.LString("chan"))
 		return ud
 	case reflect.Func:
-		return getLuaFuncWrapper(L, val)
+		return funcWrapper(L, val)
 	case reflect.Interface:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
