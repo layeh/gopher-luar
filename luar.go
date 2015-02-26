@@ -165,6 +165,8 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	switch converted := v.(type) {
 	case lua.LBool:
 		return reflect.ValueOf(bool(converted))
+	case lua.LChannel:
+		return reflect.ValueOf(converted)
 	case lua.LNumber:
 		return reflect.ValueOf(converted).Convert(hint)
 	case *lua.LFunction:
