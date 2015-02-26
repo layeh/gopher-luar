@@ -32,9 +32,8 @@
 //
 // Function types
 //
-// Function types have a meta table with the __call method defined. Function
-// arguments and returned values will be converted from and to Lua types,
-// respectively.
+// Function types can be called from Lua. Its arguments and returned values
+// will be automatically converted from and to Lua types, respectively.
 //
 // Example:
 //  fn := func(name string, age uint) string {
@@ -46,9 +45,11 @@
 //
 // Map types
 //
-// Map types have a meta table with __len, __index, __newindex, and __call
-// defined. The first three meta methods allow map values to be fetched and
-// stored, while the last creates an iterator over the map.
+// Map types can be accessed and modified like a normal Lua table a meta table.
+// Its length can also be queried using the # operator.
+//
+// Rather than using pairs to create an iterator over Go maps, calling the
+// value (e.g. map_variable()) will return an iterator for the map.
 //
 // Example:
 //  places := map[string]string{
@@ -60,6 +61,9 @@
 //  print(#places)       -- prints "2"
 //  print(places.NA)     -- prints "North America"
 //  print(places["EU"])  -- prints "European Union"
+//  for k, v = places() do
+//    print(k .. ": " .. v)
+//  end
 //
 // Slice types
 //
