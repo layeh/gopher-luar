@@ -11,7 +11,7 @@ var typeMetatable map[string]map[string]lua.LGFunction
 func init() {
 	typeMetatable = map[string]map[string]lua.LGFunction{
 		"chan": {
-			"__call": chanCall,
+			"__index": chanIndex,
 		},
 		"map": {
 			"__index":    mapIndex,

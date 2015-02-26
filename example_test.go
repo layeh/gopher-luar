@@ -171,9 +171,9 @@ func Example_4() {
 
 func Example_5() {
 	const code = `
-	print(stream())
-	stream("John")
-	print(stream())
+	print(ch:receive())
+	ch:send("John")
+	print(ch:receive())
 	`
 
 	L := lua.NewState()
@@ -187,7 +187,7 @@ func Example_5() {
 		close(ch)
 	}()
 
-	L.SetGlobal("stream", luar.New(L, ch))
+	L.SetGlobal("ch", luar.New(L, ch))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)

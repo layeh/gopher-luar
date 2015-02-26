@@ -16,18 +16,19 @@
 //
 // Channel types
 //
-// Channel types have a meta table with the __call method defined. Passing no
-// arguments when calling is considered a channel receive, and passing one
-// argument is considered a channel send.
+// Channel types have the following methods defined:
+//  receive():    Receives data from the channel. Returns nil plus false if the
+//                channel is closed.
+//  send(data):   Sends data to the channel.
+//  close():      Closes the channel.
 //
 // Example:
 //  ch := make(chan string)
 //  L.SetGlobal("ch", New(L, ch))
 //  ---
-//  ch()         -- equivalent to v, ok := ch
-//  ch("hello")  -- equivalent to ch <- "hello"
-//
-// TODO: close channels from Lua
+//  ch:receive()      -- equivalent to v, ok := ch
+//  ch:send("hello")  -- equivalent to ch <- "hello"
+//  ch:close()        -- equivalent to close(ch)
 //
 // Function types
 //
