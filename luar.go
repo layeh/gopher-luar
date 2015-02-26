@@ -58,7 +58,7 @@ func ensureMetatable(L *lua.LState) *lua.LTable {
 // New creates and returns a new lua.LValue for the given value.
 //
 // The following types are supported:
-//  reflect.Kind    gopher-lua Type   Meta Methods
+//  reflect.Kind    gopher-lua Type
 //  nil             LNil
 //  Bool            LBool
 //  Int             LNumber
@@ -72,15 +72,15 @@ func ensureMetatable(L *lua.LState) *lua.LTable {
 //  Uint64          LNumber
 //  Float32         LNumber
 //  Float64         LNumber
-//  Array           *LUserData        __index, __len
-//  Chan            *LUserData        __call
+//  Array           *LUserData
+//  Chan            *LUserData
 //  Interface       *LUserData
 //  Func            *lua.LFunction
-//  Map             *LUserData        __index, __newindex, __len, __call
-//  Ptr             *LUserData        (depends on pointed-to type)
-//  Slice           *LUserData        __index, __len
+//  Map             *LUserData
+//  Ptr             *LUserData
+//  Slice           *LUserData
 //  String          LString
-//  Struct          *LUserData        __index, __newindex
+//  Struct          *LUserData
 //  UnsafePointer   *LUserData
 func New(L *lua.LState, value interface{}) lua.LValue {
 	if value == nil {
