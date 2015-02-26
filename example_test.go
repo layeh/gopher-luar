@@ -301,6 +301,36 @@ func Example_8() {
 	// 4
 }
 
+func Example_9() {
+	const code = `
+	print(#items)
+	print(items:capacity())
+	items = items:append("hello", "world")
+	print(#items)
+	print(items:capacity())
+	print(items[1])
+	print(items[2])
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	items := make([]string, 0, 10)
+
+	L.SetGlobal("items", luar.New(L, items))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// 0
+	// 10
+	// 2
+	// 10
+	// hello
+	// world
+}
+
 func ExampleNewType() {
 	L := lua.NewState()
 	defer L.Close()

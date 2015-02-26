@@ -6,6 +6,28 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
+func sliceCapacity(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	slice := reflect.ValueOf(ud.Value)
+	L.Push(lua.LNumber(slice.Cap()))
+	return 1
+}
+
+func sliceAppend(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	slice := reflect.ValueOf(ud.Value)
+
+	hint := slice.Type().Elem()
+	values := make([]reflect.Value, L.GetTop()-1)
+	for i := 2; i <= L.GetTop(); i++ {
+		values[i-2] = lValueToReflect(L.Get(i), hint)
+	}
+
+	newSlice := reflect.Append(slice, values...)
+	L.Push(New(L, newSlice.Interface()))
+	return 1
+}
+
 func sliceLen(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	slice := reflect.ValueOf(ud.Value)
@@ -28,17 +50,27 @@ func sliceNewIndex(L *lua.LState) int {
 
 func sliceIndex(L *lua.LState) int {
 	ud := L.CheckUserData(1)
-	lIndex := L.Get(2)
+	index := L.Get(2)
 
-	value := reflect.ValueOf(ud.Value)
-	fIndex, ok := lIndex.(lua.LNumber)
-	if !ok {
-		return 0
+	slice := reflect.ValueOf(ud.Value)
+	switch index := index.(type) {
+	case lua.LNumber:
+		intIndex := int(index)
+		if intIndex < 1 || intIndex > slice.Len() {
+			L.ArgError(2, "index out-of-range")
+		}
+		L.Push(New(L, slice.Index(intIndex-1).Interface()))
+	case lua.LString:
+		switch string(index) {
+		case "capacity":
+			L.Push(L.NewFunction(sliceCapacity))
+		case "append":
+			L.Push(L.NewFunction(sliceAppend))
+		default:
+			return 0
+		}
+	default:
+		L.ArgError(2, "index must be a number or a string")
 	}
-	index := int(fIndex)
-	if index < 1 || index > value.Len() {
-		return 0
-	}
-	L.Push(New(L, value.Index(index-1).Interface()))
 	return 1
 }

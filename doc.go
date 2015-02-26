@@ -48,8 +48,8 @@
 // Map types can be accessed and modified like a normal Lua table a meta table.
 // Its length can also be queried using the # operator.
 //
-// Rather than using pairs to create an iterator over Go maps, calling the
-// value (e.g. map_variable()) will return an iterator for the map.
+// Rather than using pairs to create an map iterator, calling the value (e.g.
+// map_variable()) will return an iterator for the map.
 //
 // Example:
 //  places := map[string]string{
@@ -67,8 +67,17 @@
 //
 // Slice types
 //
-// Slice types have a meta table with __len and __index, which allows for
-// accessing slice items.
+// Like map types, slices be accessed, be modified, and have their length
+// queried. Additionally, the following methods are defined for slices:
+//  append(items...):   Appends the items to the slice. Returns a slice with
+//                      the items appended.
+//  capacity():         Returns the slice capacity.
+//
+// Example:
+//  letters := []string{"a", "e", "i"}
+//  L.SetGlobal("letters", New(L, letters))
+//  ---
+//  letters = letters:append("o", "u")
 //
 // Struct types
 //
