@@ -101,7 +101,6 @@ func ensureMetatable(L *lua.LState) *lua.LTable {
 //  Uint64          LNumber
 //  Float32         LNumber
 //  Float64         LNumber
-//  Array           *LUserData
 //  Chan            *LUserData
 //  Interface       *LUserData
 //  Func            *lua.LFunction
@@ -130,11 +129,6 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lua.LNumber(float64(val.Uint()))
 	case reflect.Float32, reflect.Float64:
 		return lua.LNumber(val.Float())
-	case reflect.Array:
-		ud := L.NewUserData()
-		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("slice"))
-		return ud
 	case reflect.Chan:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()

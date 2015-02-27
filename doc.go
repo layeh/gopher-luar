@@ -73,6 +73,8 @@
 //                      the items appended.
 //  capacity():         Returns the slice capacity.
 //
+// For consistency with other Lua code, slices use one-based indexing.
+//
 // Example:
 //  letters := []string{"a", "e", "i"}
 //  L.SetGlobal("letters", New(L, letters))
