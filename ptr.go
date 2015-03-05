@@ -23,7 +23,7 @@ func ptrIndex(L *lua.LState) int {
 	case reflect.Struct:
 		return structIndex(L)
 	}
-	panic("unsupported pointer type")
+	L.RaiseError("unsupported pointer type")
 	return 0
 }
 
@@ -34,6 +34,6 @@ func ptrNewIndex(L *lua.LState) int {
 	case reflect.Struct:
 		return structNewIndex(L)
 	}
-	panic("unsupported pointer type")
+	L.RaiseError("unsupported pointer type")
 	return 0
 }
