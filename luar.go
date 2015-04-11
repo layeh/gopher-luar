@@ -196,6 +196,8 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 		return reflect.ValueOf(converted)
 	case *lua.LNilType:
 		return reflect.Zero(hint)
+	case *lua.LState:
+		return reflect.ValueOf(converted)
 	case lua.LString:
 		return reflect.ValueOf(string(converted))
 	case *lua.LTable:
