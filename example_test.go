@@ -31,7 +31,7 @@ func (p *Person) AddNumbers(L *luar.LState) int {
 	return 1
 }
 
-func Example_1() {
+func Example__1() {
 	const code = `
 	print(user1.Name)
 	print(user1.Age)
@@ -71,7 +71,7 @@ func Example_1() {
 	// Hello, John
 }
 
-func Example_2() {
+func Example__2() {
 	const code = `
 	for i = 1, #things do
 		print(things[i])
@@ -125,7 +125,7 @@ func Example_2() {
 	// 789
 }
 
-func Example_3() {
+func Example__3() {
 	const code = `
 	user2 = Person()
 	user2.Name = "John"
@@ -161,7 +161,7 @@ func Example_3() {
 	// 2
 }
 
-func Example_4() {
+func Example__4() {
 	const code = `
 	print(getHello(person))
 	`
@@ -187,7 +187,7 @@ func Example_4() {
 	// Hello, Tim
 }
 
-func Example_5() {
+func Example__5() {
 	const code = `
 	print(ch:receive())
 	ch:send("John")
@@ -216,7 +216,7 @@ func Example_5() {
 	// nil	false
 }
 
-func Example_6() {
+func Example__6() {
 	const code = `
 	local sorted = {}
 	for k, v in countries() do
@@ -248,7 +248,7 @@ func Example_6() {
 	// Japan
 }
 
-func Example_7() {
+func Example__7() {
 	const code = `
 	fn("a", 1, 2, 3)
 	fn("b")
@@ -280,7 +280,7 @@ func Example_7() {
 	// 4
 }
 
-func Example_8() {
+func Example__8() {
 	const code = `
 	for _, x in ipairs(fn(1, 2, 3)) do
 		print(x)
@@ -316,7 +316,7 @@ func Example_8() {
 	// 4
 }
 
-func Example_9() {
+func Example__9() {
 	const code = `
 	print(#items)
 	print(items:capacity())
@@ -346,7 +346,7 @@ func Example_9() {
 	// world
 }
 
-func Example_10() {
+func Example__10() {
 	const code = `
 	ints = newInts(1)
 	print(#ints, ints:capacity())
@@ -370,7 +370,7 @@ func Example_10() {
 	// 0	10
 }
 
-func Example_11() {
+func Example__11() {
 	const code = `
 	print(p1 == p1)
 	print(p1 == p1_alias)
@@ -400,7 +400,7 @@ func Example_11() {
 	// false
 }
 
-func Example_12() {
+func Example__12() {
 	const code = `
 	print(p1)
 	print(p2)
@@ -443,7 +443,7 @@ func Example_12() {
 	// <chan string Value>
 }
 
-func Example_13() {
+func Example__13() {
 	const code = `
 	print(p:AddNumbers(1, 2, 3, 4, 5))
 	`
