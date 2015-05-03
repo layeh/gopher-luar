@@ -6,8 +6,45 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
+// LState is an wrapper for gopher-lua's LState. It should be used when you
+// wish to have a function/method with the standard "func(*lua.LState) int"
+// signature.
+//
+// Example:
+//  fn := func(L *luar.LState) int {
+//    fmt.Printf("Got %d arguments\n", L.GetTop())
+//    return 0
+//  }
+//
+//  L.SetGlobal("fn", luar.New(L, fn))
+//  --
+//  fn(1, 2, 3, 4, 5) // prints "Got 5 arguments"
+type LState struct {
+	*lua.LState
+}
+
+var lStatePtrType reflect.Type
+var intType reflect.Type
+
+func init() {
+	lStatePtrType = reflect.TypeOf(&LState{})
+	intType = reflect.TypeOf(int(0))
+}
+
+func funcIsBypass(t reflect.Type) bool {
+	return t.NumIn() == 1 && t.NumOut() == 1 && t.In(0) == lStatePtrType && t.Out(0) == intType
+}
+
 func funcEvaluate(L *lua.LState, fn reflect.Value) int {
 	fnType := fn.Type()
+	if funcIsBypass(fnType) {
+		luarState := LState{L}
+		args := []reflect.Value{
+			reflect.ValueOf(&luarState),
+		}
+		return fn.Call(args)[0].Interface().(int)
+	}
+
 	top := L.GetTop()
 	expected := fnType.NumIn()
 	variadic := fnType.IsVariadic()

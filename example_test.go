@@ -22,6 +22,15 @@ func (p Person) String() string {
 	return p.Name + " (" + strconv.Itoa(p.Age) + ")"
 }
 
+func (p *Person) AddNumbers(L *luar.LState) int {
+	sum := 0
+	for i := L.GetTop(); i >= 1; i-- {
+		sum += L.CheckInt(i)
+	}
+	L.Push(lua.LString("Tim counts: " + strconv.Itoa(sum)))
+	return 1
+}
+
 func Example_1() {
 	const code = `
 	print(user1.Name)
@@ -432,6 +441,27 @@ func Example_12() {
 	// John (2)
 	// <struct { A string } Value>
 	// <chan string Value>
+}
+
+func Example_13() {
+	const code = `
+	print(p:AddNumbers(1, 2, 3, 4, 5))
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+	}
+
+	L.SetGlobal("p", luar.New(L, &p))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// Tim counts: 15
 }
 
 func ExampleNewType() {
