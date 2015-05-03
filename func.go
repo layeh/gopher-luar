@@ -9,16 +9,6 @@ import (
 // LState is an wrapper for gopher-lua's LState. It should be used when you
 // wish to have a function/method with the standard "func(*lua.LState) int"
 // signature.
-//
-// Example:
-//  fn := func(L *luar.LState) int {
-//    fmt.Printf("Got %d arguments\n", L.GetTop())
-//    return 0
-//  }
-//
-//  L.SetGlobal("fn", luar.New(L, fn))
-//  --
-//  fn(1, 2, 3, 4, 5) // prints "Got 5 arguments"
 type LState struct {
 	*lua.LState
 }
