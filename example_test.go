@@ -2,6 +2,7 @@ package luar_test
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/layeh/gopher-luar"
 	"github.com/yuin/gopher-lua"
@@ -15,6 +16,10 @@ type Person struct {
 
 func (p Person) Hello() string {
 	return "Hello, " + p.Name
+}
+
+func (p Person) String() string {
+	return p.Name + " (" + strconv.Itoa(p.Age) + ")"
 }
 
 func Example_1() {
@@ -384,6 +389,49 @@ func Example_11() {
 	// true
 	// true
 	// false
+}
+
+func Example_12() {
+	const code = `
+	print(p1)
+	print(p2)
+	print(a)
+	print(b)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p1 := Person{
+		Name: "Tim",
+		Age:  99,
+	}
+	p2 := Person{
+		Name: "John",
+		Age:  2,
+	}
+
+	a := struct {
+		A string
+	}{
+		A: "hello",
+	}
+
+	b := make(chan string)
+
+	L.SetGlobal("p1", luar.New(L, &p1))
+	L.SetGlobal("p2", luar.New(L, &p2))
+	L.SetGlobal("a", luar.New(L, a))
+	L.SetGlobal("b", luar.New(L, b))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// Tim (99)
+	// John (2)
+	// <struct { A string } Value>
+	// <chan string Value>
 }
 
 func ExampleNewType() {

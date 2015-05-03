@@ -1,20 +1,10 @@
 package luar
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
-
-func ptrToString(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	value := reflect.ValueOf(ud.Value)
-
-	str := fmt.Sprintf("userdata: luar: %s %+v (%p)", value.Type(), value.Interface(), ud.Value)
-	L.Push(lua.LString(str))
-	return 1
-}
 
 func ptrIndex(L *lua.LState) int {
 	ud := L.CheckUserData(1)

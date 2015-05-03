@@ -13,7 +13,7 @@ func init() {
 	typeMetatable = map[string]map[string]lua.LGFunction{
 		"chan": {
 			"__index":    chanIndex,
-			"__tostring": chanToString,
+			"__tostring": baseToString,
 			"__eq":       baseEqual,
 		},
 		"map": {
@@ -27,7 +27,7 @@ func init() {
 		"ptr": {
 			"__index":    ptrIndex,
 			"__newindex": ptrNewIndex,
-			"__tostring": ptrToString,
+			"__tostring": baseToString,
 			"__eq":       baseEqual,
 		},
 		"slice": {
@@ -44,7 +44,7 @@ func init() {
 		},
 		"type": {
 			"__call":     typeCall,
-			"__tostring": typeToString,
+			"__tostring": baseToString,
 		},
 	}
 }
@@ -53,8 +53,15 @@ func baseToString(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := reflect.ValueOf(ud.Value)
 
-	str := fmt.Sprintf("userdata: luar: %s %+v (%p)", value.Type(), value.Interface(), ud.Value)
-	L.Push(lua.LString(str))
+	if value.CanInterface() {
+		val := value.Interface()
+		if stringer, ok := val.(fmt.Stringer); ok {
+			L.Push(lua.LString(stringer.String()))
+			return 1
+		}
+	}
+
+	L.Push(lua.LString(value.String()))
 	return 1
 }
 
