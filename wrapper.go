@@ -19,7 +19,7 @@ func getWrapper(L *lua.LState, idx int) luaWrapper {
 	ud := L.CheckUserData(idx)
 	wrapper, ok := ud.Value.(luaWrapper)
 	if !ok {
-		L.RaiseError("invalid datatype")
+		L.RaiseError("invalid luar datatype")
 	}
 	return wrapper
 }
