@@ -213,5 +213,4 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 		return reflect.ValueOf(converted.Value)
 	}
 	panic("fatal lValueToReflect error")
-	return reflect.Value{}
 }
