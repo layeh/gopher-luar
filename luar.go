@@ -1,75 +1,22 @@
 package luar
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
 
-var typeMetatable map[string]map[string]lua.LGFunction
+var wrapperMetatable map[string]lua.LGFunction
 
 func init() {
-	typeMetatable = map[string]map[string]lua.LGFunction{
-		"chan": {
-			"__index":    chanIndex,
-			"__tostring": baseToString,
-			"__eq":       baseEqual,
-		},
-		"map": {
-			"__index":    mapIndex,
-			"__newindex": mapNewIndex,
-			"__len":      mapLen,
-			"__call":     mapCall,
-			"__tostring": baseToString,
-			"__eq":       baseEqual,
-		},
-		"ptr": {
-			"__index":    ptrIndex,
-			"__newindex": ptrNewIndex,
-			"__tostring": baseToString,
-			"__eq":       baseEqual,
-		},
-		"slice": {
-			"__index":    sliceIndex,
-			"__newindex": sliceNewIndex,
-			"__len":      sliceLen,
-			"__tostring": baseToString,
-			"__eq":       baseEqual,
-		},
-		"struct": {
-			"__index":    structIndex,
-			"__newindex": structNewIndex,
-			"__tostring": baseToString,
-		},
-		"type": {
-			"__call":     typeCall,
-			"__tostring": baseToString,
-		},
+	wrapperMetatable = map[string]lua.LGFunction{
+		"__index":    wrapperIndex,
+		"__newindex": wrapperNewIndex,
+		"__len":      wrapperLen,
+		"__call":     wrapperCall,
+		"__tostring": wrapperString,
+		"__eq":       wrapperEq,
 	}
-}
-
-func baseToString(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	value := reflect.ValueOf(ud.Value)
-
-	if value.CanInterface() {
-		val := value.Interface()
-		if stringer, ok := val.(fmt.Stringer); ok {
-			L.Push(lua.LString(stringer.String()))
-			return 1
-		}
-	}
-
-	L.Push(lua.LString(value.String()))
-	return 1
-}
-
-func baseEqual(L *lua.LState) int {
-	ud1 := L.CheckUserData(1)
-	ud2 := L.CheckUserData(2)
-	L.Push(lua.LBool(ud1.Value == ud2.Value))
-	return 1
 }
 
 func ensureMetatable(L *lua.LState) *lua.LTable {
@@ -79,13 +26,9 @@ func ensureMetatable(L *lua.LState) *lua.LTable {
 		return v.(*lua.LTable)
 	}
 	newTable := L.NewTable()
-	for typeName, typeMethods := range typeMetatable {
-		typeTable := L.NewTable()
-		typeTable.RawSetH(lua.LString("__metatable"), lua.LTrue)
-		for methodName, methodFunc := range typeMethods {
-			typeTable.RawSetH(lua.LString(methodName), L.NewFunction(methodFunc))
-		}
-		newTable.RawSetH(lua.LString(typeName), typeTable)
+	newTable.RawSetH(lua.LString("__metatable"), lua.LTrue)
+	for methodName, methodFunc := range wrapperMetatable {
+		newTable.RawSetH(lua.LString(methodName), L.NewFunction(methodFunc))
 	}
 	L.G.Registry.RawSetH(metatableKey, newTable)
 	return newTable
@@ -138,8 +81,8 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lua.LNumber(val.Float())
 	case reflect.Chan:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("chan"))
+		ud.Value = &luaChanWrapper{L, val.Interface()}
+		ud.Metatable = table
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val)
@@ -149,25 +92,25 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return ud
 	case reflect.Map:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("map"))
+		ud.Value = &luaMapWrapper{L, val.Interface()}
+		ud.Metatable = table
 		return ud
 	case reflect.Ptr:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("ptr"))
+		ud.Value = &luaPointerWrapper{L, val.Interface()}
+		ud.Metatable = table
 		return ud
 	case reflect.Slice:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("slice"))
+		ud.Value = &luaSliceWrapper{L, val.Interface()}
+		ud.Metatable = table
 		return ud
 	case reflect.String:
 		return lua.LString(val.String())
 	case reflect.Struct:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("struct"))
+		ud.Value = &luaStructWrapper{L, val.Interface()}
+		ud.Metatable = table
 		return ud
 	case reflect.UnsafePointer:
 		ud := L.NewUserData()
@@ -182,13 +125,21 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 // When the lua.LValue is called, a new value will be created that is the
 // same type as value's type.
 func NewType(L *lua.LState, value interface{}) lua.LValue {
-	table := ensureMetatable(L)
-
-	valueType := reflect.TypeOf(value)
+	val := reflect.TypeOf(value)
 	ud := L.NewUserData()
-	ud.Value = valueType
-	ud.Metatable = table.RawGetH(lua.LString("type"))
+	ud.Value = &luaTypeWrapper{L, val}
+	ud.Metatable = ensureMetatable(L)
 	return ud
+}
+
+// Unwrap returns the underlying value from the given lua.LValue. If the type
+// allows for it, it will be converted to the type of the given hint.
+func Unwrap(value lua.LValue, hint interface{}) interface{} {
+	ref := lValueToReflect(value, reflect.TypeOf(hint))
+	if !ref.CanInterface() {
+		return nil
+	}
+	return ref.Interface()
 }
 
 func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
@@ -210,7 +161,11 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	case *lua.LTable:
 		return reflect.ValueOf(converted)
 	case *lua.LUserData:
-		return reflect.ValueOf(converted.Value)
+		value := converted.Value
+		if wrapper, ok := value.(luaWrapper); ok {
+			value = wrapper.Unwrap()
+		}
+		return reflect.ValueOf(value)
 	}
 	panic("fatal lValueToReflect error")
 }

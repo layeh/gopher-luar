@@ -1,4 +1,4 @@
-// Package gopher-luar provides custom type reflection to gopher-lua.
+// Package luar provides custom type reflection to gopher-lua.
 //
 // Notice
 //

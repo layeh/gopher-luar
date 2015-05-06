@@ -1,76 +1,117 @@
 package luar
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/yuin/gopher-lua"
 )
 
-func sliceCapacity(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	slice := reflect.ValueOf(ud.Value)
-	L.Push(lua.LNumber(slice.Cap()))
-	return 1
+type luaSliceWrapper struct {
+	L     *lua.LState
+	Slice interface{}
 }
 
-func sliceAppend(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	slice := reflect.ValueOf(ud.Value)
+func (w *luaSliceWrapper) Index(key lua.LValue) (lua.LValue, error) {
+	ref := reflect.ValueOf(w.Slice)
 
-	hint := slice.Type().Elem()
-	values := make([]reflect.Value, L.GetTop()-1)
-	for i := 2; i <= L.GetTop(); i++ {
-		values[i-2] = lValueToReflect(L.Get(i), hint)
+	getluaSliceWrapper := func(L *lua.LState) *luaSliceWrapper {
+		ud := L.CheckUserData(1)
+		w, ok := ud.Value.(*luaSliceWrapper)
+		if !ok {
+			L.RaiseError("invalid argument (expecting slice)")
+		}
+		return w
 	}
 
-	newSlice := reflect.Append(slice, values...)
-	L.Push(New(L, newSlice.Interface()))
-	return 1
-}
-
-func sliceLen(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	slice := reflect.ValueOf(ud.Value)
-	L.Push(lua.LNumber(slice.Len()))
-	return 1
-}
-
-func sliceNewIndex(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	index := L.CheckInt(2)
-	value := L.CheckAny(3)
-
-	slice := reflect.ValueOf(ud.Value)
-	if index < 1 || index > slice.Len() {
-		L.ArgError(2, "index out-of-range")
+	sliceCapacity := func(L *lua.LState) int {
+		w := getluaSliceWrapper(L)
+		ref := reflect.ValueOf(w.Slice)
+		L.Push(lua.LNumber(ref.Cap()))
+		return 1
 	}
-	slice.Index(index - 1).Set(lValueToReflect(value, slice.Type().Elem()))
-	return 0
-}
 
-func sliceIndex(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	index := L.Get(2)
+	sliceAppend := func(L *lua.LState) int {
+		w := getluaSliceWrapper(L)
+		ref := reflect.ValueOf(w.Slice)
 
-	slice := reflect.ValueOf(ud.Value)
-	switch index := index.(type) {
+		hint := ref.Type().Elem()
+		values := make([]reflect.Value, L.GetTop()-1)
+		for i := 2; i <= L.GetTop(); i++ {
+			value := lValueToReflect(L.Get(i), hint)
+			if value.Type() != hint {
+				L.RaiseError("cannot add argument " + strconv.Itoa(i) + " to slice")
+			}
+			values[i-2] = value
+		}
+
+		newSlice := reflect.Append(ref, values...)
+		L.Push(New(L, newSlice.Interface()))
+		return 1
+	}
+
+	switch converted := key.(type) {
 	case lua.LNumber:
-		intIndex := int(index)
-		if intIndex < 1 || intIndex > slice.Len() {
-			L.ArgError(2, "index out-of-range")
+		intIndex := int(converted)
+		if intIndex < 1 || intIndex > ref.Len() {
+			return nil, errors.New("index out-of-range")
 		}
-		L.Push(New(L, slice.Index(intIndex-1).Interface()))
+		return New(w.L, ref.Index(intIndex-1).Interface()), nil
 	case lua.LString:
-		switch string(index) {
+		switch string(converted) {
 		case "capacity":
-			L.Push(L.NewFunction(sliceCapacity))
+			return w.L.NewFunction(sliceCapacity), nil
 		case "append":
-			L.Push(L.NewFunction(sliceAppend))
+			return w.L.NewFunction(sliceAppend), nil
 		default:
-			return 0
+			return lua.LNil, nil
 		}
-	default:
-		L.ArgError(2, "index must be a number or a string")
 	}
-	return 1
+	return nil, errors.New("index must be a number or a string")
+}
+
+func (w *luaSliceWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+	lNumberKey, ok := key.(lua.LNumber)
+	if !ok {
+		return errors.New("key must be an int")
+	}
+	ref := reflect.ValueOf(w.Slice)
+	index := int(lNumberKey)
+
+	if index < 1 || index > ref.Len() {
+		return errors.New("index is out-of-range")
+	}
+	ref.Index(index - 1).Set(lValueToReflect(value, ref.Type().Elem()))
+
+	return nil
+}
+
+func (w *luaSliceWrapper) Len() (lua.LValue, error) {
+	ref := reflect.ValueOf(w.Slice)
+	return lua.LNumber(ref.Len()), nil
+}
+
+func (w *luaSliceWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
+	return nil, errors.New("cannot call slice")
+}
+
+func (w *luaSliceWrapper) String() (string, error) {
+	if stringer, ok := w.Slice.(fmt.Stringer); ok {
+		return stringer.String(), nil
+	}
+	return reflect.ValueOf(w.Slice).String(), nil
+}
+
+func (w *luaSliceWrapper) Equals(other luaWrapper) (lua.LValue, error) {
+	v, ok := other.(*luaSliceWrapper)
+	if !ok {
+		return lua.LFalse, nil
+	}
+	return lua.LBool(w.Slice == v.Slice), nil
+}
+
+func (w *luaSliceWrapper) Unwrap() interface{} {
+	return w.Slice
 }

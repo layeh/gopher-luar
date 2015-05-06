@@ -1,56 +1,106 @@
 package luar
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
 
-func chanSend(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	channel := reflect.ValueOf(ud.Value)
-
-	lData := L.Get(2)
-	data := lValueToReflect(lData, channel.Type().Elem())
-	channel.Send(data)
-
-	return 0
+type luaChanWrapper struct {
+	L    *lua.LState
+	Chan interface{}
 }
 
-func chanReceive(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	channel := reflect.ValueOf(ud.Value)
-
-	value, ok := channel.Recv()
+func (w *luaChanWrapper) Index(key lua.LValue) (lua.LValue, error) {
+	keyLString, ok := key.(lua.LString)
 	if !ok {
-		L.Push(lua.LNil)
-		L.Push(lua.LBool(false))
-		return 2
+		return lua.LNil, nil
 	}
-	L.Push(New(L, value.Interface()))
-	L.Push(lua.LBool(true))
-	return 2
-}
 
-func chanClose(L *lua.LState) int {
-	ud := L.CheckUserData(1)
-	channel := reflect.ValueOf(ud.Value)
-	channel.Close()
-	return 0
-}
+	getluaChanWrapper := func(L *lua.LState) *luaChanWrapper {
+		ud := L.CheckUserData(1)
+		w, ok := ud.Value.(*luaChanWrapper)
+		if !ok {
+			L.RaiseError("invalid argument (expecting chan)")
+		}
+		return w
+	}
 
-func chanIndex(L *lua.LState) int {
-	name := L.CheckString(2)
-
-	switch name {
-	case "send":
-		L.Push(L.NewFunction(chanSend))
-	case "receive":
-		L.Push(L.NewFunction(chanReceive))
-	case "close":
-		L.Push(L.NewFunction(chanClose))
-	default:
+	chanSend := func(L *lua.LState) int {
+		w := getluaChanWrapper(L)
+		ref := reflect.ValueOf(w.Chan)
+		lValue := L.Get(2)
+		value := lValueToReflect(lValue, ref.Type().Elem())
+		if value.Type() != ref.Type().Elem() {
+			L.RaiseError("cannot send given data over the given channel")
+			return 0
+		}
+		ref.Send(value)
 		return 0
 	}
-	return 1
+
+	chanReceive := func(L *lua.LState) int {
+		w := getluaChanWrapper(L)
+		ref := reflect.ValueOf(w.Chan)
+
+		value, ok := ref.Recv()
+		if !ok {
+			L.Push(lua.LNil)
+			L.Push(lua.LBool(false))
+			return 2
+		}
+		L.Push(New(L, value.Interface()))
+		L.Push(lua.LBool(true))
+		return 2
+	}
+
+	chanClose := func(L *lua.LState) int {
+		w := getluaChanWrapper(L)
+		ref := reflect.ValueOf(w.Chan)
+		ref.Close()
+		return 0
+	}
+
+	switch string(keyLString) {
+	case "send":
+		return w.L.NewFunction(chanSend), nil
+	case "receive":
+		return w.L.NewFunction(chanReceive), nil
+	case "close":
+		return w.L.NewFunction(chanClose), nil
+	}
+	return lua.LNil, nil
+}
+
+func (w *luaChanWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+	return errors.New("cannot set type chan")
+}
+
+func (w *luaChanWrapper) Len() (lua.LValue, error) {
+	return nil, errors.New("cannot # chan")
+}
+
+func (w *luaChanWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
+	return nil, errors.New("cannot call chan")
+}
+
+func (w *luaChanWrapper) String() (string, error) {
+	if stringer, ok := w.Chan.(fmt.Stringer); ok {
+		return stringer.String(), nil
+	}
+	return reflect.ValueOf(w.Chan).String(), nil
+}
+
+func (w *luaChanWrapper) Equals(other luaWrapper) (lua.LValue, error) {
+	v, ok := other.(*luaChanWrapper)
+	if !ok {
+		return lua.LFalse, nil
+	}
+	return lua.LBool(w.Chan == v.Chan), nil
+}
+
+func (w *luaChanWrapper) Unwrap() interface{} {
+	return w.Chan
 }

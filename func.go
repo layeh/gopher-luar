@@ -22,16 +22,30 @@ func init() {
 }
 
 func funcIsBypass(t reflect.Type) bool {
-	return t.NumIn() == 1 && t.NumOut() == 1 && t.In(0) == lStatePtrType && t.Out(0) == intType
+	if t.NumIn() == 1 && t.NumOut() == 1 && t.In(0) == lStatePtrType && t.Out(0) == intType {
+		return true
+	}
+	if t.NumIn() == 2 && t.NumOut() == 1 && t.In(1) == lStatePtrType && t.Out(0) == intType {
+		return true
+	}
+	return false
 }
 
 func funcEvaluate(L *lua.LState, fn reflect.Value) int {
 	fnType := fn.Type()
 	if funcIsBypass(fnType) {
 		luarState := LState{L}
-		args := []reflect.Value{
-			reflect.ValueOf(&luarState),
+		args := make([]reflect.Value, 0, 2)
+		if fnType.NumIn() == 2 {
+			receiverHint := fnType.In(0)
+			receiver := lValueToReflect(L.Get(1), receiverHint)
+			if receiver.Type() != receiverHint {
+				L.RaiseError("incorrect receiver type")
+			}
+			args = append(args, receiver)
+			L.Remove(1)
 		}
+		args = append(args, reflect.ValueOf(&luarState))
 		return fn.Call(args)[0].Interface().(int)
 	}
 

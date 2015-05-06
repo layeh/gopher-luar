@@ -84,6 +84,7 @@ func Example__2() {
 	print(thangs.DEF)
 	print(thangs.GHI)
 	thangs.GHI = 789
+	thangs.ABC = nil
 	`
 
 	L := lua.NewState()
@@ -109,8 +110,11 @@ func Example__2() {
 		panic(err)
 	}
 
+	fmt.Println()
 	fmt.Println(things[0])
 	fmt.Println(thangs["GHI"])
+	_, ok := thangs["ABC"]
+	fmt.Println(ok)
 	// Output:
 	// cake
 	// wallet
@@ -121,8 +125,10 @@ func Example__2() {
 	// 123
 	// 456
 	// nil
+	//
 	// cookie
 	// 789
+	// false
 }
 
 func Example__3() {
@@ -153,7 +159,7 @@ func Example__3() {
 		panic(err)
 	}
 
-	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
+	everyone := luar.Unwrap(L.GetGlobal("everyone"), 0).(map[string]*Person)
 	fmt.Println(len(everyone))
 	// Output:
 	// John
