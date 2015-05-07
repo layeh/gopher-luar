@@ -2,7 +2,6 @@ package luar
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 
@@ -98,10 +97,7 @@ func (w *luaSliceWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
 }
 
 func (w *luaSliceWrapper) String() (string, error) {
-	if stringer, ok := w.Slice.(fmt.Stringer); ok {
-		return stringer.String(), nil
-	}
-	return reflect.ValueOf(w.Slice).String(), nil
+	return getString(w.Slice)
 }
 
 func (w *luaSliceWrapper) Equals(other luaWrapper) (lua.LValue, error) {

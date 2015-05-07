@@ -2,7 +2,6 @@ package luar
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
@@ -64,10 +63,7 @@ func (w *luaMapWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
 }
 
 func (w *luaMapWrapper) String() (string, error) {
-	if stringer, ok := w.Map.(fmt.Stringer); ok {
-		return stringer.String(), nil
-	}
-	return reflect.ValueOf(w.Map).String(), nil
+	return getString(w.Map)
 }
 
 func (w *luaMapWrapper) Equals(other luaWrapper) (lua.LValue, error) {
