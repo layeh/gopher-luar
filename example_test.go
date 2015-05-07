@@ -470,6 +470,30 @@ func Example__13() {
 	// Tim counts: 15
 }
 
+func Example__14() {
+	const code = `
+	print(p:hello())
+	print(p.age)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+		Age:  66,
+	}
+
+	L.SetGlobal("p", luar.New(L, &p))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// Hello, Tim
+	// 66
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

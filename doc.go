@@ -84,7 +84,8 @@
 // Struct types
 //
 // Struct types can have their fields accessed and modified and their methods
-// called.
+// called. First letters of field/method names are automatically converted to
+// uppercase.
 //
 // Example:
 //  type Person {
@@ -97,7 +98,7 @@
 //  tim := Person{"Tim"}
 //  L.SetGlobal("tim", New(L, tim))
 //  ---
-//  tim:SayHello()
+//  tim:SayHello() -- same as tim:sayHello()
 //
 // Type types
 //

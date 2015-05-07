@@ -19,16 +19,17 @@ func (w *luaStructWrapper) Index(key lua.LValue) (lua.LValue, error) {
 
 	// Check for method
 	keyLString, ok := key.(lua.LString)
+	keyString := getExportedName(string(keyLString))
 	if ok {
-		if method, ok := refType.MethodByName(string(keyLString)); ok {
+		if method, ok := refType.MethodByName(keyString); ok {
 			return New(w.L, method.Func.Interface()), nil
 		}
 	}
 
 	// Check for field
-	if field := ref.FieldByName(string(keyLString)); field.IsValid() {
+	if field := ref.FieldByName(keyString); field.IsValid() {
 		if !field.CanInterface() {
-			return nil, errors.New("cannot interface field " + string(keyLString))
+			return nil, errors.New("cannot interface field " + keyString)
 		}
 		if val := New(w.L, field.Interface()); val != nil {
 			return val, nil
