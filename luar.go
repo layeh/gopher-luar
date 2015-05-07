@@ -143,6 +143,9 @@ func Unwrap(value lua.LValue, hint interface{}) interface{} {
 }
 
 func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
+	if hint == lValue {
+		return reflect.ValueOf(v)
+	}
 	switch converted := v.(type) {
 	case lua.LBool:
 		return reflect.ValueOf(bool(converted))

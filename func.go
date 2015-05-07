@@ -15,11 +15,13 @@ type LState struct {
 
 var lStatePtrType reflect.Type
 var lValueSlice reflect.Type
+var lValue reflect.Type
 var intType reflect.Type
 
 func init() {
 	lStatePtrType = reflect.TypeOf(&LState{})
 	lValueSlice = reflect.TypeOf([]lua.LValue{})
+	lValue = reflect.TypeOf((*lua.LValue)(nil)).Elem()
 	intType = reflect.TypeOf(int(0))
 }
 
