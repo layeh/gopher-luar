@@ -27,9 +27,7 @@ func (w *luaPointerWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	}
 
 	// Check for field
-	for ref.Kind() == reflect.Ptr {
-		ref = ref.Elem()
-	}
+	ref = ref.Elem()
 	if ref.Kind() != reflect.Struct {
 		return nil, errors.New("cannot index non-struct pointer type")
 	}
