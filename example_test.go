@@ -558,6 +558,30 @@ func Example__16() {
 	// tim	tim	tim	tim	tim
 }
 
+func ExampleMetaCall() {
+	const code = `
+	proxy(234, nil, "asd", {})
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	// Proxy has the following method defined:
+	//  func (p *Proxy) LuarCall(args ...lua.LValue) {
+	//  	fmt.Printf("I was called with %d arguments!\n", len(args))
+	//  }
+	//
+	proxy := &Proxy{}
+
+	L.SetGlobal("proxy", luar.New(L, proxy))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// I was called with 4 arguments!
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
