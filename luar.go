@@ -186,7 +186,7 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 }
 
 func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
-	if hint == lValue {
+	if hint == refTypeLuaLValue {
 		return reflect.ValueOf(v)
 	}
 	switch converted := v.(type) {

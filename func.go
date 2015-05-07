@@ -13,23 +13,23 @@ type LState struct {
 	*lua.LState
 }
 
-var lStatePtrType reflect.Type
-var lValueSlice reflect.Type
-var lValue reflect.Type
-var intType reflect.Type
+var refTypeLStatePtr reflect.Type
+var refTypeLuaLValueSlice reflect.Type
+var refTypeLuaLValue reflect.Type
+var refTypeInt reflect.Type
 
 func init() {
-	lStatePtrType = reflect.TypeOf(&LState{})
-	lValueSlice = reflect.TypeOf([]lua.LValue{})
-	lValue = reflect.TypeOf((*lua.LValue)(nil)).Elem()
-	intType = reflect.TypeOf(int(0))
+	refTypeLStatePtr = reflect.TypeOf(&LState{})
+	refTypeLuaLValueSlice = reflect.TypeOf([]lua.LValue{})
+	refTypeLuaLValue = reflect.TypeOf((*lua.LValue)(nil)).Elem()
+	refTypeInt = reflect.TypeOf(int(0))
 }
 
 func funcIsBypass(t reflect.Type) bool {
-	if t.NumIn() == 1 && t.NumOut() == 1 && t.In(0) == lStatePtrType && t.Out(0) == intType {
+	if t.NumIn() == 1 && t.NumOut() == 1 && t.In(0) == refTypeLStatePtr && t.Out(0) == refTypeInt {
 		return true
 	}
-	if t.NumIn() == 2 && t.NumOut() == 1 && t.In(1) == lStatePtrType && t.Out(0) == intType {
+	if t.NumIn() == 2 && t.NumOut() == 1 && t.In(1) == refTypeLStatePtr && t.Out(0) == refTypeInt {
 		return true
 	}
 	return false
@@ -73,7 +73,7 @@ func funcEvaluate(L *lua.LState, fn reflect.Value) int {
 		args[i] = lValueToReflect(L.Get(i+1), hint)
 	}
 	ret := fn.Call(args)
-	if len(ret) == 1 && ret[0].Type() == lValueSlice {
+	if len(ret) == 1 && ret[0].Type() == refTypeLuaLValueSlice {
 		values := ret[0].Interface().([]lua.LValue)
 		for _, value := range values {
 			L.Push(value)
