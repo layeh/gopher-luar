@@ -15,6 +15,10 @@ type luaPointerWrapper struct {
 
 func (w *luaPointerWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	ref := reflect.ValueOf(w.Ptr)
+	deref := ref.Elem()
+	if deref.Kind() != reflect.Struct {
+		return nil, errors.New("cannot index non-struct pointer type")
+	}
 	refType := ref.Type()
 
 	// Check for method
@@ -27,12 +31,7 @@ func (w *luaPointerWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	}
 
 	// Check for field
-	ref = ref.Elem()
-	if ref.Kind() != reflect.Struct {
-		return nil, errors.New("cannot index non-struct pointer type")
-	}
-
-	if field := ref.FieldByName(keyString); field.IsValid() {
+	if field := deref.FieldByName(keyString); field.IsValid() {
 		if !field.CanInterface() {
 			return nil, errors.New("cannot interface field " + keyString)
 		}
