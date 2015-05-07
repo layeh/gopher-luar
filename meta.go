@@ -19,5 +19,5 @@ type MetaIndex interface {
 // MetaNewIndex is a struct or struct pointer that defines a fallback action
 // for the Lua __newindex metamethod.
 type MetaNewIndex interface {
-	LuarNewIndex(key lua.LValue, value lua.LValue) error
+	LuarNewIndex(key, value lua.LValue) error
 }

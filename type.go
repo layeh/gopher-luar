@@ -16,7 +16,7 @@ func (w *luaTypeWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	return nil, errors.New("cannot index type")
 }
 
-func (w *luaTypeWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+func (w *luaTypeWrapper) NewIndex(key, value lua.LValue) error {
 	return errors.New("cannot set type index")
 }
 

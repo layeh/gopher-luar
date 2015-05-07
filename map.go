@@ -23,7 +23,7 @@ func (w *luaMapWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	return New(w.L, item.Interface()), nil
 }
 
-func (w *luaMapWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+func (w *luaMapWrapper) NewIndex(key, value lua.LValue) error {
 	ref := reflect.ValueOf(w.Map)
 
 	convertedKey := lValueToReflect(key, ref.Type().Key())

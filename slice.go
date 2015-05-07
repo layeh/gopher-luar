@@ -71,7 +71,7 @@ func (w *luaSliceWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	return nil, errors.New("index must be a number or a string")
 }
 
-func (w *luaSliceWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+func (w *luaSliceWrapper) NewIndex(key, value lua.LValue) error {
 	lNumberKey, ok := key.(lua.LNumber)
 	if !ok {
 		return errors.New("key must be an int")

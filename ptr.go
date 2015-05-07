@@ -46,7 +46,7 @@ func (w *luaPointerWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	return lua.LNil, nil
 }
 
-func (w *luaPointerWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+func (w *luaPointerWrapper) NewIndex(key, value lua.LValue) error {
 	ref := reflect.ValueOf(w.Ptr).Elem()
 
 	if ref.Kind() != reflect.Struct {

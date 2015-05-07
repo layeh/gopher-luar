@@ -42,7 +42,7 @@ func (w *luaStructWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	return lua.LNil, nil
 }
 
-func (w *luaStructWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+func (w *luaStructWrapper) NewIndex(key, value lua.LValue) error {
 	ref := reflect.ValueOf(w.Struct)
 
 	keyLString, ok := key.(lua.LString)

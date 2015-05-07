@@ -73,7 +73,7 @@ func (w *luaChanWrapper) Index(key lua.LValue) (lua.LValue, error) {
 	return lua.LNil, nil
 }
 
-func (w *luaChanWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
+func (w *luaChanWrapper) NewIndex(key, value lua.LValue) error {
 	return errors.New("cannot set type chan")
 }
 

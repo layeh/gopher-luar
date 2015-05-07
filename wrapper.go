@@ -6,7 +6,7 @@ import (
 
 type luaWrapper interface {
 	Index(key lua.LValue) (lua.LValue, error)
-	NewIndex(key lua.LValue, value lua.LValue) error
+	NewIndex(key, value lua.LValue) error
 	Len() (lua.LValue, error)
 	Call(...lua.LValue) ([]lua.LValue, error)
 	String() (string, error)
