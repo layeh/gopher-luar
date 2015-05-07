@@ -13,6 +13,7 @@ func init() {
 	wrapperMetatable = map[string]map[string]lua.LGFunction{
 		"chan": {
 			"__index":    chanIndex,
+			"__len":      chanLen,
 			"__tostring": allTostring,
 			"__eq":       chanEq,
 		},

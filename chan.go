@@ -32,6 +32,12 @@ func chanIndex(L *lua.LState) int {
 	return 1
 }
 
+func chanLen(L *lua.LState) int {
+	ref := checkChan(L, 1)
+	L.Push(lua.LNumber(ref.Len()))
+	return 1
+}
+
 func chanEq(L *lua.LState) int {
 	chan1 := checkChan(L, 1)
 	chan2 := checkChan(L, 2)

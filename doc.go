@@ -22,6 +22,9 @@
 //  send(data):   Sends data to the channel.
 //  close():      Closes the channel.
 //
+// Taking the length (#) of a channel returns how many unread items are in its
+// buffer.
+//
 // Example:
 //  ch := make(chan string)
 //  L.SetGlobal("ch", New(L, ch))
