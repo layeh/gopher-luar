@@ -31,6 +31,21 @@ func (p *Person) AddNumbers(L *luar.LState) int {
 	return 1
 }
 
+type Proxy struct {
+	XYZ string
+}
+
+func (p *Proxy) LuarCall(args ...lua.LValue) ([]lua.LValue, error) {
+	fmt.Printf("I was called with %d arguments!\n", len(args))
+	return nil, nil
+}
+
+func (p *Proxy) LuarNewIndex(key, value lua.LValue) error {
+	str := value.String()
+	p.XYZ = str + str
+	return nil
+}
+
 func Example__1() {
 	const code = `
 	print(user1.Name)
@@ -492,6 +507,32 @@ func Example__14() {
 	// Output:
 	// Hello, Tim
 	// 66
+}
+
+func Example__15() {
+	const code = `
+	print(p.XYZ)
+	p("Hello", "World")
+	p.nothing = "nice"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Proxy{
+		XYZ: "1000+",
+	}
+
+	L.SetGlobal("p", luar.New(L, &p))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	fmt.Println(p.XYZ)
+	// Output:
+	// 1000+
+	// I was called with 2 arguments!
+	// nicenice
 }
 
 func ExampleLState() {

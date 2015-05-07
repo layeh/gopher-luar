@@ -35,6 +35,10 @@ func (w *luaStructWrapper) Index(key lua.LValue) (lua.LValue, error) {
 		}
 	}
 
+	if meta, ok := w.Struct.(MetaIndex); ok {
+		return meta.LuarIndex(key)
+	}
+
 	return lua.LNil, nil
 }
 
@@ -49,6 +53,9 @@ func (w *luaStructWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
 	keyString := string(keyLString)
 	field := ref.FieldByName(keyString)
 	if !field.IsValid() {
+		if meta, ok := w.Struct.(MetaNewIndex); ok {
+			return meta.LuarNewIndex(key, value)
+		}
 		return errors.New("unknown field " + keyString)
 	}
 	if !field.CanSet() {
@@ -62,7 +69,10 @@ func (w *luaStructWrapper) Len() (lua.LValue, error) {
 	return nil, errors.New("cannot # struct")
 }
 
-func (w *luaStructWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
+func (w *luaStructWrapper) Call(args ...lua.LValue) ([]lua.LValue, error) {
+	if meta, ok := w.Struct.(MetaCall); ok {
+		return meta.LuarCall(args...)
+	}
 	return nil, errors.New("cannot call struct")
 }
 

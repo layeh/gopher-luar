@@ -39,6 +39,10 @@ func (w *luaPointerWrapper) Index(key lua.LValue) (lua.LValue, error) {
 		}
 	}
 
+	if meta, ok := w.Ptr.(MetaIndex); ok {
+		return meta.LuarIndex(key)
+	}
+
 	return lua.LNil, nil
 }
 
@@ -57,6 +61,9 @@ func (w *luaPointerWrapper) NewIndex(key lua.LValue, value lua.LValue) error {
 	keyString := string(keyLString)
 	field := ref.FieldByName(keyString)
 	if !field.IsValid() {
+		if meta, ok := w.Ptr.(MetaNewIndex); ok {
+			return meta.LuarNewIndex(key, value)
+		}
 		return errors.New("unknown field " + keyString)
 	}
 	if !field.CanSet() {
@@ -70,7 +77,10 @@ func (w *luaPointerWrapper) Len() (lua.LValue, error) {
 	return nil, errors.New("cannot # ptr")
 }
 
-func (w *luaPointerWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
+func (w *luaPointerWrapper) Call(args ...lua.LValue) ([]lua.LValue, error) {
+	if meta, ok := w.Ptr.(MetaCall); ok {
+		return meta.LuarCall(args...)
+	}
 	return nil, errors.New("cannot call ptr")
 }
 
