@@ -14,10 +14,12 @@ type LState struct {
 }
 
 var lStatePtrType reflect.Type
+var lValueSlice reflect.Type
 var intType reflect.Type
 
 func init() {
 	lStatePtrType = reflect.TypeOf(&LState{})
+	lValueSlice = reflect.TypeOf([]lua.LValue{})
 	intType = reflect.TypeOf(int(0))
 }
 
@@ -69,6 +71,13 @@ func funcEvaluate(L *lua.LState, fn reflect.Value) int {
 		args[i] = lValueToReflect(L.Get(i+1), hint)
 	}
 	ret := fn.Call(args)
+	if len(ret) == 1 && ret[0].Type() == lValueSlice {
+		values := ret[0].Interface().([]lua.LValue)
+		for _, value := range values {
+			L.Push(value)
+		}
+		return len(values)
+	}
 	for _, val := range ret {
 		L.Push(New(L, val.Interface()))
 	}

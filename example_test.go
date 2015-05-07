@@ -535,6 +535,31 @@ func Example__15() {
 	// nicenice
 }
 
+func Example__16() {
+	const code = `
+	print(fn("tim", 5))
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	fn := func(name string, count int) []lua.LValue {
+		s := make([]lua.LValue, count)
+		for i := 0; i < count; i++ {
+			s[i] = lua.LString(name)
+		}
+		return s
+	}
+
+	L.SetGlobal("fn", luar.New(L, fn))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// tim	tim	tim	tim	tim
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

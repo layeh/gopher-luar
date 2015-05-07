@@ -33,7 +33,10 @@
 // Function types
 //
 // Function types can be called from Lua. Its arguments and returned values
-// will be automatically converted from and to Lua types, respectively.
+// will be automatically converted from and to Lua types, respectively (see
+// exception below). However, a function that uses luar.LState can bypass the
+// automatic argument and return value conversion (see luar.LState
+// documentation for example).
 //
 // Example:
 //  fn := func(name string, age uint) string {
@@ -42,6 +45,19 @@
 //  L.SetGlobal("fn", New(L, fn))
 //  ---
 //  print(fn("Tim", 5)) -- prints "Hello Tim, age 5"
+//
+// A special conversion case happens when function returns a lua.LValue slice.
+// In that case, luar will automatically unpack the slice.
+//
+// Example
+//  fn := func() []lua.LValue {
+//    return []lua.LValue{lua.LString("Hello"), lua.LNumber(2.5)}
+//  }
+//  L.SetGlobal("fn", New(L, fn))
+//  ---
+//  x, y = fn()
+//  print(x) -- prints "Hello"
+//  print(y) -- prints "2.5"
 //
 // Map types
 //
