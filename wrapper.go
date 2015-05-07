@@ -32,6 +32,9 @@ func wrapperIndex(L *lua.LState) int {
 		L.RaiseError(err.Error())
 		return 0
 	}
+	if value == nil {
+		return 0
+	}
 	L.Push(value)
 	return 1
 }
@@ -45,8 +48,7 @@ func wrapperNewIndex(L *lua.LState) int {
 		L.RaiseError(err.Error())
 		return 0
 	}
-	L.Push(value)
-	return 1
+	return 0
 }
 
 func wrapperLen(L *lua.LState) int {
