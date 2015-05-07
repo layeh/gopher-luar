@@ -92,7 +92,7 @@ func ptrCall(L *lua.LState) int {
 	if ret := metaCall(L, ref); ret >= 0 {
 		return ret
 	}
-	// TODO: throw error
+	L.RaiseError("attempt to call a non-function object")
 	return 0
 }
 
