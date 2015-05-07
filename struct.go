@@ -1,89 +1,84 @@
 package luar
 
 import (
-	"errors"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
 
-type luaStructWrapper struct {
-	L      *lua.LState
-	Struct interface{}
+func checkStruct(L *lua.LState, idx int) reflect.Value {
+	ud := L.CheckUserData(idx)
+	ref := reflect.ValueOf(ud.Value)
+	if ref.Kind() != reflect.Struct {
+		L.ArgError(idx, "expecting struct")
+	}
+	return ref
 }
 
-func (w *luaStructWrapper) Index(key lua.LValue) (lua.LValue, error) {
-	ref := reflect.ValueOf(w.Struct)
+func structIndex(L *lua.LState) int {
+	ref := checkStruct(L, 1)
 	refType := ref.Type()
 
 	// Check for method
-	keyLString, ok := key.(lua.LString)
-	keyString := getExportedName(string(keyLString))
-	if ok {
-		if method, ok := refType.MethodByName(keyString); ok {
-			return New(w.L, method.Func.Interface()), nil
+	key := L.OptString(2, "")
+	exKey := getExportedName(key)
+	if exKey != "" {
+		if method, ok := refType.MethodByName(exKey); ok {
+			L.Push(New(L, method.Func.Interface()))
+			return 1
 		}
 	}
 
 	// Check for field
-	if field := ref.FieldByName(keyString); field.IsValid() {
+	if field := ref.FieldByName(exKey); field.IsValid() {
 		if !field.CanInterface() {
-			return nil, errors.New("cannot interface field " + keyString)
+			L.RaiseError("cannot interface field " + exKey)
 		}
-		if val := New(w.L, field.Interface()); val != nil {
-			return val, nil
-		}
+		L.Push(New(L, field.Interface()))
+		return 1
 	}
 
-	if meta, ok := w.Struct.(MetaIndex); ok {
-		return meta.LuarIndex(key)
+	if ret := metaIndex(L, ref); ret >= 0 {
+		return ret
 	}
-
-	return lua.LNil, nil
+	return 0
 }
 
-func (w *luaStructWrapper) NewIndex(key, value lua.LValue) error {
-	ref := reflect.ValueOf(w.Struct)
+func structNewIndex(L *lua.LState) int {
+	ref := checkStruct(L, 1)
+	key := L.OptString(2, "")
+	value := L.CheckAny(3)
 
-	keyLString, ok := key.(lua.LString)
-	if !ok {
-		return errors.New("invalid non-string key")
+	if key == "" {
+		if ret := metaNewIndex(L, ref); ret >= 0 {
+			return ret
+		}
+		L.TypeError(2, lua.LTString)
+		return 0
 	}
 
-	keyString := string(keyLString)
-	field := ref.FieldByName(keyString)
+	exKey := getExportedName(key)
+
+	field := ref.FieldByName(exKey)
 	if !field.IsValid() {
-		if meta, ok := w.Struct.(MetaNewIndex); ok {
-			return meta.LuarNewIndex(key, value)
+		if ret := metaNewIndex(L, ref); ret >= 0 {
+			return ret
 		}
-		return errors.New("unknown field " + keyString)
+		L.ArgError(2, "unknown field "+exKey)
 	}
 	if !field.CanSet() {
-		return errors.New("cannot set field " + keyString)
+		L.ArgError(2, "cannot set field "+exKey)
 	}
 	field.Set(lValueToReflect(value, field.Type()))
-	return nil
+
+	return 0
 }
 
-func (w *luaStructWrapper) Len() (lua.LValue, error) {
-	return nil, errors.New("cannot # struct")
-}
-
-func (w *luaStructWrapper) Call(args ...lua.LValue) ([]lua.LValue, error) {
-	if meta, ok := w.Struct.(MetaCall); ok {
-		return meta.LuarCall(args...)
+func structCall(L *lua.LState) int {
+	ref := checkStruct(L, 1)
+	if ret := metaCall(L, ref); ret >= 0 {
+		return ret
 	}
-	return nil, errors.New("cannot call struct")
-}
-
-func (w *luaStructWrapper) String() (string, error) {
-	return getString(w.Struct)
-}
-
-func (w *luaStructWrapper) Equals(v luaWrapper) (lua.LValue, error) {
-	return nil, errors.New("cannot compare struct")
-}
-
-func (w *luaStructWrapper) Unwrap() interface{} {
-	return w.Struct
+	// TODO: throw error
+	return 0
 }

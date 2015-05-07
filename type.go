@@ -1,78 +1,44 @@
 package luar
 
 import (
-	"errors"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
 
-type luaTypeWrapper struct {
-	L    *lua.LState
-	Type interface{}
+func checkType(L *lua.LState, idx int) reflect.Type {
+	ud := L.CheckUserData(idx)
+	ref, ok := ud.Value.(reflect.Type)
+	if !ok {
+		L.ArgError(idx, "expecting type")
+	}
+	return ref
 }
 
-func (w *luaTypeWrapper) Index(key lua.LValue) (lua.LValue, error) {
-	return nil, errors.New("cannot index type")
-}
-
-func (w *luaTypeWrapper) NewIndex(key, value lua.LValue) error {
-	return errors.New("cannot set type index")
-}
-
-func (w *luaTypeWrapper) Len() (lua.LValue, error) {
-	return nil, errors.New("cannot # type")
-}
-
-func (w *luaTypeWrapper) Call(args ...lua.LValue) ([]lua.LValue, error) {
-	ref := w.Type.(reflect.Type)
+func typeCall(L *lua.LState) int {
+	ref := checkType(L, 1)
 
 	var value reflect.Value
 	switch ref.Kind() {
 	case reflect.Chan:
-		var buffer int
-		if len(args) >= 1 {
-			lNumber, ok := args[0].(lua.LNumber)
-			if !ok {
-				return nil, errors.New("argument 1 must be an integer")
-			}
-			buffer = int(lNumber)
-		}
+		buffer := L.OptInt(2, 0)
 		value = reflect.MakeChan(ref, buffer)
 	case reflect.Map:
 		value = reflect.MakeMap(ref)
 	case reflect.Slice:
-		var length int
-		if len(args) >= 1 {
-			lLength, ok := args[0].(lua.LNumber)
-			if !ok {
-				return nil, errors.New("argument 1 must be an integer")
-			}
-			length = int(lLength)
-		}
-		capacity := length
-		if len(args) >= 2 {
-			lCapacity, ok := args[1].(lua.LNumber)
-			if !ok {
-				return nil, errors.New("argument 2 must be an integer")
-			}
-			capacity = int(lCapacity)
-		}
+		length := L.OptInt(2, 0)
+		capacity := L.OptInt(3, length)
 		value = reflect.MakeSlice(ref, length, capacity)
 	default:
 		value = reflect.New(ref)
 	}
-	return []lua.LValue{New(w.L, value.Interface())}, nil
+	L.Push(New(L, value.Interface()))
+	return 1
 }
 
-func (w *luaTypeWrapper) String() (string, error) {
-	return reflect.ValueOf(w.Type).String(), nil
-}
-
-func (w *luaTypeWrapper) Equals(v luaWrapper) (lua.LValue, error) {
-	return nil, errors.New("cannot compare type")
-}
-
-func (w *luaTypeWrapper) Unwrap() interface{} {
-	return w.Type
+func typeEq(L *lua.LState) int {
+	type1 := checkType(L, 1)
+	type2 := checkType(L, 2)
+	L.Push(lua.LBool(type1 == type2))
+	return 1
 }

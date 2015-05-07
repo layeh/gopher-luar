@@ -1,101 +1,104 @@
 package luar
 
 import (
-	"errors"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
 
-type luaPointerWrapper struct {
-	L   *lua.LState
-	Ptr interface{}
+func checkPtr(L *lua.LState, idx int) reflect.Value {
+	ud := L.CheckUserData(idx)
+	ref := reflect.ValueOf(ud.Value)
+	if ref.Kind() != reflect.Ptr {
+		L.ArgError(idx, "expecting ptr")
+	}
+	return ref
 }
 
-func (w *luaPointerWrapper) Index(key lua.LValue) (lua.LValue, error) {
-	ref := reflect.ValueOf(w.Ptr)
+func ptrIndex(L *lua.LState) int {
+	ref := checkPtr(L, 1)
 	deref := ref.Elem()
 	if deref.Kind() != reflect.Struct {
-		return nil, errors.New("cannot index non-struct pointer type")
+		L.RaiseError("cannot index non-struct pointer")
 	}
 	refType := ref.Type()
 
 	// Check for method
-	keyLString, ok := key.(lua.LString)
-	keyString := getExportedName(string(keyLString))
-	if ok {
-		if method, ok := refType.MethodByName(keyString); ok {
-			return New(w.L, method.Func.Interface()), nil
+	key := L.OptString(2, "")
+	exKey := getExportedName(key)
+	if key != "" {
+		if method, ok := refType.MethodByName(exKey); ok {
+			L.Push(New(L, method.Func.Interface()))
+			return 1
 		}
 	}
 
 	// Check for field
-	if field := deref.FieldByName(keyString); field.IsValid() {
+	if field := deref.FieldByName(exKey); field.IsValid() {
 		if !field.CanInterface() {
-			return nil, errors.New("cannot interface field " + keyString)
+			L.RaiseError("cannot interface field " + exKey)
 		}
-		if val := New(w.L, field.Interface()); val != nil {
-			return val, nil
+		if val := New(L, field.Interface()); val != nil {
+			L.Push(val)
+			return 1
 		}
+		L.RaiseError("could not convert field " + exKey)
 	}
 
-	if meta, ok := w.Ptr.(MetaIndex); ok {
-		return meta.LuarIndex(key)
+	if ret := metaIndex(L, ref); ret >= 0 {
+		return ret
 	}
-
-	return lua.LNil, nil
+	return 0
 }
 
-func (w *luaPointerWrapper) NewIndex(key, value lua.LValue) error {
-	ref := reflect.ValueOf(w.Ptr).Elem()
+func ptrNewIndex(L *lua.LState) int {
+	ref := checkPtr(L, 1)
+	deref := ref.Elem()
 
-	if ref.Kind() != reflect.Struct {
-		return errors.New("cannot new index non-struct pointer type")
+	if deref.Kind() != reflect.Struct {
+		L.RaiseError("cannot new index non-struct pointer")
 	}
 
-	keyLString, ok := key.(lua.LString)
-	if !ok {
-		return errors.New("invalid non-string key")
-	}
+	key := L.OptString(2, "")
+	value := L.CheckAny(3)
 
-	keyString := string(keyLString)
-	field := ref.FieldByName(keyString)
-	if !field.IsValid() {
-		if meta, ok := w.Ptr.(MetaNewIndex); ok {
-			return meta.LuarNewIndex(key, value)
+	if key == "" {
+		if ret := metaNewIndex(L, ref); ret >= 0 {
+			return ret
 		}
-		return errors.New("unknown field " + keyString)
+		L.TypeError(2, lua.LTString)
+		return 0
+	}
+
+	exKey := getExportedName(key)
+
+	field := deref.FieldByName(exKey)
+	if !field.IsValid() {
+		if ret := metaNewIndex(L, ref); ret >= 0 {
+			return ret
+		}
+		L.ArgError(2, "unknown field "+exKey)
 	}
 	if !field.CanSet() {
-		return errors.New("cannot set field " + keyString)
+		L.ArgError(2, "cannot set field "+exKey)
 	}
 	field.Set(lValueToReflect(value, field.Type()))
-	return nil
+
+	return 0
 }
 
-func (w *luaPointerWrapper) Len() (lua.LValue, error) {
-	return nil, errors.New("cannot # ptr")
-}
-
-func (w *luaPointerWrapper) Call(args ...lua.LValue) ([]lua.LValue, error) {
-	if meta, ok := w.Ptr.(MetaCall); ok {
-		return meta.LuarCall(args...)
+func ptrCall(L *lua.LState) int {
+	ref := checkPtr(L, 1)
+	if ret := metaCall(L, ref); ret >= 0 {
+		return ret
 	}
-	return nil, errors.New("cannot call ptr")
+	// TODO: throw error
+	return 0
 }
 
-func (w *luaPointerWrapper) String() (string, error) {
-	return getString(w.Ptr)
-}
-
-func (w *luaPointerWrapper) Equals(other luaWrapper) (lua.LValue, error) {
-	v, ok := other.(*luaPointerWrapper)
-	if !ok {
-		return lua.LFalse, nil
-	}
-	return lua.LBool(w.Ptr == v.Ptr), nil
-}
-
-func (w *luaPointerWrapper) Unwrap() interface{} {
-	return w.Ptr
+func ptrEq(L *lua.LState) int {
+	ptr1 := checkPtr(L, 1)
+	ptr2 := checkPtr(L, 2)
+	L.Push(lua.LBool(ptr1 == ptr2))
+	return 1
 }

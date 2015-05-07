@@ -35,15 +35,13 @@ type Proxy struct {
 	XYZ string
 }
 
-func (p *Proxy) LuarCall(args ...lua.LValue) ([]lua.LValue, error) {
+func (p *Proxy) LuarCall(args ...lua.LValue) {
 	fmt.Printf("I was called with %d arguments!\n", len(args))
-	return nil, nil
 }
 
-func (p *Proxy) LuarNewIndex(key, value lua.LValue) error {
+func (p *Proxy) LuarNewIndex(key string, value lua.LValue) {
 	str := value.String()
 	p.XYZ = str + str
-	return nil
 }
 
 func Example__1() {
@@ -174,7 +172,7 @@ func Example__3() {
 		panic(err)
 	}
 
-	everyone := luar.Unwrap(L.GetGlobal("everyone"), 0).(map[string]*Person)
+	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
 	fmt.Println(len(everyone))
 	// Output:
 	// John

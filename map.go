@@ -1,53 +1,61 @@
 package luar
 
 import (
-	"errors"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
 
-type luaMapWrapper struct {
-	L   *lua.LState
-	Map interface{}
+func checkMap(L *lua.LState, idx int) reflect.Value {
+	ud := L.CheckUserData(idx)
+	ref := reflect.ValueOf(ud.Value)
+	if ref.Kind() != reflect.Map {
+		L.ArgError(idx, "expecting map")
+	}
+	return ref
 }
 
-func (w *luaMapWrapper) Index(key lua.LValue) (lua.LValue, error) {
-	ref := reflect.ValueOf(w.Map)
+func mapIndex(L *lua.LState) int {
+	ref := checkMap(L, 1)
+	key := L.CheckAny(2)
 
 	convertedKey := lValueToReflect(key, ref.Type().Key())
 	item := ref.MapIndex(convertedKey)
 	if !item.IsValid() {
-		return lua.LNil, nil
+		return 0
 	}
-	return New(w.L, item.Interface()), nil
+	L.Push(New(L, item.Interface()))
+	return 1
 }
 
-func (w *luaMapWrapper) NewIndex(key, value lua.LValue) error {
-	ref := reflect.ValueOf(w.Map)
+func mapNewIndex(L *lua.LState) int {
+	ref := checkMap(L, 1)
+	key := L.CheckAny(2)
+	value := L.CheckAny(3)
 
 	convertedKey := lValueToReflect(key, ref.Type().Key())
 	if convertedKey.Type() != ref.Type().Key() {
-		return errors.New("invalid map key type")
+		L.ArgError(2, "invalid map key type")
 	}
 	var convertedValue reflect.Value
 	if value != lua.LNil {
 		convertedValue = lValueToReflect(value, ref.Type().Elem())
 		if convertedValue.Type() != ref.Type().Elem() {
-			return errors.New("invalid map value type")
+			L.ArgError(3, "invalid map value type")
 		}
 	}
 	ref.SetMapIndex(convertedKey, convertedValue)
-	return nil
+	return 0
 }
 
-func (w *luaMapWrapper) Len() (lua.LValue, error) {
-	ref := reflect.ValueOf(w.Map)
-	return lua.LNumber(ref.Len()), nil
+func mapLen(L *lua.LState) int {
+	ref := checkMap(L, 1)
+	L.Push(lua.LNumber(ref.Len()))
+	return 1
 }
 
-func (w *luaMapWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
-	ref := reflect.ValueOf(w.Map)
+func mapCall(L *lua.LState) int {
+	ref := checkMap(L, 1)
 	keys := ref.MapKeys()
 	i := 0
 	fn := func(L *lua.LState) int {
@@ -59,21 +67,13 @@ func (w *luaMapWrapper) Call(...lua.LValue) ([]lua.LValue, error) {
 		i++
 		return 2
 	}
-	return []lua.LValue{w.L.NewFunction(fn)}, nil
+	L.Push(L.NewFunction(fn))
+	return 1
 }
 
-func (w *luaMapWrapper) String() (string, error) {
-	return getString(w.Map)
-}
-
-func (w *luaMapWrapper) Equals(other luaWrapper) (lua.LValue, error) {
-	v, ok := other.(*luaMapWrapper)
-	if !ok {
-		return lua.LFalse, nil
-	}
-	return lua.LBool(w.Map == v.Map), nil
-}
-
-func (w *luaMapWrapper) Unwrap() interface{} {
-	return w.Map
+func mapEq(L *lua.LState) int {
+	map1 := checkMap(L, 1)
+	map2 := checkMap(L, 2)
+	L.Push(lua.LBool(map1 == map2))
+	return 1
 }
