@@ -49,7 +49,7 @@
 // A special conversion case happens when function returns a lua.LValue slice.
 // In that case, luar will automatically unpack the slice.
 //
-// Example
+// Example:
 //  fn := func() []lua.LValue {
 //    return []lua.LValue{lua.LString("Hello"), lua.LNumber(2.5)}
 //  }
