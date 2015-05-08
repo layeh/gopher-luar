@@ -38,7 +38,7 @@ func structIndex(L *lua.LState) int {
 		return 1
 	}
 
-	if ret := metaIndex(L, ref); ret >= 0 {
+	if ret := metaFunction(L, luarIndexFunc, ref); ret >= 0 {
 		return ret
 	}
 	return 0
@@ -50,7 +50,7 @@ func structNewIndex(L *lua.LState) int {
 	value := L.CheckAny(3)
 
 	if key == "" {
-		if ret := metaNewIndex(L, ref); ret >= 0 {
+		if ret := metaFunction(L, luarNewIndexFunc, ref); ret >= 0 {
 			return ret
 		}
 		L.TypeError(2, lua.LTString)
@@ -61,7 +61,7 @@ func structNewIndex(L *lua.LState) int {
 
 	field := ref.FieldByName(exKey)
 	if !field.IsValid() {
-		if ret := metaNewIndex(L, ref); ret >= 0 {
+		if ret := metaFunction(L, luarNewIndexFunc, ref); ret >= 0 {
 			return ret
 		}
 		L.ArgError(2, "unknown field "+exKey)
@@ -76,7 +76,7 @@ func structNewIndex(L *lua.LState) int {
 
 func structCall(L *lua.LState) int {
 	ref := checkStruct(L, 1)
-	if ret := metaCall(L, ref); ret >= 0 {
+	if ret := metaFunction(L, luarCallFunc, ref); ret >= 0 {
 		return ret
 	}
 	L.RaiseError("attempt to call a non-function object")

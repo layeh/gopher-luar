@@ -45,7 +45,7 @@ func ptrIndex(L *lua.LState) int {
 		L.RaiseError("could not convert field " + exKey)
 	}
 
-	if ret := metaIndex(L, ref); ret >= 0 {
+	if ret := metaFunction(L, luarIndexFunc, ref); ret >= 0 {
 		return ret
 	}
 	return 0
@@ -63,7 +63,7 @@ func ptrNewIndex(L *lua.LState) int {
 	value := L.CheckAny(3)
 
 	if key == "" {
-		if ret := metaNewIndex(L, ref); ret >= 0 {
+		if ret := metaFunction(L, luarNewIndexFunc, ref); ret >= 0 {
 			return ret
 		}
 		L.TypeError(2, lua.LTString)
@@ -74,7 +74,7 @@ func ptrNewIndex(L *lua.LState) int {
 
 	field := deref.FieldByName(exKey)
 	if !field.IsValid() {
-		if ret := metaNewIndex(L, ref); ret >= 0 {
+		if ret := metaFunction(L, luarNewIndexFunc, ref); ret >= 0 {
 			return ret
 		}
 		L.ArgError(2, "unknown field "+exKey)
@@ -89,7 +89,7 @@ func ptrNewIndex(L *lua.LState) int {
 
 func ptrCall(L *lua.LState) int {
 	ref := checkPtr(L, 1)
-	if ret := metaCall(L, ref); ret >= 0 {
+	if ret := metaFunction(L, luarCallFunc, ref); ret >= 0 {
 		return ret
 	}
 	L.RaiseError("attempt to call a non-function object")
