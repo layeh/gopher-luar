@@ -13,9 +13,9 @@ import (
 // the standard function conversion rules. Also, a type is allowed to implement
 // only a subset of the interface.
 type Meta interface {
-	LuarCall()
-	LuarIndex()
-	LuarNewIndex()
+	LuarCall(arguments ...interface{}) interface{}
+	LuarIndex(key interface{}) interface{}
+	LuarNewIndex(key, value interface{})
 }
 
 const (
