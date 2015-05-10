@@ -558,7 +558,7 @@ func Example__16() {
 	// tim	tim	tim	tim	tim
 }
 
-func ExampleMetaCall() {
+func ExampleMeta() {
 	const code = `
 	proxy(234, nil, "asd", {})
 	`
