@@ -132,6 +132,14 @@
 //
 // The length operator returns true if the pointer is non-nil.
 //
+// The pointed to value can changed using the pow (^) operator.
+//
+// Example:
+//  str := "hello"
+//  L.SetGlobal("strptr", New(L, &str))
+//  ---
+//  print(str^"world") -- prints "world", and str's value is now "world"
+//
 // Type types
 //
 // Type constructors can be created using NewType. When called, it returns a

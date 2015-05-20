@@ -28,6 +28,7 @@ func init() {
 		"ptr": {
 			"__index":    ptrIndex,
 			"__newindex": ptrNewIndex,
+			"__pow":      ptrPow,
 			"__len":      ptrLen,
 			"__call":     ptrCall,
 			"__tostring": allTostring,

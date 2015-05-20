@@ -87,6 +87,22 @@ func ptrNewIndex(L *lua.LState) int {
 	return 0
 }
 
+func ptrPow(L *lua.LState) int {
+	ref := checkPtr(L, 1)
+	val := L.CheckAny(2)
+
+	if ref.IsNil() {
+		L.RaiseError("cannot dereference nil pointer")
+	}
+	elem := ref.Elem()
+	if !elem.CanSet() {
+		L.RaiseError("unable to set pointer value")
+	}
+	value := lValueToReflect(val, elem.Type())
+	elem.Set(value)
+	return 1
+}
+
 func ptrLen(L *lua.LState) int {
 	ref := checkPtr(L, 1)
 	L.Push(lua.LBool(!ref.IsNil()))

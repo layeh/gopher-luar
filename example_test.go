@@ -602,6 +602,29 @@ func Example__18() {
 	// false
 }
 
+func Example__19() {
+	const code = `
+	print(-str)
+	print(str ^ "world")
+	print(-str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	str := "hello"
+
+	L.SetGlobal("str", luar.New(L, &str))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// hello
+	// world
+	// world
+}
+
 func ExampleMeta() {
 	const code = `
 	proxy(234, nil, "asd", {})
