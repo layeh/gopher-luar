@@ -130,6 +130,8 @@
 //  ---
 //  print(-strptr) -- prints "hello"
 //
+// The length operator returns true if the pointer is non-nil.
+//
 // Type types
 //
 // Type constructors can be created using NewType. When called, it returns a

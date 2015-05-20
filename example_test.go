@@ -577,6 +577,31 @@ func Example__17() {
 	// hello
 }
 
+func Example__18() {
+	const code = `
+	print(#ptr1)
+	print(#ptr2)
+	print(ptr1 == ptr2)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	var ptr1 *string
+	str := "hello"
+
+	L.SetGlobal("ptr1", luar.New(L, ptr1))
+	L.SetGlobal("ptr2", luar.New(L, &str))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// false
+	// true
+	// false
+}
+
 func ExampleMeta() {
 	const code = `
 	proxy(234, nil, "asd", {})
