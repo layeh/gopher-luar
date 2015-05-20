@@ -558,6 +558,25 @@ func Example__16() {
 	// tim	tim	tim	tim	tim
 }
 
+func Example__17() {
+	const code = `
+	print(-ptr)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	str := "hello"
+
+	L.SetGlobal("ptr", luar.New(L, &str))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// hello
+}
+
 func ExampleMeta() {
 	const code = `
 	proxy(234, nil, "asd", {})

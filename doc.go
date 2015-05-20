@@ -119,6 +119,17 @@
 //  ---
 //  tim:SayHello() -- same as tim:sayHello()
 //
+// Pointer types
+//
+// Pointers to structs operate the same way structs do. Pointers can also be
+// dereferenced using the unary minus (-) operator.
+//
+// Example:
+//  str := "hello"
+//  L.SetGlobal("strptr", New(L, &str))
+//  ---
+//  print(-strptr) -- prints "hello"
+//
 // Type types
 //
 // Type constructors can be created using NewType. When called, it returns a

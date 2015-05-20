@@ -96,6 +96,16 @@ func ptrCall(L *lua.LState) int {
 	return 0
 }
 
+func ptrUnm(L *lua.LState) int {
+	ref := checkPtr(L, 1)
+	elem := ref.Elem()
+	if !elem.CanInterface() {
+		L.RaiseError("cannot interface pointer type " + elem.String())
+	}
+	L.Push(New(L, elem.Interface()))
+	return 1
+}
+
 func ptrEq(L *lua.LState) int {
 	ptr1 := checkPtr(L, 1)
 	ptr2 := checkPtr(L, 2)

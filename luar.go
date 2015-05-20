@@ -30,6 +30,7 @@ func init() {
 			"__newindex": ptrNewIndex,
 			"__call":     ptrCall,
 			"__tostring": allTostring,
+			"__unm":      ptrUnm,
 			"__eq":       ptrEq,
 		},
 		"slice": {
