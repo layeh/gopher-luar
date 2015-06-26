@@ -80,7 +80,7 @@
 //  print(#places)       -- prints "2"
 //  print(places.NA)     -- prints "North America"
 //  print(places["EU"])  -- prints "European Union"
-//  for k, v = places() do
+//  for k, v in places() do
 //    print(k .. ": " .. v)
 //  end
 //
