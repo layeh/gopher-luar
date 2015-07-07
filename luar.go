@@ -29,7 +29,6 @@ func init() {
 			"__index":    ptrIndex,
 			"__newindex": ptrNewIndex,
 			"__pow":      ptrPow,
-			"__len":      ptrLen,
 			"__call":     ptrCall,
 			"__tostring": allTostring,
 			"__unm":      ptrUnm,
@@ -122,9 +121,17 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	if lval, ok := value.(lua.LValue); ok {
 		return lval
 	}
-	table := ensureMetatable(L)
 
 	val := reflect.ValueOf(value)
+	switch val.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		if val.IsNil() {
+			return lua.LNil
+		}
+	}
+
+	table := ensureMetatable(L)
+
 	switch val.Kind() {
 	case reflect.Bool:
 		return lua.LBool(val.Bool())

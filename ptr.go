@@ -103,12 +103,6 @@ func ptrPow(L *lua.LState) int {
 	return 1
 }
 
-func ptrLen(L *lua.LState) int {
-	ref := checkPtr(L, 1)
-	L.Push(lua.LBool(!ref.IsNil()))
-	return 1
-}
-
 func ptrCall(L *lua.LState) int {
 	ref := checkPtr(L, 1)
 	if ret := metaFunction(L, luarCallFunc, ref); ret >= 0 {

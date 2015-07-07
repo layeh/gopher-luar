@@ -579,8 +579,8 @@ func Example__17() {
 
 func Example__18() {
 	const code = `
-	print(#ptr1)
-	print(#ptr2)
+	print(ptr1 == nil)
+	print(ptr2 == nil)
 	print(ptr1 == ptr2)
 	`
 
@@ -597,8 +597,8 @@ func Example__18() {
 		panic(err)
 	}
 	// Output:
-	// false
 	// true
+	// false
 	// false
 }
 
@@ -623,6 +623,62 @@ func Example__19() {
 	// hello
 	// world
 	// world
+}
+
+type Example__20_A struct {
+	*Example__20_B
+}
+
+type Example__20_B struct {
+	Value *string
+}
+
+func Example__20() {
+	const code = `
+	print(a.Value == nil)
+	a.Value = str_ptr()
+	_ = a.Value ^ "hello"
+	print(a.Value == nil)
+	print(-a.Value)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := Example__20_A{
+		Example__20_B: &Example__20_B{
+		},
+	}
+
+	L.SetGlobal("a", luar.New(L, a))
+	L.SetGlobal("str_ptr", luar.NewType(L, ""))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// true
+	// false
+	// hello
+}
+
+func Example__21() {
+	const code = `
+	print(fn == nil)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	var fn func()
+
+	L.SetGlobal("fn", luar.New(L, fn))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// true
 }
 
 func ExampleMeta() {

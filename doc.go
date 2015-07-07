@@ -130,8 +130,6 @@
 //  ---
 //  print(-strptr) -- prints "hello"
 //
-// The length operator returns true if the pointer is non-nil.
-//
 // The pointed to value can changed using the pow (^) operator.
 //
 // Example:
