@@ -689,6 +689,27 @@ func Example__22() {
 	// 1 2 3
 }
 
+func Example__23() {
+	const code = `
+	b = a
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := complex(float64(1), float64(2))
+
+	L.SetGlobal("a", luar.New(L, a))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	b := L.GetGlobal("b").(*lua.LUserData).Value.(complex128)
+	fmt.Println(a == b)
+	// Output:
+	// true
+}
+
 func ExampleMeta() {
 	const code = `
 	proxy(234, nil, "asd", {})

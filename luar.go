@@ -105,6 +105,8 @@ func allTostring(L *lua.LState) int {
 //  Uint64          LNumber
 //  Float32         LNumber
 //  Float64         LNumber
+//  Complex64       *LUserData
+//  Complex128      *LUserData
 //  Array           *LUserData
 //  Chan            *LUserData
 //  Interface       *LUserData

@@ -13,10 +13,12 @@ type LState struct {
 	*lua.LState
 }
 
-var refTypeLStatePtr reflect.Type
-var refTypeLuaLValueSlice reflect.Type
-var refTypeLuaLValue reflect.Type
-var refTypeInt reflect.Type
+var (
+	refTypeLStatePtr      reflect.Type
+	refTypeLuaLValueSlice reflect.Type
+	refTypeLuaLValue      reflect.Type
+	refTypeInt            reflect.Type
+)
 
 func init() {
 	refTypeLStatePtr = reflect.TypeOf(&LState{})
