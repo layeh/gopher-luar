@@ -141,7 +141,15 @@
 // Type types
 //
 // Type constructors can be created using NewType. When called, it returns a
-// new variable which is the same type of variable that was passed to NewType.
+// new variable which is of the same type that was passed to NewType. Its
+// behavior is dependent on the kind of value passed, as described below:
+//
+//  Kind      Constructor arguments          Return value
+//  -----------------------------------------------------
+//  Channel   Buffer size (opt)              Channel
+//  Map       None                           Map
+//  Slice     Length (opt), Capacity (opt)   Slice
+//  Default   None                           Pointer to the newly allocated value
 //
 // Example:
 //  type Person struct {

@@ -91,7 +91,8 @@ func allTostring(L *lua.LState) int {
 // New creates and returns a new lua.LValue for the given value.
 //
 // The following types are supported:
-//  reflect.Kind    gopher-lua Type
+//  Kind            gopher-lua Type
+//  -------------------------------
 //  nil             LNil
 //  Bool            LBool
 //  Int             LNumber
@@ -105,6 +106,7 @@ func allTostring(L *lua.LState) int {
 //  Uint64          LNumber
 //  Float32         LNumber
 //  Float64         LNumber
+//  Array           *LUserData
 //  Chan            *LUserData
 //  Interface       *LUserData
 //  Func            *lua.LFunction

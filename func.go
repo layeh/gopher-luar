@@ -57,10 +57,10 @@ func funcEvaluate(L *lua.LState, fn reflect.Value) int {
 	expected := fnType.NumIn()
 	variadic := fnType.IsVariadic()
 	if !variadic && top != expected {
-		L.RaiseError("invalid number of function argument (%d expected, got %d)", expected, top)
+		L.RaiseError("invalid number of function arguments (%d expected, got %d)", expected, top)
 	}
 	if variadic && top < expected-1 {
-		L.RaiseError("invalid number of function argument (%d or more expected, got %d)", expected-1, top)
+		L.RaiseError("invalid number of function arguments (%d or more expected, got %d)", expected-1, top)
 	}
 	args := make([]reflect.Value, top)
 	for i := 0; i < L.GetTop(); i++ {
