@@ -423,8 +423,6 @@ func Example__12() {
 	const code = `
 	print(p1)
 	print(p2)
-	print(a)
-	print(b)
 	`
 
 	L := lua.NewState()
@@ -439,18 +437,8 @@ func Example__12() {
 		Age:  2,
 	}
 
-	a := struct {
-		A string
-	}{
-		A: "hello",
-	}
-
-	b := make(chan string)
-
 	L.SetGlobal("p1", luar.New(L, &p1))
 	L.SetGlobal("p2", luar.New(L, &p2))
-	L.SetGlobal("a", luar.New(L, a))
-	L.SetGlobal("b", luar.New(L, b))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -458,8 +446,6 @@ func Example__12() {
 	// Output:
 	// Tim (99)
 	// John (2)
-	// <struct { A string } Value>
-	// <chan string Value>
 }
 
 func Example__13() {
@@ -646,8 +632,7 @@ func Example__20() {
 	defer L.Close()
 
 	a := Example__20_A{
-		Example__20_B: &Example__20_B{
-		},
+		Example__20_B: &Example__20_B{},
 	}
 
 	L.SetGlobal("a", luar.New(L, a))

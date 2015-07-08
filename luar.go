@@ -47,7 +47,6 @@ func init() {
 			"__call":     structCall,
 			"__tostring": allTostring,
 		},
-
 		"type": {
 			"__call":     typeCall,
 			"__tostring": allTostring,
@@ -83,7 +82,7 @@ func allTostring(L *lua.LState) int {
 	if stringer, ok := value.(fmt.Stringer); ok {
 		L.Push(lua.LString(stringer.String()))
 	} else {
-		L.Push(lua.LString(reflect.ValueOf(value).String()))
+		L.Push(lua.LString(fmt.Sprintf("userdata (luar): %p", ud)))
 	}
 	return 1
 }
