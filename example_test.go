@@ -681,6 +681,29 @@ func Example__21() {
 	// true
 }
 
+func Example__22() {
+	const code = `
+	fn(arr)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	arr := [3]int{1, 2, 3}
+	fn := func(val [3]int) {
+		fmt.Printf("%d %d %d\n", val[0], val[1], val[2])
+	}
+
+	L.SetGlobal("fn", luar.New(L, fn))
+	L.SetGlobal("arr", luar.New(L, arr))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// 1 2 3
+}
+
 func ExampleMeta() {
 	const code = `
 	proxy(234, nil, "asd", {})

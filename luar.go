@@ -174,12 +174,11 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		ud.Value = val.Interface()
 		ud.Metatable = table.RawGetH(lua.LString("struct"))
 		return ud
-	case reflect.UnsafePointer:
+	default:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
 		return ud
 	}
-	return nil
 }
 
 // NewType returns a new type creator for the given value's type.
