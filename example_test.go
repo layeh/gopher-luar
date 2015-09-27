@@ -172,7 +172,7 @@ func Example__3() {
 		panic(err)
 	}
 
-	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
+	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.Interface().(map[string]*Person)
 	fmt.Println(len(everyone))
 	// Output:
 	// John
@@ -704,7 +704,7 @@ func Example__23() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
-	b := L.GetGlobal("b").(*lua.LUserData).Value.(complex128)
+	b := L.GetGlobal("b").(*lua.LUserData).Value.Interface().(complex128)
 	fmt.Println(a == b)
 	// Output:
 	// true

@@ -8,8 +8,8 @@ import (
 
 func checkPtr(L *lua.LState, idx int) reflect.Value {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Ptr {
+	ref, ok := ud.Value.(reflect.Value)
+	if !ok || ref.Kind() != reflect.Ptr {
 		L.ArgError(idx, "expecting ptr")
 	}
 	return ref
@@ -26,7 +26,7 @@ func ptrIndex(L *lua.LState) int {
 	// Check for method
 	key := L.OptString(2, "")
 	exKey := getExportedName(key)
-	if key != "" {
+	if exKey != "" {
 		if method, ok := refType.MethodByName(exKey); ok {
 			L.Push(New(L, method.Func.Interface()))
 			return 1
@@ -35,10 +35,7 @@ func ptrIndex(L *lua.LState) int {
 
 	// Check for field
 	if field := deref.FieldByName(exKey); field.IsValid() {
-		if !field.CanInterface() {
-			L.RaiseError("cannot interface field " + exKey)
-		}
-		if val := New(L, field.Interface()); val != nil {
+		if val := NewReflected(L, field); val != nil {
 			L.Push(val)
 			return 1
 		}
@@ -114,11 +111,7 @@ func ptrCall(L *lua.LState) int {
 
 func ptrUnm(L *lua.LState) int {
 	ref := checkPtr(L, 1)
-	elem := ref.Elem()
-	if !elem.CanInterface() {
-		L.RaiseError("cannot interface pointer type " + elem.String())
-	}
-	L.Push(New(L, elem.Interface()))
+	L.Push(NewReflected(L, ref.Elem()))
 	return 1
 }
 
