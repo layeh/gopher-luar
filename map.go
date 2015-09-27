@@ -8,8 +8,8 @@ import (
 
 func checkMap(L *lua.LState, idx int) reflect.Value {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Map {
+	ref, ok := ud.Value.(reflect.Value)
+	if !ok || ref.Kind() != reflect.Map {
 		L.ArgError(idx, "expecting map")
 	}
 	return ref

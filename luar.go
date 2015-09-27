@@ -78,12 +78,14 @@ func ensureMetatable(L *lua.LState) *lua.LTable {
 
 func allTostring(L *lua.LState) int {
 	ud := L.CheckUserData(1)
-	value := ud.Value
-	if stringer, ok := value.(fmt.Stringer); ok {
-		L.Push(lua.LString(stringer.String()))
-	} else {
-		L.Push(lua.LString(fmt.Sprintf("userdata (luar): %p", ud)))
+	value, ok := ud.Value.(reflect.Value)
+	if ok && value.CanInterface() {
+		if stringer, ok := value.Interface().(fmt.Stringer); ok {
+			L.Push(lua.LString(stringer.String()))
+			return 1
+		}
 	}
+	L.Push(lua.LString(fmt.Sprintf("userdata (luar): %p", ud)))
 	return 1
 }
 
@@ -125,7 +127,11 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lval
 	}
 
-	val := reflect.ValueOf(value)
+	return NewReflected(L, reflect.ValueOf(value))
+}
+
+// NewReflected works the same as New but with an already-reflected value.
+func NewReflected(L *lua.LState, val reflect.Value) lua.LValue {
 	switch val.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
 		if val.IsNil() {
@@ -146,40 +152,40 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lua.LNumber(val.Float())
 	case reflect.Chan:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = val
 		ud.Metatable = table.RawGetH(lua.LString("chan"))
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val)
 	case reflect.Interface:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = val
 		return ud
 	case reflect.Map:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = val
 		ud.Metatable = table.RawGetH(lua.LString("map"))
 		return ud
 	case reflect.Ptr:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = val
 		ud.Metatable = table.RawGetH(lua.LString("ptr"))
 		return ud
 	case reflect.Slice:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = val
 		ud.Metatable = table.RawGetH(lua.LString("slice"))
 		return ud
 	case reflect.String:
 		return lua.LString(val.String())
 	case reflect.Struct:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = val
 		ud.Metatable = table.RawGetH(lua.LString("struct"))
 		return ud
 	default:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = val
 		return ud
 	}
 }
@@ -220,7 +226,10 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	case *lua.LTable:
 		return reflect.ValueOf(converted)
 	case *lua.LUserData:
-		return reflect.ValueOf(converted.Value)
+		rv, ok := converted.Value.(reflect.Value)
+		if ok {
+			return rv
+		}
 	}
 	panic("fatal lValueToReflect error")
 }

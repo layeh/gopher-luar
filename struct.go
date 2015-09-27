@@ -8,8 +8,8 @@ import (
 
 func checkStruct(L *lua.LState, idx int) reflect.Value {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Struct {
+	ref, ok := ud.Value.(reflect.Value)
+	if !ok || ref.Kind() != reflect.Struct {
 		L.ArgError(idx, "expecting struct")
 	}
 	return ref
@@ -31,10 +31,7 @@ func structIndex(L *lua.LState) int {
 
 	// Check for field
 	if field := ref.FieldByName(exKey); field.IsValid() {
-		if !field.CanInterface() {
-			L.RaiseError("cannot interface field " + exKey)
-		}
-		L.Push(New(L, field.Interface()))
+		L.Push(NewReflected(L, field))
 		return 1
 	}
 
