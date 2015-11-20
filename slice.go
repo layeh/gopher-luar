@@ -33,6 +33,13 @@ func sliceIndex(L *lua.LState) int {
 		case "append":
 			L.Push(L.NewFunction(sliceAppend))
 		default:
+			exKey := getExportedName(string(converted))
+			if exKey != "" {
+				if method, ok := ref.Type().MethodByName(exKey); ok {
+					L.Push(New(L, method.Func.Interface()))
+					return 1
+				}
+			}
 			return 0
 		}
 	default:
