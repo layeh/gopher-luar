@@ -56,8 +56,8 @@ func init() {
 }
 
 func ensureMetatable(L *lua.LState) *lua.LTable {
-	const metatableKey = lua.LString("github.com/layeh/gopher-luar")
-	v := L.G.Registry.RawGetH(metatableKey)
+	const metatableKey = "github.com/layeh/gopher-luar"
+	v := L.G.Registry.RawGetString(metatableKey)
 	if v != lua.LNil {
 		return v.(*lua.LTable)
 	}
@@ -65,14 +65,14 @@ func ensureMetatable(L *lua.LState) *lua.LTable {
 
 	for typeName, meta := range wrapperMetatable {
 		typeTable := L.NewTable()
-		typeTable.RawSetH(lua.LString("__metatable"), lua.LTrue)
+		typeTable.RawSetString("__metatable", lua.LTrue)
 		for methodName, methodFunc := range meta {
-			typeTable.RawSetH(lua.LString(methodName), L.NewFunction(methodFunc))
+			typeTable.RawSetString(methodName, L.NewFunction(methodFunc))
 		}
-		newTable.RawSetH(lua.LString(typeName), typeTable)
+		newTable.RawSetString(typeName, typeTable)
 	}
 
-	L.G.Registry.RawSetH(metatableKey, newTable)
+	L.G.Registry.RawSetString(metatableKey, newTable)
 	return newTable
 }
 
@@ -147,7 +147,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	case reflect.Chan:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("chan"))
+		ud.Metatable = table.RawGetString("chan")
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val)
@@ -158,24 +158,24 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	case reflect.Map:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("map"))
+		ud.Metatable = table.RawGetString("map")
 		return ud
 	case reflect.Ptr:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("ptr"))
+		ud.Metatable = table.RawGetString("ptr")
 		return ud
 	case reflect.Slice:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("slice"))
+		ud.Metatable = table.RawGetString("slice")
 		return ud
 	case reflect.String:
 		return lua.LString(val.String())
 	case reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = table.RawGetH(lua.LString("struct"))
+		ud.Metatable = table.RawGetString("struct")
 		return ud
 	default:
 		ud := L.NewUserData()
@@ -194,7 +194,7 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 	val := reflect.TypeOf(value)
 	ud := L.NewUserData()
 	ud.Value = val
-	ud.Metatable = table.RawGetH(lua.LString("type"))
+	ud.Metatable = table.RawGetString("type")
 	return ud
 }
 
