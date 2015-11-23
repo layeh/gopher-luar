@@ -31,19 +31,6 @@ func (p *Person) AddNumbers(L *luar.LState) int {
 	return 1
 }
 
-type Proxy struct {
-	XYZ string
-}
-
-func (p *Proxy) LuarCall(args ...lua.LValue) {
-	fmt.Printf("I was called with %d arguments!\n", len(args))
-}
-
-func (p *Proxy) LuarNewIndex(key string, value lua.LValue) {
-	str := value.String()
-	p.XYZ = str + str
-}
-
 func Example__1() {
 	const code = `
 	print(user1.Name)
@@ -493,32 +480,6 @@ func Example__14() {
 	// 66
 }
 
-func Example__15() {
-	const code = `
-	print(p.XYZ)
-	p("Hello", "World")
-	p.nothing = "nice"
-	`
-
-	L := lua.NewState()
-	defer L.Close()
-
-	p := Proxy{
-		XYZ: "1000+",
-	}
-
-	L.SetGlobal("p", luar.New(L, &p))
-
-	if err := L.DoString(code); err != nil {
-		panic(err)
-	}
-	fmt.Println(p.XYZ)
-	// Output:
-	// 1000+
-	// I was called with 2 arguments!
-	// nicenice
-}
-
 func Example__16() {
 	const code = `
 	print(fn("tim", 5))
@@ -746,30 +707,6 @@ func Example__24() {
 	// Output:
 	// I'm a "chan string" alias
 	// 2
-}
-
-func ExampleMeta() {
-	const code = `
-	proxy(234, nil, "asd", {})
-	`
-
-	L := lua.NewState()
-	defer L.Close()
-
-	// Proxy has the following method defined:
-	//  func (p *Proxy) LuarCall(args ...lua.LValue) {
-	//  	fmt.Printf("I was called with %d arguments!\n", len(args))
-	//  }
-	//
-	proxy := &Proxy{}
-
-	L.SetGlobal("proxy", luar.New(L, proxy))
-
-	if err := L.DoString(code); err != nil {
-		panic(err)
-	}
-	// Output:
-	// I was called with 4 arguments!
 }
 
 func ExampleLState() {

@@ -73,7 +73,6 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 		mt.RawSetString("__index", L.NewFunction(ptrIndex))
 		mt.RawSetString("__newindex", L.NewFunction(ptrNewIndex))
 		mt.RawSetString("__pow", L.NewFunction(ptrPow))
-		mt.RawSetString("__call", L.NewFunction(ptrCall))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 		mt.RawSetString("__unm", L.NewFunction(ptrUnm))
 		mt.RawSetString("__eq", L.NewFunction(ptrEq))
@@ -92,7 +91,6 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	case reflect.Struct:
 		mt.RawSetString("__index", L.NewFunction(structIndex))
 		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
-		mt.RawSetString("__call", L.NewFunction(structCall))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 	}
 
