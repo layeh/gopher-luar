@@ -480,6 +480,50 @@ func Example__14() {
 	// 66
 }
 
+type OneString [1]string
+
+func (o OneString) Print() {
+	fmt.Println(o[0])
+}
+
+func Example__15() {
+	const code = `
+	print(#e.V, e.V[1], e.V[2])
+	e.V[1] = "World"
+	e.V[2] = "Hello"
+	print(#e.V, e.V[1], e.V[2])
+
+	print(#arr, arr[1])
+	arr:Print()
+	`
+
+	type Elem struct {
+		V [2]string
+	}
+
+	L := lua.NewState()
+	defer L.Close()
+
+	var elem Elem
+	elem.V[0] = "Hello"
+	elem.V[1] = "World"
+
+	var arr OneString
+	arr[0] = "Test"
+
+	L.SetGlobal("e", luar.New(L, &elem))
+	L.SetGlobal("arr", luar.New(L, arr))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// 2	Hello	World
+	// 2	World	Hello
+	// 1	Test
+	// Test
+}
+
 func Example__16() {
 	const code = `
 	print(fn("tim", 5))

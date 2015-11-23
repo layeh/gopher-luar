@@ -34,6 +34,9 @@ func structIndex(L *lua.LState) int {
 	if !field.CanInterface() {
 		L.RaiseError("cannot interface field " + key)
 	}
+	if field.Kind() == reflect.Array {
+		field = field.Addr()
+	}
 	L.Push(New(L, field.Interface()))
 	return 1
 }

@@ -61,7 +61,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lua.LNumber(float64(val.Uint()))
 	case reflect.Float32, reflect.Float64:
 		return lua.LNumber(val.Float())
-	case reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
+	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
 		ud.Metatable = getMetatable(L, val)

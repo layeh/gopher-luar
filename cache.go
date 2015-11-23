@@ -89,6 +89,14 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	mt := L.NewTable()
 
 	switch vtype.Kind() {
+	case reflect.Array:
+		methods := L.NewTable()
+		addMethods(L, value, methods)
+
+		mt.RawSetString("__index", L.NewFunction(arrayIndex))
+		mt.RawSetString("__len", L.NewFunction(arrayLen))
+		mt.RawSetString("__eq", L.NewFunction(arrayEq))
+		mt.RawSetString("methods", methods)
 	case reflect.Chan:
 		methods := L.NewTable()
 		methods.RawSetString("send", L.NewFunction(chanSend))
@@ -126,6 +134,7 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 		mt.RawSetString("__pow", L.NewFunction(ptrPow))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 		mt.RawSetString("__unm", L.NewFunction(ptrUnm))
+		mt.RawSetString("__len", L.NewFunction(ptrLen))
 		mt.RawSetString("__eq", L.NewFunction(ptrEq))
 		mt.RawSetString("ptr_methods", ptrMethods)
 		mt.RawSetString("methods", methods)

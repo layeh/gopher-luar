@@ -119,6 +119,9 @@
 //  ---
 //  tim:SayHello() -- same as tim:sayHello()
 //
+// As a special case, accessing a struct field that is an array will return
+// an pointer to that array.
+//
 // Pointer types
 //
 // Pointers to structs operate the same way structs do. Pointers can also be
