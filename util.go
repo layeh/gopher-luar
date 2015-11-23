@@ -36,3 +36,11 @@ func getUnexportedName(name string) string {
 	}
 	return string(unicode.ToLower(first)) + string(buf[n:])
 }
+
+func getMethod(key string, mt *lua.LTable) lua.LValue {
+	methods := mt.RawGetString("methods").(*lua.LTable)
+	if fn := methods.RawGetString(key); fn != lua.LNil {
+		return fn
+	}
+	return nil
+}

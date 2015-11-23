@@ -719,23 +719,33 @@ func (ChanAlias) Test() string {
 func (ChanAlias) hidden() {
 }
 
+type SliceAlias []string
+
+func (s SliceAlias) Len() int {
+	return len(s)
+}
+
 func Example__24() {
 	const code = `
 	print(a:Test())
+	print(b:Len())
 	`
 
 	L := lua.NewState()
 	defer L.Close()
 
 	a := make(ChanAlias)
+	var b SliceAlias = []string{"Hello", "world"}
 
 	L.SetGlobal("a", luar.New(L, a))
+	L.SetGlobal("b", luar.New(L, b))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
 	// Output:
 	// I'm a "chan string" alias
+	// 2
 }
 
 func ExampleMeta() {
