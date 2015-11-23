@@ -693,6 +693,10 @@ func (s SliceAlias) Len() int {
 	return len(s)
 }
 
+func (s *SliceAlias) Append(v string) {
+	*s = append(*s, v)
+}
+
 type MapAlias map[string]int
 
 func (m MapAlias) Y() int {
@@ -702,7 +706,9 @@ func (m MapAlias) Y() int {
 func Example__24() {
 	const code = `
 	print(a:Test())
-	print(b:Len())
+	local len1 = b:Len()
+	b:Append("!")
+	print(len1, b:Len())
 	print(c.x, c:y())
 	`
 
@@ -716,7 +722,7 @@ func Example__24() {
 	}
 
 	L.SetGlobal("a", luar.New(L, a))
-	L.SetGlobal("b", luar.New(L, b))
+	L.SetGlobal("b", luar.New(L, &b))
 	L.SetGlobal("c", luar.New(L, c))
 
 	if err := L.DoString(code); err != nil {
@@ -724,7 +730,7 @@ func Example__24() {
 	}
 	// Output:
 	// I'm a "chan string" alias
-	// 2
+	// 2	3
 	// 15	1
 }
 

@@ -19,15 +19,6 @@ func allTostring(L *lua.LState) int {
 	return 1
 }
 
-func getExportedName(name string) string {
-	buf := []byte(name)
-	first, n := utf8.DecodeRune(buf)
-	if n == 0 {
-		return name
-	}
-	return string(unicode.ToUpper(first)) + string(buf[n:])
-}
-
 func getUnexportedName(name string) string {
 	buf := []byte(name)
 	first, n := utf8.DecodeRune(buf)
@@ -39,6 +30,14 @@ func getUnexportedName(name string) string {
 
 func getMethod(key string, mt *lua.LTable) lua.LValue {
 	methods := mt.RawGetString("methods").(*lua.LTable)
+	if fn := methods.RawGetString(key); fn != lua.LNil {
+		return fn
+	}
+	return nil
+}
+
+func getPtrMethod(key string, mt *lua.LTable) lua.LValue {
+	methods := mt.RawGetString("ptr_methods").(*lua.LTable)
 	if fn := methods.RawGetString(key); fn != lua.LNil {
 		return fn
 	}

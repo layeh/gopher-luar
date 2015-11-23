@@ -6,49 +6,51 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkPtr(L *lua.LState, idx int) reflect.Value {
+func checkPtr(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Ptr {
 		L.ArgError(idx, "expecting ptr")
 	}
-	return ref
+	return ref, ud.Metatable.(*lua.LTable)
 }
 
 func ptrIndex(L *lua.LState) int {
-	ref := checkPtr(L, 1)
-	deref := ref.Elem()
-	if deref.Kind() != reflect.Struct {
-		L.RaiseError("cannot index non-struct pointer")
+	ref, mt := checkPtr(L, 1)
+
+	// Check for pointer method
+	key := L.OptString(2, "")
+	if fn := getPtrMethod(key, mt); fn != nil {
+		L.Push(fn)
+		return 1
 	}
-	refType := ref.Type()
 
 	// Check for method
-	key := L.OptString(2, "")
-	exKey := getExportedName(key)
-	if key != "" {
-		if method, ok := refType.MethodByName(exKey); ok {
-			L.Push(New(L, method.Func.Interface()))
-			return 1
-		}
+	if fn := getMethod(key, mt); fn != nil {
+		L.Push(fn)
+		return 1
 	}
 
-	// Check for field
-	if field := deref.FieldByName(exKey); field.IsValid() {
-		if !field.CanInterface() {
-			L.RaiseError("cannot interface field " + exKey)
-		}
-		if val := New(L, field.Interface()); val != nil {
-			L.Push(val)
-			return 1
-		}
-		L.RaiseError("could not convert field " + exKey)
+	if ref.Elem().Kind() != reflect.Struct {
+		return 0
 	}
-	return 0
+
+	// Check for struct field
+	deref := ref.Elem()
+	index := getFieldIndex(key, mt)
+	if index == nil {
+		return 0
+	}
+	field := deref.FieldByIndex(index)
+	if !field.CanInterface() {
+		L.RaiseError("cannot interface field " + key)
+	}
+	L.Push(New(L, field.Interface()))
+	return 1
 }
 
 func ptrNewIndex(L *lua.LState) int {
-	ref := checkPtr(L, 1)
+	ref, mt := checkPtr(L, 1)
 	deref := ref.Elem()
 
 	if deref.Kind() != reflect.Struct {
@@ -58,22 +60,20 @@ func ptrNewIndex(L *lua.LState) int {
 	key := L.CheckString(2)
 	value := L.CheckAny(3)
 
-	exKey := getExportedName(key)
-
-	field := deref.FieldByName(exKey)
-	if !field.IsValid() {
-		L.ArgError(2, "unknown field "+exKey)
+	index := getFieldIndex(key, mt)
+	if index == nil {
+		L.RaiseError("unknown field " + key)
 	}
+	field := deref.FieldByIndex(index)
 	if !field.CanSet() {
-		L.ArgError(2, "cannot set field "+exKey)
+		L.RaiseError("cannot set field " + key)
 	}
 	field.Set(lValueToReflect(value, field.Type()))
-
 	return 0
 }
 
 func ptrPow(L *lua.LState) int {
-	ref := checkPtr(L, 1)
+	ref, _ := checkPtr(L, 1)
 	val := L.CheckAny(2)
 
 	if ref.IsNil() {
@@ -89,7 +89,7 @@ func ptrPow(L *lua.LState) int {
 }
 
 func ptrUnm(L *lua.LState) int {
-	ref := checkPtr(L, 1)
+	ref, _ := checkPtr(L, 1)
 	elem := ref.Elem()
 	if !elem.CanInterface() {
 		L.RaiseError("cannot interface pointer type " + elem.String())
@@ -99,8 +99,8 @@ func ptrUnm(L *lua.LState) int {
 }
 
 func ptrEq(L *lua.LState) int {
-	ptr1 := checkPtr(L, 1)
-	ptr2 := checkPtr(L, 2)
+	ptr1, _ := checkPtr(L, 1)
+	ptr2, _ := checkPtr(L, 2)
 	L.Push(lua.LBool(ptr1 == ptr2))
 	return 1
 }
