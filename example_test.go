@@ -686,10 +686,17 @@ func (s SliceAlias) Len() int {
 	return len(s)
 }
 
+type MapAlias map[string]int
+
+func (m MapAlias) Y() int {
+	return len(m)
+}
+
 func Example__24() {
 	const code = `
 	print(a:Test())
 	print(b:Len())
+	print(c.x, c:y())
 	`
 
 	L := lua.NewState()
@@ -697,9 +704,13 @@ func Example__24() {
 
 	a := make(ChanAlias)
 	var b SliceAlias = []string{"Hello", "world"}
+	c := MapAlias{
+		"x": 15,
+	}
 
 	L.SetGlobal("a", luar.New(L, a))
 	L.SetGlobal("b", luar.New(L, b))
+	L.SetGlobal("c", luar.New(L, c))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -707,6 +718,7 @@ func Example__24() {
 	// Output:
 	// I'm a "chan string" alias
 	// 2
+	// 15	1
 }
 
 func ExampleLState() {

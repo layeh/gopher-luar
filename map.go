@@ -6,22 +6,28 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkMap(L *lua.LState, idx int) reflect.Value {
+func checkMap(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Map {
 		L.ArgError(idx, "expecting map")
 	}
-	return ref
+	return ref, ud.Metatable.(*lua.LTable)
 }
 
 func mapIndex(L *lua.LState) int {
-	ref := checkMap(L, 1)
+	ref, mt := checkMap(L, 1)
 	key := L.CheckAny(2)
 
 	convertedKey := lValueToReflect(key, ref.Type().Key())
 	item := ref.MapIndex(convertedKey)
 	if !item.IsValid() {
+		if lstring, ok := key.(lua.LString); ok {
+			if fn := getMethod(lstring.String(), mt); fn != nil {
+				L.Push(fn)
+				return 1
+			}
+		}
 		return 0
 	}
 	L.Push(New(L, item.Interface()))
@@ -29,7 +35,7 @@ func mapIndex(L *lua.LState) int {
 }
 
 func mapNewIndex(L *lua.LState) int {
-	ref := checkMap(L, 1)
+	ref, _ := checkMap(L, 1)
 	key := L.CheckAny(2)
 	value := L.CheckAny(3)
 
@@ -49,13 +55,13 @@ func mapNewIndex(L *lua.LState) int {
 }
 
 func mapLen(L *lua.LState) int {
-	ref := checkMap(L, 1)
+	ref, _ := checkMap(L, 1)
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func mapCall(L *lua.LState) int {
-	ref := checkMap(L, 1)
+	ref, _ := checkMap(L, 1)
 	keys := ref.MapKeys()
 	i := 0
 	fn := func(L *lua.LState) int {
@@ -72,8 +78,8 @@ func mapCall(L *lua.LState) int {
 }
 
 func mapEq(L *lua.LState) int {
-	map1 := checkMap(L, 1)
-	map2 := checkMap(L, 2)
+	map1, _ := checkMap(L, 1)
+	map2, _ := checkMap(L, 2)
 	L.Push(lua.LBool(map1 == map2))
 	return 1
 }
