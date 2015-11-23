@@ -12,6 +12,33 @@ var (
 	cache = map[reflect.Type]lua.LValue{}
 )
 
+func addMethods(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
+	vtype := value.Type()
+	for i := 0; i < vtype.NumMethod(); i++ {
+		method := vtype.Method(i)
+		if method.PkgPath != "" {
+			continue
+		}
+		fn := New(L, method.Func.Interface())
+		tbl.RawSetString(method.Name, fn)
+		tbl.RawSetString(getUnexportedName(method.Name), fn)
+	}
+}
+
+func addFields(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
+	vtype := value.Type()
+	for i := 0; i < vtype.NumField(); i++ {
+		field := vtype.Field(i)
+		if field.PkgPath != "" {
+			continue
+		}
+		ud := L.NewUserData()
+		ud.Value = field.Index
+		tbl.RawSetString(field.Name, ud)
+		tbl.RawSetString(getUnexportedName(field.Name), ud)
+	}
+}
+
 func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	mu.Lock()
 	defer mu.Unlock()
@@ -29,16 +56,7 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 		methods.RawSetString("send", L.NewFunction(chanSend))
 		methods.RawSetString("receive", L.NewFunction(chanReceive))
 		methods.RawSetString("close", L.NewFunction(chanClose))
-
-		for i := 0; i < vtype.NumMethod(); i++ {
-			method := vtype.Method(i)
-			if method.PkgPath != "" {
-				continue
-			}
-			fn := New(L, method.Func.Interface())
-			methods.RawSetString(method.Name, fn)
-			methods.RawSetString(getExportedName(method.Name), fn)
-		}
+		addMethods(L, value, methods)
 
 		mt.RawSetString("__index", methods)
 		mt.RawSetString("__len", L.NewFunction(chanLen))

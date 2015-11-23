@@ -27,3 +27,12 @@ func getExportedName(name string) string {
 	}
 	return string(unicode.ToUpper(first)) + string(buf[n:])
 }
+
+func getUnexportedName(name string) string {
+	buf := []byte(name)
+	first, n := utf8.DecodeRune(buf)
+	if n == 0 {
+		return name
+	}
+	return string(unicode.ToLower(first)) + string(buf[n:])
+}
