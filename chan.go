@@ -15,23 +15,6 @@ func checkChan(L *lua.LState, idx int) reflect.Value {
 	return ref
 }
 
-func chanIndex(L *lua.LState) int {
-	_ = checkChan(L, 1)
-	key := L.CheckString(2)
-
-	switch key {
-	case "send":
-		L.Push(L.NewFunction(chanSend))
-	case "receive":
-		L.Push(L.NewFunction(chanReceive))
-	case "close":
-		L.Push(L.NewFunction(chanClose))
-	default:
-		return 0
-	}
-	return 1
-}
-
 func chanLen(L *lua.LState) int {
 	ref := checkChan(L, 1)
 	L.Push(lua.LNumber(ref.Len()))

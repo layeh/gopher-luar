@@ -25,7 +25,12 @@ func getMetatable(l *lua.LState, value reflect.Value) lua.LValue {
 
 	switch vtype.Kind() {
 	case reflect.Chan:
-		tbl.RawSetString("__index", l.NewFunction(chanIndex))
+		methods := l.NewTable()
+		methods.RawSetString("send", l.NewFunction(chanSend))
+		methods.RawSetString("receive", l.NewFunction(chanReceive))
+		methods.RawSetString("close", l.NewFunction(chanClose))
+
+		tbl.RawSetString("__index", methods)
 		tbl.RawSetString("__len", l.NewFunction(chanLen))
 		tbl.RawSetString("__tostring", l.NewFunction(allTostring))
 		tbl.RawSetString("__eq", l.NewFunction(chanEq))
