@@ -6,28 +6,26 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkStruct(L *lua.LState, idx int) reflect.Value {
+func checkStruct(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Struct {
 		L.ArgError(idx, "expecting struct")
 	}
-	return ref
+	return ref, ud.Metatable.(*lua.LTable)
 }
 
 func structIndex(L *lua.LState) int {
-	ref := checkStruct(L, 1)
-	refType := ref.Type()
+	ref, mt := checkStruct(L, 1)
+	key := L.CheckString(2)
 
 	// Check for method
-	key := L.OptString(2, "")
-	exKey := getExportedName(key)
-	if exKey != "" {
-		if method, ok := refType.MethodByName(exKey); ok {
-			L.Push(New(L, method.Func.Interface()))
-			return 1
-		}
+	if fn := getMethod(key, mt); fn != nil {
+		L.Push(fn)
+		return 1
 	}
+
+	exKey := getExportedName(key)
 
 	// Check for field
 	if field := ref.FieldByName(exKey); field.IsValid() {
@@ -41,7 +39,7 @@ func structIndex(L *lua.LState) int {
 }
 
 func structNewIndex(L *lua.LState) int {
-	ref := checkStruct(L, 1)
+	ref, _ := checkStruct(L, 1)
 	key := L.CheckString(2)
 	value := L.CheckAny(3)
 

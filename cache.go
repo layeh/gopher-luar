@@ -94,9 +94,12 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 		mt.RawSetString("__eq", L.NewFunction(sliceEq))
 		mt.RawSetString("methods", methods)
 	case reflect.Struct:
+		methods := L.NewTable()
+		addMethods(L, value, methods)
 		mt.RawSetString("__index", L.NewFunction(structIndex))
 		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
+		mt.RawSetString("methods", methods)
 	}
 
 	cache[vtype] = mt
