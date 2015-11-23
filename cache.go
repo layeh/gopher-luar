@@ -12,7 +12,7 @@ var (
 	cache = map[reflect.Type]lua.LValue{}
 )
 
-func getMetatable(l *lua.LState, value reflect.Value) lua.LValue {
+func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -21,47 +21,47 @@ func getMetatable(l *lua.LState, value reflect.Value) lua.LValue {
 		return v
 	}
 
-	tbl := l.NewTable()
+	mt := L.NewTable()
 
 	switch vtype.Kind() {
 	case reflect.Chan:
-		methods := l.NewTable()
-		methods.RawSetString("send", l.NewFunction(chanSend))
-		methods.RawSetString("receive", l.NewFunction(chanReceive))
-		methods.RawSetString("close", l.NewFunction(chanClose))
+		methods := L.NewTable()
+		methods.RawSetString("send", L.NewFunction(chanSend))
+		methods.RawSetString("receive", L.NewFunction(chanReceive))
+		methods.RawSetString("close", L.NewFunction(chanClose))
 
-		tbl.RawSetString("__index", methods)
-		tbl.RawSetString("__len", l.NewFunction(chanLen))
-		tbl.RawSetString("__tostring", l.NewFunction(allTostring))
-		tbl.RawSetString("__eq", l.NewFunction(chanEq))
+		mt.RawSetString("__index", methods)
+		mt.RawSetString("__len", L.NewFunction(chanLen))
+		mt.RawSetString("__tostring", L.NewFunction(allTostring))
+		mt.RawSetString("__eq", L.NewFunction(chanEq))
 	case reflect.Map:
-		tbl.RawSetString("__index", l.NewFunction(mapIndex))
-		tbl.RawSetString("__newindex", l.NewFunction(mapNewIndex))
-		tbl.RawSetString("__len", l.NewFunction(mapLen))
-		tbl.RawSetString("__call", l.NewFunction(mapCall))
-		tbl.RawSetString("__tostring", l.NewFunction(allTostring))
-		tbl.RawSetString("__eq", l.NewFunction(mapEq))
+		mt.RawSetString("__index", L.NewFunction(mapIndex))
+		mt.RawSetString("__newindex", L.NewFunction(mapNewIndex))
+		mt.RawSetString("__len", L.NewFunction(mapLen))
+		mt.RawSetString("__call", L.NewFunction(mapCall))
+		mt.RawSetString("__tostring", L.NewFunction(allTostring))
+		mt.RawSetString("__eq", L.NewFunction(mapEq))
 	case reflect.Ptr:
-		tbl.RawSetString("__index", l.NewFunction(ptrIndex))
-		tbl.RawSetString("__newindex", l.NewFunction(ptrNewIndex))
-		tbl.RawSetString("__pow", l.NewFunction(ptrPow))
-		tbl.RawSetString("__call", l.NewFunction(ptrCall))
-		tbl.RawSetString("__tostring", l.NewFunction(allTostring))
-		tbl.RawSetString("__unm", l.NewFunction(ptrUnm))
-		tbl.RawSetString("__eq", l.NewFunction(ptrEq))
+		mt.RawSetString("__index", L.NewFunction(ptrIndex))
+		mt.RawSetString("__newindex", L.NewFunction(ptrNewIndex))
+		mt.RawSetString("__pow", L.NewFunction(ptrPow))
+		mt.RawSetString("__call", L.NewFunction(ptrCall))
+		mt.RawSetString("__tostring", L.NewFunction(allTostring))
+		mt.RawSetString("__unm", L.NewFunction(ptrUnm))
+		mt.RawSetString("__eq", L.NewFunction(ptrEq))
 	case reflect.Slice:
-		tbl.RawSetString("__index", l.NewFunction(sliceIndex))
-		tbl.RawSetString("__newindex", l.NewFunction(sliceNewIndex))
-		tbl.RawSetString("__len", l.NewFunction(sliceLen))
-		tbl.RawSetString("__tostring", l.NewFunction(allTostring))
-		tbl.RawSetString("__eq", l.NewFunction(sliceEq))
+		mt.RawSetString("__index", L.NewFunction(sliceIndex))
+		mt.RawSetString("__newindex", L.NewFunction(sliceNewIndex))
+		mt.RawSetString("__len", L.NewFunction(sliceLen))
+		mt.RawSetString("__tostring", L.NewFunction(allTostring))
+		mt.RawSetString("__eq", L.NewFunction(sliceEq))
 	case reflect.Struct:
-		tbl.RawSetString("__index", l.NewFunction(structIndex))
-		tbl.RawSetString("__newindex", l.NewFunction(structNewIndex))
-		tbl.RawSetString("__call", l.NewFunction(structCall))
-		tbl.RawSetString("__tostring", l.NewFunction(allTostring))
+		mt.RawSetString("__index", L.NewFunction(structIndex))
+		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
+		mt.RawSetString("__call", L.NewFunction(structCall))
+		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 	}
 
-	cache[vtype] = tbl
-	return tbl
+	cache[vtype] = mt
+	return mt
 }
