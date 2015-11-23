@@ -30,6 +30,16 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 		methods.RawSetString("receive", L.NewFunction(chanReceive))
 		methods.RawSetString("close", L.NewFunction(chanClose))
 
+		for i := 0; i < vtype.NumMethod(); i++ {
+			method := vtype.Method(i)
+			if method.PkgPath != "" {
+				continue
+			}
+			fn := New(L, method.Func.Interface())
+			methods.RawSetString(method.Name, fn)
+			methods.RawSetString(getExportedName(method.Name), fn)
+		}
+
 		mt.RawSetString("__index", methods)
 		mt.RawSetString("__len", L.NewFunction(chanLen))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))

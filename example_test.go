@@ -710,6 +710,34 @@ func Example__23() {
 	// true
 }
 
+type ChanAlias chan string
+
+func (ChanAlias) Test() string {
+	return `I'm a "chan string" alias`
+}
+
+func (ChanAlias) hidden() {
+}
+
+func Example__24() {
+	const code = `
+	print(a:Test())
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := make(ChanAlias)
+
+	L.SetGlobal("a", luar.New(L, a))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// I'm a "chan string" alias
+}
+
 func ExampleMeta() {
 	const code = `
 	proxy(234, nil, "asd", {})
