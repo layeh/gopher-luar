@@ -86,15 +86,10 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 // When the lua.LValue is called, a new value will be created that is the
 // same type as value's type.
 func NewType(L *lua.LState, value interface{}) lua.LValue {
-	mt := L.NewTable()
-	mt.RawSetString("__call", L.NewFunction(typeCall))
-	mt.RawSetString("__tostring", L.NewFunction(allTostring))
-	mt.RawSetString("__eq", L.NewFunction(typeEq))
-
 	val := reflect.TypeOf(value)
 	ud := L.NewUserData()
 	ud.Value = val
-	ud.Metatable = mt
+	ud.Metatable = getTypeMetatable(L, val)
 
 	return ud
 }

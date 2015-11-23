@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	mu    sync.Mutex
-	cache = map[reflect.Type]lua.LValue{}
+	mu        sync.Mutex
+	cache     = map[reflect.Type]lua.LValue{}
+	typeCache = map[reflect.Type]lua.LValue{}
 )
 
 func addMethods(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
@@ -99,5 +100,22 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	}
 
 	cache[vtype] = mt
+	return mt
+}
+
+func getTypeMetatable(L *lua.LState, t reflect.Type) lua.LValue {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if v := typeCache[t]; v != nil {
+		return v
+	}
+
+	mt := L.NewTable()
+	mt.RawSetString("__call", L.NewFunction(typeCall))
+	mt.RawSetString("__tostring", L.NewFunction(allTostring))
+	mt.RawSetString("__eq", L.NewFunction(typeEq))
+
+	typeCache[t] = mt
 	return mt
 }
