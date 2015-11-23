@@ -44,3 +44,11 @@ func getMethod(key string, mt *lua.LTable) lua.LValue {
 	}
 	return nil
 }
+
+func getFieldIndex(key string, mt *lua.LTable) []int {
+	fields := mt.RawGetString("fields").(*lua.LTable)
+	if index := fields.RawGetString(key); index != lua.LNil {
+		return index.(*lua.LUserData).Value.([]int)
+	}
+	return nil
+}

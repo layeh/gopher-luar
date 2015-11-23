@@ -25,34 +25,32 @@ func structIndex(L *lua.LState) int {
 		return 1
 	}
 
-	exKey := getExportedName(key)
-
 	// Check for field
-	if field := ref.FieldByName(exKey); field.IsValid() {
-		if !field.CanInterface() {
-			L.RaiseError("cannot interface field " + exKey)
-		}
-		L.Push(New(L, field.Interface()))
-		return 1
+	index := getFieldIndex(key, mt)
+	if index == nil {
+		return 0
 	}
-	return 0
+	field := ref.FieldByIndex(index)
+	if !field.CanInterface() {
+		L.RaiseError("cannot interface field " + key)
+	}
+	L.Push(New(L, field.Interface()))
+	return 1
 }
 
 func structNewIndex(L *lua.LState) int {
-	ref, _ := checkStruct(L, 1)
+	ref, mt := checkStruct(L, 1)
 	key := L.CheckString(2)
 	value := L.CheckAny(3)
 
-	exKey := getExportedName(key)
-
-	field := ref.FieldByName(exKey)
-	if !field.IsValid() {
-		L.ArgError(2, "unknown field "+exKey)
+	index := getFieldIndex(key, mt)
+	if index == nil {
+		L.RaiseError("unknown field " + key)
 	}
+	field := ref.FieldByIndex(index)
 	if !field.CanSet() {
-		L.ArgError(2, "cannot set field "+exKey)
+		L.RaiseError("cannot set field " + key)
 	}
 	field.Set(lValueToReflect(value, field.Type()))
-
 	return 0
 }

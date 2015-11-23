@@ -578,6 +578,7 @@ type Example__20_A struct {
 
 type Example__20_B struct {
 	Value *string
+	Person
 }
 
 func Example__20() {
@@ -587,13 +588,18 @@ func Example__20() {
 	_ = a.Value ^ "hello"
 	print(a.Value == nil)
 	print(-a.Value)
+	print(a.Name)
 	`
 
 	L := lua.NewState()
 	defer L.Close()
 
 	a := Example__20_A{
-		Example__20_B: &Example__20_B{},
+		Example__20_B: &Example__20_B{
+			Person: Person{
+				Name: "Tim",
+			},
+		},
 	}
 
 	L.SetGlobal("a", luar.New(L, a))
@@ -606,6 +612,7 @@ func Example__20() {
 	// true
 	// false
 	// hello
+	// Tim
 }
 
 func Example__21() {

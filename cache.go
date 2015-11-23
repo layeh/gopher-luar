@@ -1,6 +1,7 @@
 package luar
 
 import (
+	"container/list"
 	"reflect"
 	"sync"
 
@@ -27,16 +28,52 @@ func addMethods(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
 }
 
 func addFields(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
+	type element struct {
+		Type  reflect.Type
+		Index []int
+	}
+
+	queue := list.New()
 	vtype := value.Type()
-	for i := 0; i < vtype.NumField(); i++ {
-		field := vtype.Field(i)
-		if field.PkgPath != "" {
-			continue
+	queue.PushFront(element{
+		Type: vtype,
+	})
+
+	for queue.Len() > 0 {
+		e := queue.Back()
+		elem := e.Value.(element)
+		vtype := elem.Type
+		if vtype.Kind() == reflect.Ptr {
+			vtype = vtype.Elem()
 		}
-		ud := L.NewUserData()
-		ud.Value = field.Index
-		tbl.RawSetString(field.Name, ud)
-		tbl.RawSetString(getUnexportedName(field.Name), ud)
+		for i := 0; i < vtype.NumField(); i++ {
+			field := vtype.Field(i)
+			if field.PkgPath != "" {
+				continue
+			}
+			if tbl.RawGetString(field.Name) != lua.LNil {
+				continue
+			}
+			index := make([]int, len(elem.Index)+1)
+			copy(index, elem.Index)
+			index[len(elem.Index)] = i
+
+			ud := L.NewUserData()
+			ud.Value = index
+			tbl.RawSetString(field.Name, ud)
+			tbl.RawSetString(getUnexportedName(field.Name), ud)
+			if field.Anonymous {
+				index := make([]int, len(elem.Index)+1)
+				copy(index, elem.Index)
+				index[len(elem.Index)] = i
+				queue.PushFront(element{
+					Type:  field.Type,
+					Index: index,
+				})
+			}
+		}
+
+		queue.Remove(e)
 	}
 }
 
@@ -96,10 +133,14 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	case reflect.Struct:
 		methods := L.NewTable()
 		addMethods(L, value, methods)
+		fields := L.NewTable()
+		addFields(L, value, fields)
+
 		mt.RawSetString("__index", L.NewFunction(structIndex))
 		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 		mt.RawSetString("methods", methods)
+		mt.RawSetString("fields", fields)
 	}
 
 	cache[vtype] = mt
