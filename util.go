@@ -1,9 +1,23 @@
 package luar
 
 import (
+	"fmt"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/yuin/gopher-lua"
 )
+
+func allTostring(L *lua.LState) int {
+	ud := L.CheckUserData(1)
+	value := ud.Value
+	if stringer, ok := value.(fmt.Stringer); ok {
+		L.Push(lua.LString(stringer.String()))
+	} else {
+		L.Push(lua.LString(fmt.Sprintf("userdata (luar): %p", ud)))
+	}
+	return 1
+}
 
 func getExportedName(name string) string {
 	buf := []byte(name)
