@@ -8,34 +8,36 @@ import (
 
 // New creates and returns a new lua.LValue for the given value.
 //
-// The following types are supported:
-//  Kind            gopher-lua Type
-//  -------------------------------
-//  nil             LNil
-//  Bool            LBool
-//  Int             LNumber
-//  Int8            LNumber
-//  Int16           LNumber
-//  Int32           LNumber
-//  Int64           LNumber
-//  Uint            LNumber
-//  Uint8           LNumber
-//  Uint32          LNumber
-//  Uint64          LNumber
-//  Float32         LNumber
-//  Float64         LNumber
-//  Complex64       *LUserData
-//  Complex128      *LUserData
-//  Array           *LUserData
-//  Chan            *LUserData
-//  Interface       *LUserData
-//  Func            *lua.LFunction
-//  Map             *LUserData
-//  Ptr             *LUserData
-//  Slice           *LUserData
-//  String          LString
-//  Struct          *LUserData
-//  UnsafePointer   *LUserData
+// The following table shows how Go types are converted to Lua types:
+//  Kind            gopher-lua Type  Custom Metatable
+//  --------------------------------------------------
+//  nil             LNil             No
+//  Bool            LBool            No
+//  Int             LNumber          No
+//  Int8            LNumber          No
+//  Int16           LNumber          No
+//  Int32           LNumber          No
+//  Int64           LNumber          No
+//  Uint            LNumber          No
+//  Uint8           LNumber          No
+//  Uint16          LNumber          No
+//  Uint32          LNumber          No
+//  Uint64          LNumber          No
+//  Uintptr         *LUserData       No
+//  Float32         LNumber          No
+//  Float64         LNumber          No
+//  Complex64       *LUserData       No
+//  Complex128      *LUserData       No
+//  Array           *LUserData       Yes
+//  Chan            *LUserData       Yes
+//  Func            *lua.LFunction   No
+//  Interface       *LUserData       No
+//  Map             *LUserData       Yes
+//  Ptr             *LUserData       Yes
+//  Slice           *LUserData       Yes
+//  String          LString          No
+//  Struct          *LUserData       Yes
+//  UnsafePointer   *LUserData       No
 func New(L *lua.LState, value interface{}) lua.LValue {
 	if value == nil {
 		return lua.LNil
