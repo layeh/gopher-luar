@@ -92,11 +92,11 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	case reflect.Array:
 		methods := L.NewTable()
 		addMethods(L, value, methods)
+		mt.RawSetString("methods", methods)
 
 		mt.RawSetString("__index", L.NewFunction(arrayIndex))
 		mt.RawSetString("__len", L.NewFunction(arrayLen))
 		mt.RawSetString("__eq", L.NewFunction(arrayEq))
-		mt.RawSetString("methods", methods)
 	case reflect.Chan:
 		methods := L.NewTable()
 		methods.RawSetString("send", L.NewFunction(chanSend))
@@ -111,6 +111,7 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	case reflect.Map:
 		methods := L.NewTable()
 		addMethods(L, value, methods)
+		mt.RawSetString("methods", methods)
 
 		mt.RawSetString("__index", L.NewFunction(mapIndex))
 		mt.RawSetString("__newindex", L.NewFunction(mapNewIndex))
@@ -118,15 +119,17 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 		mt.RawSetString("__call", L.NewFunction(mapCall))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 		mt.RawSetString("__eq", L.NewFunction(mapEq))
-		mt.RawSetString("methods", methods)
 	case reflect.Ptr:
 		ptrMethods := L.NewTable()
 		addMethods(L, value, ptrMethods)
+		mt.RawSetString("ptr_methods", ptrMethods)
 		methods := L.NewTable()
 		addMethods(L, value.Elem(), methods)
-		fields := L.NewTable()
+		mt.RawSetString("methods", methods)
 		if value.Elem().Kind() == reflect.Struct {
+			fields := L.NewTable()
 			addFields(L, value.Elem(), fields)
+			mt.RawSetString("fields", fields)
 		}
 
 		if value.Elem().Kind() == reflect.Array {
@@ -147,32 +150,29 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 			mt.RawSetString("__len", L.NewFunction(arrayLen))
 		}
 		mt.RawSetString("__eq", L.NewFunction(ptrEq))
-		mt.RawSetString("ptr_methods", ptrMethods)
-		mt.RawSetString("methods", methods)
-		mt.RawSetString("fields", fields)
 	case reflect.Slice:
 		methods := L.NewTable()
 		methods.RawSetString("capacity", L.NewFunction(sliceCapacity))
 		methods.RawSetString("append", L.NewFunction(sliceAppend))
 		addMethods(L, value, methods)
+		mt.RawSetString("methods", methods)
 
 		mt.RawSetString("__index", L.NewFunction(sliceIndex))
 		mt.RawSetString("__newindex", L.NewFunction(sliceNewIndex))
 		mt.RawSetString("__len", L.NewFunction(sliceLen))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 		mt.RawSetString("__eq", L.NewFunction(sliceEq))
-		mt.RawSetString("methods", methods)
 	case reflect.Struct:
 		methods := L.NewTable()
 		addMethods(L, value, methods)
+		mt.RawSetString("methods", methods)
 		fields := L.NewTable()
 		addFields(L, value, fields)
+		mt.RawSetString("fields", fields)
 
 		mt.RawSetString("__index", L.NewFunction(structIndex))
 		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
-		mt.RawSetString("methods", methods)
-		mt.RawSetString("fields", fields)
 	}
 
 	cache[vtype] = mt
