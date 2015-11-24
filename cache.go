@@ -129,12 +129,23 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 			addFields(L, value.Elem(), fields)
 		}
 
-		mt.RawSetString("__index", L.NewFunction(ptrIndex))
-		mt.RawSetString("__newindex", L.NewFunction(ptrNewIndex))
+		if value.Elem().Kind() == reflect.Array {
+			mt.RawSetString("__index", L.NewFunction(arrayIndex))
+		} else {
+			mt.RawSetString("__index", L.NewFunction(ptrIndex))
+		}
+		switch value.Elem().Kind() {
+		case reflect.Array:
+			mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
+		case reflect.Struct:
+			mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
+		}
 		mt.RawSetString("__pow", L.NewFunction(ptrPow))
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 		mt.RawSetString("__unm", L.NewFunction(ptrUnm))
-		mt.RawSetString("__len", L.NewFunction(ptrLen))
+		if value.Elem().Kind() == reflect.Array {
+			mt.RawSetString("__len", L.NewFunction(arrayLen))
+		}
 		mt.RawSetString("__eq", L.NewFunction(ptrEq))
 		mt.RawSetString("ptr_methods", ptrMethods)
 		mt.RawSetString("methods", methods)

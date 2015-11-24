@@ -9,7 +9,7 @@ import (
 func checkArray(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Array {
+	if ref.Kind() != reflect.Array && (ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Array) {
 		L.ArgError(idx, "expecting array")
 	}
 	return ref, ud.Metatable.(*lua.LTable)
@@ -17,6 +17,7 @@ func checkArray(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 
 func arrayIndex(L *lua.LState) int {
 	ref, mt := checkArray(L, 1)
+	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
 	switch converted := key.(type) {
@@ -38,8 +39,22 @@ func arrayIndex(L *lua.LState) int {
 	return 1
 }
 
+func arrayNewIndex(L *lua.LState) int {
+	ref, _ := checkArray(L, 1)
+	deref := ref.Elem()
+
+	index := L.CheckInt(2)
+	value := L.CheckAny(3)
+	if index < 1 || index > deref.Len() {
+		L.ArgError(2, "index out of range")
+	}
+	deref.Index(index - 1).Set(lValueToReflect(value, deref.Type().Elem()))
+	return 0
+}
+
 func arrayLen(L *lua.LState) int {
 	ref, _ := checkArray(L, 1)
+	ref = reflect.Indirect(ref)
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
