@@ -752,7 +752,7 @@ func Example__24() {
 	print(a:Test())
 	local len1 = b:Len()
 	b:Append("!")
-	print(len1, b:Len())
+	print(len1, b:len())
 	print(c.x, c:y())
 	`
 

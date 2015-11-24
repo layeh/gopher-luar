@@ -7,16 +7,17 @@
 //
 // Basic types
 //
-// Go bool, number, and string types are converted to the equivalent basic
-// Lua type.
+// Go bool, number types, string types, and nil values are converted to the
+// equivalent Lua type.
 //
 // Example:
-//  New(L, "Hello World") -> lua.LString("Hello World")
-//  New(L, uint(834))     -> lua.LNumber(uint(834))
+//  New(L, "Hello World")        =  lua.LString("Hello World")
+//  New(L, uint(834))            =  lua.LNumber(uint(834))
+//  New(L, map[string]int(nil))  =  lua.LNil
 //
-// Channel types
+// Channels
 //
-// Channel types have the following methods defined:
+// Channels have the following methods defined:
 //  receive():    Receives data from the channel. Returns nil plus false if the
 //                channel is closed.
 //  send(data):   Sends data to the channel.
@@ -33,13 +34,11 @@
 //  ch:send("hello")  -- equivalent to ch <- "hello"
 //  ch:close()        -- equivalent to close(ch)
 //
-// Function types
+// Functions
 //
-// Function types can be called from Lua. Its arguments and returned values
-// will be automatically converted from and to Lua types, respectively (see
-// exception below). However, a function that uses luar.LState can bypass the
-// automatic argument and return value conversion (see luar.LState
-// documentation for example).
+// Functions can be converted and called from Lua. The function arguments and
+// return values are automatically converted from and to Lua types,
+// respectively (see exception below).
 //
 // Example:
 //  fn := func(name string, age uint) string {
@@ -49,8 +48,12 @@
 //  ---
 //  print(fn("Tim", 5)) -- prints "Hello Tim, age 5"
 //
+// A function that has the signature func(*luar.LState) int can bypass the
+// automatic argument and return value conversion (see luar.LState
+// documentation for example).
+//
 // A special conversion case happens when function returns a lua.LValue slice.
-// In that case, luar will automatically unpack the slice.
+// In that case, luar automatically unpacks the slice.
 //
 // Example:
 //  fn := func() []lua.LValue {
@@ -62,13 +65,13 @@
 //  print(x) -- prints "Hello"
 //  print(y) -- prints "2.5"
 //
-// Map types
+// Maps
 //
-// Map types can be accessed and modified like a normal Lua table a meta table.
-// Its length can also be queried using the # operator.
+// Maps can be accessed and modified like a normal Lua table. The map's length
+// can also be queried using the # operator.
 //
-// Rather than using pairs to create an map iterator, calling the value (e.g.
-// map_variable()) will return an iterator for the map.
+// Rather than using Lua's pairs function to create an map iterator, calling
+// the value (e.g. map_variable()) returns an iterator for the map.
 //
 // Example:
 //  places := map[string]string{
@@ -80,13 +83,13 @@
 //  print(#places)       -- prints "2"
 //  print(places.NA)     -- prints "North America"
 //  print(places["EU"])  -- prints "European Union"
-//  for k, v in places() do
+//  for k, v in places() do  -- prints all keys and values of places
 //    print(k .. ": " .. v)
 //  end
 //
-// Slice types
+// Slices
 //
-// Like map types, slices be accessed, be modified, and have their length
+// Like maps, slices be indexed, be modified, and have their length
 // queried. Additionally, the following methods are defined for slices:
 //  append(items...):   Appends the items to the slice. Returns a slice with
 //                      the items appended.
@@ -100,9 +103,21 @@
 //  ---
 //  letters = letters:append("o", "u")
 //
-// Struct types
+// Arrays
 //
-// Struct types can have their fields accessed and modified and their methods
+// Arrays can be indexed and have their length queried. Only pointers to
+// arrays can their contents modified.
+//
+// Example:
+//  var arr [2]string
+//  L.SetGlobal("arr", New(L, &arr))
+//  ---
+//  arr[1] = "Hello"
+//  arr[2] = "World"
+//
+// Structs
+//
+// Structs can have their fields accessed and modified and their methods
 // called. First letters of field/method names are automatically converted to
 // uppercase.
 //
@@ -119,13 +134,12 @@
 //  ---
 //  tim:SayHello() -- same as tim:sayHello()
 //
-// As a special case, accessing a struct field that is an array will return
-// an pointer to that array.
+// As a special case, accessing a struct field that is an array returns a
+// pointer to that array.
 //
-// Pointer types
+// Pointers
 //
-// Pointers to structs operate the same way structs do. Pointers can also be
-// dereferenced using the unary minus (-) operator.
+// Pointers can be dereferenced using the unary minus (-) operator.
 //
 // Example:
 //  str := "hello"
@@ -141,7 +155,25 @@
 //  ---
 //  print(str^"world") -- prints "world", and str's value is now "world"
 //
-// Type types
+// Type methods
+//
+// Any array, channel, map, slice, or struct type that has methods defined on
+// it can be called from Lua.
+//
+// On maps with key strings, map elements are returned before type methods.
+//
+// Example:
+//  type mySlice []string
+//  func (s mySlice) Len() int {
+//      return len(s)
+//  }
+//
+//  var s mySlice = []string{"Hello", "world"}
+//  L.SetGlobal("s", New(L, s))
+//  ---
+//  print(s:len()) -- prints "2"
+//
+// New types
 //
 // Type constructors can be created using NewType. When called, it returns a
 // new variable which is of the same type that was passed to NewType. Its
