@@ -134,8 +134,8 @@
 //  ---
 //  tim:SayHello() -- same as tim:sayHello()
 //
-// As a special case, accessing a struct field that is an array returns a
-// pointer to that array.
+// As a special case, accessing a field that is an array or struct returns
+// a pointer to that field, if possible.
 //
 // Pointers
 //

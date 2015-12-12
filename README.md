@@ -4,4 +4,4 @@ custom type reflection for [gopher-lua](https://github.com/yuin/gopher-lua).
 
 ## License
 
-MIT
+MPL 2.0

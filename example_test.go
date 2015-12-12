@@ -778,6 +778,37 @@ func Example__24() {
 	// 15	1
 }
 
+type E25B struct {
+}
+
+func (*E25B) Test() {
+	fmt.Println("Pointer test")
+}
+
+type E25A struct {
+	B E25B
+}
+
+func Example__25() {
+	const code = `
+	a.b:Test()
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := E25A{}
+	L.SetGlobal("a", luar.New(L, &a))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	a.B.Test()
+	// Output:
+	// Pointer test
+	// Pointer test
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
