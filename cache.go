@@ -46,13 +46,31 @@ func addFields(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
 		if vtype.Kind() == reflect.Ptr {
 			vtype = vtype.Elem()
 		}
+	fields:
 		for i := 0; i < vtype.NumField(); i++ {
 			field := vtype.Field(i)
 			if field.PkgPath != "" {
 				continue
 			}
-			if tbl.RawGetString(field.Name) != lua.LNil {
+			var names []string
+			tag := field.Tag.Get("luar")
+			if tag == "-" {
 				continue
+			}
+			if tag != "" {
+				names = []string{
+					tag,
+				}
+			} else {
+				names = []string{
+					field.Name,
+					getUnexportedName(field.Name),
+				}
+			}
+			for _, key := range names {
+				if tbl.RawGetString(key) != lua.LNil {
+					continue fields
+				}
 			}
 			index := make([]int, len(elem.Index)+1)
 			copy(index, elem.Index)
@@ -60,8 +78,9 @@ func addFields(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
 
 			ud := L.NewUserData()
 			ud.Value = index
-			tbl.RawSetString(field.Name, ud)
-			tbl.RawSetString(getUnexportedName(field.Name), ud)
+			for _, key := range names {
+				tbl.RawSetString(key, ud)
+			}
 			if field.Anonymous {
 				index := make([]int, len(elem.Index)+1)
 				copy(index, elem.Index)

@@ -118,8 +118,7 @@
 // Structs
 //
 // Structs can have their fields accessed and modified and their methods
-// called. First letters of field/method names are automatically converted to
-// uppercase.
+// called.
 //
 // Example:
 //  type Person {
@@ -133,6 +132,23 @@
 //  L.SetGlobal("tim", New(L, tim))
 //  ---
 //  tim:SayHello() -- same as tim:sayHello()
+//
+// The name of a struct field is determined by its tag:
+//  "":   the field is accessed by its name and its name with a lowercase
+//        first letter
+//  "-":  the field is not accessible
+//  else: the field is accessed by that value
+//
+// Example:
+//  type Person struct {
+//    Name   string `luar:"name"`
+//    Age    int
+//    Hidden bool   `luar:"-"`
+//  }
+//  ---
+//  Person.Name   -> "name"
+//  Person.Age    -> "Age", "age"
+//  Person.Hidden -> Not accessible
 //
 // As a special case, accessing a field that is an array or struct returns
 // a pointer to that field, if possible.

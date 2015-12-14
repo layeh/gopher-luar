@@ -809,6 +809,47 @@ func Example__25() {
 	// Pointer test
 }
 
+type E26A struct {
+	Name   string `luar:"name"`
+	Name2  string `luar:"Name"`
+	Str    string
+	Hidden bool `luar:"-"`
+}
+
+func Example__26() {
+	const code = `
+	print(a.name)
+	print(a.Name)
+	print(a.str)
+	print(a.Str)
+	print(a.Hidden)
+	print(a.hidden)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := &E26A{
+		Name:   "tim",
+		Name2:  "bob",
+		Str:    "asd123",
+		Hidden: true,
+	}
+
+	L.SetGlobal("a", luar.New(L, a))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// tim
+	// bob
+	// asd123
+	// asd123
+	// nil
+	// nil
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
