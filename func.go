@@ -27,6 +27,12 @@ func init() {
 	refTypeInt = reflect.TypeOf(int(0))
 }
 
+func getFunc(L *lua.LState) (ref reflect.Value, refType reflect.Type) {
+	ref = L.Get(lua.UpvalueIndex(1)).(*lua.LUserData).Value.(reflect.Value)
+	refType = ref.Type()
+	return
+}
+
 func funcIsBypass(t reflect.Type) bool {
 	if t.NumIn() == 1 && t.NumOut() == 1 && t.In(0) == refTypeLStatePtr && t.Out(0) == refTypeInt {
 		return true
@@ -37,27 +43,30 @@ func funcIsBypass(t reflect.Type) bool {
 	return false
 }
 
-func funcEvaluate(L *lua.LState, fn reflect.Value) int {
-	fnType := fn.Type()
-	if funcIsBypass(fnType) {
-		luarState := LState{L}
-		args := make([]reflect.Value, 0, 2)
-		if fnType.NumIn() == 2 {
-			receiverHint := fnType.In(0)
-			receiver := lValueToReflect(L.Get(1), receiverHint)
-			if receiver.Type() != receiverHint {
-				L.RaiseError("incorrect receiver type")
-			}
-			args = append(args, receiver)
-			L.Remove(1)
+func funcBypass(L *lua.LState) int {
+	ref, refType := getFunc(L)
+
+	luarState := LState{L}
+	args := make([]reflect.Value, 0, 2)
+	if refType.NumIn() == 2 {
+		receiverHint := refType.In(0)
+		receiver := lValueToReflect(L.Get(1), receiverHint)
+		if receiver.Type() != receiverHint {
+			L.RaiseError("incorrect receiver type")
 		}
-		args = append(args, reflect.ValueOf(&luarState))
-		return fn.Call(args)[0].Interface().(int)
+		args = append(args, receiver)
+		L.Remove(1)
 	}
+	args = append(args, reflect.ValueOf(&luarState))
+	return ref.Call(args)[0].Interface().(int)
+}
+
+func funcRegular(L *lua.LState) int {
+	ref, refType := getFunc(L)
 
 	top := L.GetTop()
-	expected := fnType.NumIn()
-	variadic := fnType.IsVariadic()
+	expected := refType.NumIn()
+	variadic := refType.IsVariadic()
 	if !variadic && top != expected {
 		L.RaiseError("invalid number of function arguments (%d expected, got %d)", expected, top)
 	}
@@ -68,13 +77,13 @@ func funcEvaluate(L *lua.LState, fn reflect.Value) int {
 	for i := 0; i < L.GetTop(); i++ {
 		var hint reflect.Type
 		if variadic && i >= expected-1 {
-			hint = fnType.In(expected - 1).Elem()
+			hint = refType.In(expected - 1).Elem()
 		} else {
-			hint = fnType.In(i)
+			hint = refType.In(i)
 		}
 		args[i] = lValueToReflect(L.Get(i+1), hint)
 	}
-	ret := fn.Call(args)
+	ret := ref.Call(args)
 	if len(ret) == 1 && ret[0].Type() == refTypeLuaLValueSlice {
 		values := ret[0].Interface().([]lua.LValue)
 		for _, value := range values {
@@ -89,8 +98,10 @@ func funcEvaluate(L *lua.LState, fn reflect.Value) int {
 }
 
 func funcWrapper(L *lua.LState, fn reflect.Value) *lua.LFunction {
-	wrapper := func(L *lua.LState) int {
-		return funcEvaluate(L, fn)
+	up := L.NewUserData()
+	up.Value = fn
+	if funcIsBypass(fn.Type()) {
+		return L.NewClosure(funcBypass, up)
 	}
-	return L.NewFunction(wrapper)
+	return L.NewClosure(funcRegular, up)
 }
