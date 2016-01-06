@@ -20,12 +20,11 @@ func allTostring(L *lua.LState) int {
 }
 
 func getUnexportedName(name string) string {
-	buf := []byte(name)
-	first, n := utf8.DecodeRune(buf)
+	first, n := utf8.DecodeRuneInString(name)
 	if n == 0 {
 		return name
 	}
-	return string(unicode.ToLower(first)) + string(buf[n:])
+	return string(unicode.ToLower(first)) + name[n:]
 }
 
 func getMethod(key string, mt *lua.LTable) lua.LValue {
