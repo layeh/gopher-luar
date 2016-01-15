@@ -8,7 +8,10 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-const cacheKey = "github.com/layeh/gopher-luar"
+const (
+	cacheKey = "github.com/layeh/gopher-luar"
+	tagName  = "luar"
+)
 
 var mu sync.Mutex
 
@@ -80,7 +83,7 @@ func addFields(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
 				continue
 			}
 			var names []string
-			tag := field.Tag.Get("luar")
+			tag := field.Tag.Get(tagName)
 			if tag == "-" {
 				continue
 			}
