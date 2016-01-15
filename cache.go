@@ -135,6 +135,7 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	}
 
 	mt := L.NewTable()
+	mt.RawSetString("__metatable", L.NewTable())
 
 	switch vtype.Kind() {
 	case reflect.Array:
