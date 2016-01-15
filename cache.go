@@ -8,11 +8,38 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-var (
-	mu        sync.Mutex
-	cache     = map[reflect.Type]lua.LValue{}
-	typeCache = map[reflect.Type]lua.LValue{}
-)
+const cacheKey = "github.com/layeh/gopher-luar"
+
+var mu sync.Mutex
+
+type mtCache struct {
+	regular, types map[reflect.Type]lua.LValue
+}
+
+func newMTCache() *mtCache {
+	return &mtCache{
+		regular: make(map[reflect.Type]lua.LValue),
+		types:   make(map[reflect.Type]lua.LValue),
+	}
+}
+
+func getMTCache(L *lua.LState) *mtCache {
+	registry, ok := L.Get(lua.RegistryIndex).(*lua.LTable)
+	if !ok {
+		panic("gopher-luar: corrupt lua registry")
+	}
+	lCache, ok := registry.RawGetString(cacheKey).(*lua.LUserData)
+	if !ok {
+		lCache = L.NewUserData()
+		lCache.Value = newMTCache()
+		registry.RawSetString(cacheKey, lCache)
+	}
+	cache, ok := lCache.Value.(*mtCache)
+	if !ok {
+		panic("gopher-luar: corrupt luar metatable cache")
+	}
+	return cache
+}
 
 func addMethods(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
 	vtype := value.Type()
@@ -100,8 +127,10 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	mu.Lock()
 	defer mu.Unlock()
 
+	cache := getMTCache(L)
+
 	vtype := value.Type()
-	if v := cache[vtype]; v != nil {
+	if v := cache.regular[vtype]; v != nil {
 		return v
 	}
 
@@ -194,7 +223,7 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 		mt.RawSetString("__tostring", L.NewFunction(allTostring))
 	}
 
-	cache[vtype] = mt
+	cache.regular[vtype] = mt
 	return mt
 }
 
@@ -202,7 +231,9 @@ func getTypeMetatable(L *lua.LState, t reflect.Type) lua.LValue {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if v := typeCache[t]; v != nil {
+	cache := getMTCache(L)
+
+	if v := cache.types[t]; v != nil {
 		return v
 	}
 
@@ -211,6 +242,6 @@ func getTypeMetatable(L *lua.LState, t reflect.Type) lua.LValue {
 	mt.RawSetString("__tostring", L.NewFunction(allTostring))
 	mt.RawSetString("__eq", L.NewFunction(typeEq))
 
-	typeCache[t] = mt
+	cache.types[t] = mt
 	return mt
 }
