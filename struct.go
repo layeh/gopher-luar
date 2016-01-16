@@ -17,8 +17,15 @@ func checkStruct(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 
 func structIndex(L *lua.LState) int {
 	ref, mt := checkStruct(L, 1)
-	ref = reflect.Indirect(ref)
 	key := L.CheckString(2)
+
+	// Check for pointer method
+	if ref.Type().Kind() == reflect.Ptr {
+		if fn := getPtrMethod(key, mt); fn != nil {
+			L.Push(fn)
+			return 1
+		}
+	}
 
 	// Check for method
 	if fn := getMethod(key, mt); fn != nil {
@@ -27,6 +34,7 @@ func structIndex(L *lua.LState) int {
 	}
 
 	// Check for field
+	ref = reflect.Indirect(ref)
 	index := getFieldIndex(key, mt)
 	if index == nil {
 		return 0

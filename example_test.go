@@ -850,6 +850,34 @@ func Example__26() {
 	// nil
 }
 
+func Example__27() {
+	const code = `
+	print(a.Name)
+	_ = a ^ -b
+	print(a.Name)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := &Person{
+		Name: "tim",
+	}
+	b := &Person{
+		Name: "bob",
+	}
+
+	L.SetGlobal("a", luar.New(L, a))
+	L.SetGlobal("b", luar.New(L, b))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// tim
+	// bob
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

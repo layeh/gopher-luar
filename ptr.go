@@ -16,7 +16,7 @@ func checkPtr(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 }
 
 func ptrIndex(L *lua.LState) int {
-	ref, mt := checkPtr(L, 1)
+	_, mt := checkPtr(L, 1)
 
 	// Check for pointer method
 	key := L.CheckString(2)
@@ -31,9 +31,6 @@ func ptrIndex(L *lua.LState) int {
 		return 1
 	}
 
-	if ref.Elem().Kind() == reflect.Struct {
-		return structIndex(L)
-	}
 	return 0
 }
 
