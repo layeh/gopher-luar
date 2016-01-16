@@ -16,13 +16,13 @@ const (
 var mu sync.Mutex
 
 type mtCache struct {
-	regular, types map[reflect.Type]lua.LValue
+	regular, types map[reflect.Type]*lua.LTable
 }
 
 func newMTCache() *mtCache {
 	return &mtCache{
-		regular: make(map[reflect.Type]lua.LValue),
-		types:   make(map[reflect.Type]lua.LValue),
+		regular: make(map[reflect.Type]*lua.LTable),
+		types:   make(map[reflect.Type]*lua.LTable),
 	}
 }
 
@@ -126,7 +126,7 @@ func addFields(L *lua.LState, value reflect.Value, tbl *lua.LTable) {
 	}
 }
 
-func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
+func getMetatable(L *lua.LState, value reflect.Value) *lua.LTable {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -231,7 +231,7 @@ func getMetatable(L *lua.LState, value reflect.Value) lua.LValue {
 	return mt
 }
 
-func getTypeMetatable(L *lua.LState, t reflect.Type) lua.LValue {
+func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
 	mu.Lock()
 	defer mu.Unlock()
 
