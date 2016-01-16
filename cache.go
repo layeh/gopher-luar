@@ -155,6 +155,7 @@ func getMetatable(L *lua.LState, value reflect.Value) *lua.LTable {
 		methods.RawSetString("receive", L.NewFunction(chanReceive))
 		methods.RawSetString("close", L.NewFunction(chanClose))
 		addMethods(L, value, methods)
+		mt.RawSetString("methods", methods)
 
 		mt.RawSetString("__index", methods)
 		mt.RawSetString("__len", L.NewFunction(chanLen))
