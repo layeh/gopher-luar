@@ -99,10 +99,3 @@ func mapCall(L *lua.LState) int {
 	L.Push(L.NewFunction(fn))
 	return 1
 }
-
-func mapEq(L *lua.LState) int {
-	map1, _, _ := checkMap(L, 1)
-	map2, _, _ := checkMap(L, 2)
-	L.Push(lua.LBool(map1 == map2))
-	return 1
-}

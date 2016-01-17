@@ -378,6 +378,8 @@ func Example__10() {
 
 func Example__11() {
 	const code = `
+	print(-p1 == -p1)
+	print(-p1 == -p1_alias)
 	print(p1 == p1)
 	print(p1 == p1_alias)
 	print(p1 == p2)
@@ -401,6 +403,8 @@ func Example__11() {
 		panic(err)
 	}
 	// Output:
+	// true
+	// true
 	// true
 	// true
 	// false

@@ -47,13 +47,6 @@ func chanLen(L *lua.LState) int {
 	return 1
 }
 
-func chanEq(L *lua.LState) int {
-	chan1, _, _ := checkChan(L, 1)
-	chan2, _, _ := checkChan(L, 2)
-	L.Push(lua.LBool(chan1 == chan2))
-	return 1
-}
-
 // chan methods
 
 func chanSend(L *lua.LState) int {

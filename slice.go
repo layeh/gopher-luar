@@ -75,13 +75,6 @@ func sliceLen(L *lua.LState) int {
 	return 1
 }
 
-func sliceEq(L *lua.LState) int {
-	slice1, _, _ := checkSlice(L, 1)
-	slice2, _, _ := checkSlice(L, 2)
-	L.Push(lua.LBool(slice1 == slice2))
-	return 1
-}
-
 // slice methods
 
 func sliceCapacity(L *lua.LState) int {

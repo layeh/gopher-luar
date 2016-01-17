@@ -73,10 +73,3 @@ func arrayLen(L *lua.LState) int {
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
-
-func arrayEq(L *lua.LState) int {
-	array1, _, _ := checkArray(L, 1)
-	array2, _, _ := checkArray(L, 2)
-	L.Push(lua.LBool(array1 == array2))
-	return 1
-}
