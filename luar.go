@@ -102,7 +102,7 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	}
 	switch converted := v.(type) {
 	case lua.LBool:
-		return reflect.ValueOf(bool(converted))
+		return reflect.ValueOf(bool(converted)).Convert(hint)
 	case lua.LChannel:
 		return reflect.ValueOf(converted)
 	case lua.LNumber:
@@ -114,7 +114,7 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	case *lua.LState:
 		return reflect.ValueOf(converted)
 	case lua.LString:
-		return reflect.ValueOf(string(converted))
+		return reflect.ValueOf(string(converted)).Convert(hint)
 	case *lua.LTable:
 		return reflect.ValueOf(converted)
 	case *lua.LUserData:
