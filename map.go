@@ -11,7 +11,7 @@ func checkMap(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr b
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Map {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Map {
-			L.ArgError(idx, "expecting map")
+			L.ArgError(idx, "expecting map or map pointer")
 		}
 		isPtr = true
 	}

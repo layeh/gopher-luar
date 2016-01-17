@@ -11,7 +11,7 @@ func checkSlice(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Slice {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Slice {
-			L.ArgError(idx, "expecting slice")
+			L.ArgError(idx, "expecting slice or slice pointer")
 		}
 		isPtr = true
 	}

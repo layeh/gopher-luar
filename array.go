@@ -11,7 +11,7 @@ func checkArray(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Array {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Array {
-			L.ArgError(idx, "expecting array")
+			L.ArgError(idx, "expecting array or array pointer")
 		}
 		isPtr = true
 	}

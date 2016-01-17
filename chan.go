@@ -11,7 +11,7 @@ func checkChan(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr 
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Chan {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Chan {
-			L.ArgError(idx, "expecting channel")
+			L.ArgError(idx, "expecting channel or channel pointer")
 		}
 		isPtr = true
 	}

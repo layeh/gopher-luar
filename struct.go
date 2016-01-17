@@ -11,7 +11,7 @@ func checkStruct(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPt
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Struct {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
-			L.ArgError(idx, "expecting struct")
+			L.ArgError(idx, "expecting struct or struct pointer")
 		}
 		isPtr = true
 	}
