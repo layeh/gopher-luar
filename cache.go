@@ -3,7 +3,6 @@ package luar
 import (
 	"container/list"
 	"reflect"
-	"sync"
 
 	"github.com/yuin/gopher-lua"
 )
@@ -12,8 +11,6 @@ const (
 	cacheKey = "github.com/layeh/gopher-luar"
 	tagName  = "luar"
 )
-
-var mu sync.Mutex
 
 type mtCache struct {
 	regular, types map[reflect.Type]*lua.LTable
@@ -129,9 +126,6 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 }
 
 func getMetatable(L *lua.LState, value reflect.Value) *lua.LTable {
-	mu.Lock()
-	defer mu.Unlock()
-
 	cache := getMTCache(L)
 
 	vtype := value.Type()
@@ -204,9 +198,6 @@ func getMetatable(L *lua.LState, value reflect.Value) *lua.LTable {
 }
 
 func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
-	mu.Lock()
-	defer mu.Unlock()
-
 	cache := getMTCache(L)
 
 	if v := cache.types[t]; v != nil {
