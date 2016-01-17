@@ -47,7 +47,7 @@ func addMethods(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 		if method.PkgPath != "" {
 			continue
 		}
-		fn := New(L, method.Func.Interface())
+		fn := funcWrapper(L, method.Func)
 		tbl.RawSetString(method.Name, fn)
 		tbl.RawSetString(getUnexportedName(method.Name), fn)
 	}
