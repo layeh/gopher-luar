@@ -77,7 +77,7 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 	fields:
 		for i := 0; i < vtype.NumField(); i++ {
 			field := vtype.Field(i)
-			if field.PkgPath != "" {
+			if field.PkgPath != "" && !field.Anonymous {
 				continue
 			}
 			var names []string
