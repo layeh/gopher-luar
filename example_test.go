@@ -878,6 +878,43 @@ func Example__27() {
 	// bob
 }
 
+type E28_Chan chan string
+
+func (*E28_Chan) Test() {
+	fmt.Println("E28_Chan.Test")
+}
+
+func (E28_Chan) Test2() {
+	fmt.Println("E28_Chan.Test2")
+}
+
+func Example__28() {
+	const code = `
+	b:Test()
+	b:Test2()
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := make(E28_Chan)
+	b := &a
+
+	b.Test()
+	b.Test2()
+
+	L.SetGlobal("b", luar.New(L, b))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// E28_Chan.Test
+	// E28_Chan.Test2
+	// E28_Chan.Test
+	// E28_Chan.Test2
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

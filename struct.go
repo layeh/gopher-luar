@@ -6,34 +6,35 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkStruct(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
+func checkStruct(L *lua.LState, idx int) (reflect.Value, *lua.LTable, bool) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Struct && (ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct) {
-		L.ArgError(idx, "expecting struct")
+	isPtr := false
+	if ref.Kind() != reflect.Struct {
+		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
+			L.ArgError(idx, "expecting struct")
+		}
+		isPtr = true
 	}
-	return ref, ud.Metatable.(*lua.LTable)
+	return ref, ud.Metatable.(*lua.LTable), isPtr
 }
 
 func structIndex(L *lua.LState) int {
-	ref, mt := checkStruct(L, 1)
+	ref, mt, isPtr := checkStruct(L, 1)
 	key := L.CheckString(2)
 
-	// Check for pointer method
-	if ref.Type().Kind() == reflect.Ptr {
+	if isPtr {
 		if fn := getPtrMethod(key, mt); fn != nil {
 			L.Push(fn)
 			return 1
 		}
 	}
 
-	// Check for method
 	if fn := getMethod(key, mt); fn != nil {
 		L.Push(fn)
 		return 1
 	}
 
-	// Check for field
 	ref = reflect.Indirect(ref)
 	index := getFieldIndex(key, mt)
 	if index == nil {
@@ -54,8 +55,10 @@ func structIndex(L *lua.LState) int {
 }
 
 func structNewIndex(L *lua.LState) int {
-	ref, mt := checkStruct(L, 1)
-	ref = reflect.Indirect(ref)
+	ref, mt, isPtr := checkStruct(L, 1)
+	if isPtr {
+		ref = ref.Elem()
+	}
 	key := L.CheckString(2)
 	value := L.CheckAny(3)
 

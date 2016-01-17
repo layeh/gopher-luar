@@ -6,17 +6,21 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkArray(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
+func checkArray(L *lua.LState, idx int) (reflect.Value, *lua.LTable, bool) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Array && (ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Array) {
-		L.ArgError(idx, "expecting array")
+	isPtr := false
+	if ref.Kind() != reflect.Array {
+		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Array {
+			L.ArgError(idx, "expecting array")
+		}
+		isPtr = true
 	}
-	return ref, ud.Metatable.(*lua.LTable)
+	return ref, ud.Metatable.(*lua.LTable), isPtr
 }
 
 func arrayIndex(L *lua.LState) int {
-	ref, mt := checkArray(L, 1)
+	ref, mt, isPtr := checkArray(L, 1)
 	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
@@ -28,7 +32,13 @@ func arrayIndex(L *lua.LState) int {
 		}
 		L.Push(New(L, ref.Index(index-1).Interface()))
 	case lua.LString:
-		if fn := getMethod(converted.String(), mt); fn != nil {
+		if isPtr {
+			if fn := getPtrMethod(string(converted), mt); fn != nil {
+				L.Push(fn)
+				return 1
+			}
+		}
+		if fn := getMethod(string(converted), mt); fn != nil {
 			L.Push(fn)
 			return 1
 		}
@@ -40,28 +50,33 @@ func arrayIndex(L *lua.LState) int {
 }
 
 func arrayNewIndex(L *lua.LState) int {
-	ref, _ := checkArray(L, 1)
-	deref := ref.Elem()
+	ref, _, isPtr := checkArray(L, 1)
+
+	if !isPtr {
+		L.RaiseError("invalid operation on array")
+	}
+
+	ref = ref.Elem()
 
 	index := L.CheckInt(2)
 	value := L.CheckAny(3)
-	if index < 1 || index > deref.Len() {
+	if index < 1 || index > ref.Len() {
 		L.ArgError(2, "index out of range")
 	}
-	deref.Index(index - 1).Set(lValueToReflect(value, deref.Type().Elem()))
+	ref.Index(index - 1).Set(lValueToReflect(value, ref.Type().Elem()))
 	return 0
 }
 
 func arrayLen(L *lua.LState) int {
-	ref, _ := checkArray(L, 1)
+	ref, _, _ := checkArray(L, 1)
 	ref = reflect.Indirect(ref)
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func arrayEq(L *lua.LState) int {
-	array1, _ := checkArray(L, 1)
-	array2, _ := checkArray(L, 2)
+	array1, _, _ := checkArray(L, 1)
+	array2, _, _ := checkArray(L, 2)
 	L.Push(lua.LBool(array1 == array2))
 	return 1
 }

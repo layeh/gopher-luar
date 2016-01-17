@@ -6,24 +6,38 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkMap(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
+func checkMap(L *lua.LState, idx int) (reflect.Value, *lua.LTable, bool) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
+	isPtr := false
 	if ref.Kind() != reflect.Map {
-		L.ArgError(idx, "expecting map")
+		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Map {
+			L.ArgError(idx, "expecting map")
+		}
+		isPtr = true
 	}
-	return ref, ud.Metatable.(*lua.LTable)
+	return ref, ud.Metatable.(*lua.LTable), isPtr
 }
 
 func mapIndex(L *lua.LState) int {
-	ref, mt := checkMap(L, 1)
+	ref, mt, isPtr := checkMap(L, 1)
 	key := L.CheckAny(2)
+
+	if isPtr {
+		if lstring, ok := key.(lua.LString); ok {
+			if fn := getPtrMethod(string(lstring), mt); fn != nil {
+				L.Push(fn)
+				return 1
+			}
+		}
+		return 0
+	}
 
 	convertedKey := lValueToReflect(key, ref.Type().Key())
 	item := ref.MapIndex(convertedKey)
 	if !item.IsValid() {
 		if lstring, ok := key.(lua.LString); ok {
-			if fn := getMethod(lstring.String(), mt); fn != nil {
+			if fn := getMethod(string(lstring), mt); fn != nil {
 				L.Push(fn)
 				return 1
 			}
@@ -35,7 +49,10 @@ func mapIndex(L *lua.LState) int {
 }
 
 func mapNewIndex(L *lua.LState) int {
-	ref, _ := checkMap(L, 1)
+	ref, _, isPtr := checkMap(L, 1)
+	if isPtr {
+		L.RaiseError("invalid operation on map pointer")
+	}
 	key := L.CheckAny(2)
 	value := L.CheckAny(3)
 
@@ -55,13 +72,19 @@ func mapNewIndex(L *lua.LState) int {
 }
 
 func mapLen(L *lua.LState) int {
-	ref, _ := checkMap(L, 1)
+	ref, _, isPtr := checkMap(L, 1)
+	if isPtr {
+		L.RaiseError("invalid operation on map pointer")
+	}
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func mapCall(L *lua.LState) int {
-	ref, _ := checkMap(L, 1)
+	ref, _, isPtr := checkMap(L, 1)
+	if isPtr {
+		L.RaiseError("invalid operation on map pointer")
+	}
 	keys := ref.MapKeys()
 	i := 0
 	fn := func(L *lua.LState) int {
@@ -78,8 +101,8 @@ func mapCall(L *lua.LState) int {
 }
 
 func mapEq(L *lua.LState) int {
-	map1, _ := checkMap(L, 1)
-	map2, _ := checkMap(L, 2)
+	map1, _, _ := checkMap(L, 1)
+	map2, _, _ := checkMap(L, 2)
 	L.Push(lua.LBool(map1 == map2))
 	return 1
 }

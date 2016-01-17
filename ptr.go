@@ -10,22 +10,20 @@ func checkPtr(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
 	ud := L.CheckUserData(idx)
 	ref := reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Ptr {
-		L.ArgError(idx, "expecting ptr")
+		L.ArgError(idx, "expecting pointer")
 	}
 	return ref, ud.Metatable.(*lua.LTable)
 }
 
 func ptrIndex(L *lua.LState) int {
 	_, mt := checkPtr(L, 1)
-
-	// Check for pointer method
 	key := L.CheckString(2)
+
 	if fn := getPtrMethod(key, mt); fn != nil {
 		L.Push(fn)
 		return 1
 	}
 
-	// Check for method
 	if fn := getMethod(key, mt); fn != nil {
 		L.Push(fn)
 		return 1
