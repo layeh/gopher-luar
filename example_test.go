@@ -915,6 +915,35 @@ func Example__28() {
 	// E28_Chan.Test2
 }
 
+type E29_String string
+
+type E29_A struct {
+	E29_String
+}
+
+func Example__29() {
+	const code = `
+	a.E29_String = "world"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := E29_A{}
+	a.E29_String = "hello"
+	fmt.Println(a.E29_String)
+
+	L.SetGlobal("a", luar.New(L, &a))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	fmt.Println(a.E29_String)
+	// Output:
+	// hello
+	// world
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

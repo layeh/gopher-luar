@@ -71,9 +71,6 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 		e := queue.Back()
 		elem := e.Value.(element)
 		vtype := elem.Type
-		if vtype.Kind() == reflect.Ptr {
-			vtype = vtype.Elem()
-		}
 	fields:
 		for i := 0; i < vtype.NumField(); i++ {
 			field := vtype.Field(i)
@@ -110,11 +107,18 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 				tbl.RawSetString(key, ud)
 			}
 			if field.Anonymous {
+				t := field.Type
+				if field.Type.Kind() != reflect.Struct {
+					if field.Type.Kind() != reflect.Ptr || field.Type.Elem().Kind() != reflect.Struct {
+						continue
+					}
+					t = field.Type.Elem()
+				}
 				index := make([]int, len(elem.Index)+1)
 				copy(index, elem.Index)
 				index[len(elem.Index)] = i
 				queue.PushFront(element{
-					Type:  field.Type,
+					Type:  t,
 					Index: index,
 				})
 			}
