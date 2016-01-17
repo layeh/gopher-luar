@@ -6,7 +6,7 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkMap(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
+func checkMap(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
 	ud := L.CheckUserData(idx)
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Map {
@@ -15,7 +15,7 @@ func checkMap(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr 
 		}
 		isPtr = true
 	}
-	mt = ud.Metatable.(*lua.LTable)
+	mt = &Metatable{ud.Metatable.(*lua.LTable)}
 	return
 }
 
@@ -25,7 +25,7 @@ func mapIndex(L *lua.LState) int {
 
 	if isPtr {
 		if lstring, ok := key.(lua.LString); ok {
-			if fn := getPtrMethod(string(lstring), mt); fn != nil {
+			if fn := mt.ptrMethod(string(lstring)); fn != nil {
 				L.Push(fn)
 				return 1
 			}
@@ -37,7 +37,7 @@ func mapIndex(L *lua.LState) int {
 	item := ref.MapIndex(convertedKey)
 	if !item.IsValid() {
 		if lstring, ok := key.(lua.LString); ok {
-			if fn := getMethod(string(lstring), mt); fn != nil {
+			if fn := mt.method(string(lstring)); fn != nil {
 				L.Push(fn)
 				return 1
 			}

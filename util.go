@@ -26,27 +26,3 @@ func getUnexportedName(name string) string {
 	}
 	return string(unicode.ToLower(first)) + name[n:]
 }
-
-func getMethod(key string, mt *lua.LTable) lua.LValue {
-	methods := mt.RawGetString("methods").(*lua.LTable)
-	if fn := methods.RawGetString(key); fn != lua.LNil {
-		return fn
-	}
-	return nil
-}
-
-func getPtrMethod(key string, mt *lua.LTable) lua.LValue {
-	methods := mt.RawGetString("ptr_methods").(*lua.LTable)
-	if fn := methods.RawGetString(key); fn != lua.LNil {
-		return fn
-	}
-	return nil
-}
-
-func getFieldIndex(key string, mt *lua.LTable) []int {
-	fields := mt.RawGetString("fields").(*lua.LTable)
-	if index := fields.RawGetString(key); index != lua.LNil {
-		return index.(*lua.LUserData).Value.([]int)
-	}
-	return nil
-}

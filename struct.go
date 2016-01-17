@@ -6,7 +6,7 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkStruct(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
+func checkStruct(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
 	ud := L.CheckUserData(idx)
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Struct {
@@ -15,7 +15,7 @@ func checkStruct(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isP
 		}
 		isPtr = true
 	}
-	mt = ud.Metatable.(*lua.LTable)
+	mt = &Metatable{ud.Metatable.(*lua.LTable)}
 	return
 }
 
@@ -24,19 +24,19 @@ func structIndex(L *lua.LState) int {
 	key := L.CheckString(2)
 
 	if isPtr {
-		if fn := getPtrMethod(key, mt); fn != nil {
+		if fn := mt.ptrMethod(key); fn != nil {
 			L.Push(fn)
 			return 1
 		}
 	}
 
-	if fn := getMethod(key, mt); fn != nil {
+	if fn := mt.method(key); fn != nil {
 		L.Push(fn)
 		return 1
 	}
 
 	ref = reflect.Indirect(ref)
-	index := getFieldIndex(key, mt)
+	index := mt.fieldIndex(key)
 	if index == nil {
 		return 0
 	}
@@ -62,7 +62,7 @@ func structNewIndex(L *lua.LState) int {
 	key := L.CheckString(2)
 	value := L.CheckAny(3)
 
-	index := getFieldIndex(key, mt)
+	index := mt.fieldIndex(key)
 	if index == nil {
 		L.RaiseError("unknown field " + key)
 	}

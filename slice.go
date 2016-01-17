@@ -6,7 +6,7 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkSlice(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
+func checkSlice(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
 	ud := L.CheckUserData(idx)
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Slice {
@@ -15,7 +15,7 @@ func checkSlice(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPt
 		}
 		isPtr = true
 	}
-	mt = ud.Metatable.(*lua.LTable)
+	mt = &Metatable{ud.Metatable.(*lua.LTable)}
 	return
 }
 
@@ -32,12 +32,12 @@ func sliceIndex(L *lua.LState) int {
 		L.Push(New(L, ref.Index(index-1).Interface()))
 	case lua.LString:
 		if isPtr {
-			if fn := getPtrMethod(string(converted), mt); fn != nil {
+			if fn := mt.ptrMethod(string(converted)); fn != nil {
 				L.Push(fn)
 				return 1
 			}
 		}
-		if fn := getMethod(string(converted), mt); fn != nil {
+		if fn := mt.method(string(converted)); fn != nil {
 			L.Push(fn)
 			return 1
 		}

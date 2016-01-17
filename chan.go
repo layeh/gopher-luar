@@ -6,7 +6,7 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkChan(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
+func checkChan(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
 	ud := L.CheckUserData(idx)
 	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Chan {
@@ -15,7 +15,7 @@ func checkChan(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr
 		}
 		isPtr = true
 	}
-	mt = ud.Metatable.(*lua.LTable)
+	mt = &Metatable{ud.Metatable.(*lua.LTable)}
 	return
 }
 
@@ -24,13 +24,13 @@ func chanIndex(L *lua.LState) int {
 	key := L.CheckString(2)
 
 	if isPtr {
-		if fn := getPtrMethod(key, mt); fn != nil {
+		if fn := mt.ptrMethod(key); fn != nil {
 			L.Push(fn)
 			return 1
 		}
 	}
 
-	if fn := getMethod(key, mt); fn != nil {
+	if fn := mt.method(key); fn != nil {
 		L.Push(fn)
 		return 1
 	}
