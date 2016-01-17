@@ -6,17 +6,17 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkChan(L *lua.LState, idx int) (reflect.Value, *lua.LTable, bool) {
+func checkChan(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
-	isPtr := false
+	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Chan {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Chan {
 			L.ArgError(idx, "expecting channel")
 		}
 		isPtr = true
 	}
-	return ref, ud.Metatable.(*lua.LTable), isPtr
+	mt = ud.Metatable.(*lua.LTable)
+	return
 }
 
 func chanIndex(L *lua.LState) int {

@@ -6,17 +6,17 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkSlice(L *lua.LState, idx int) (reflect.Value, *lua.LTable, bool) {
+func checkSlice(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
-	isPtr := false
+	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Slice {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Slice {
 			L.ArgError(idx, "expecting slice")
 		}
 		isPtr = true
 	}
-	return ref, ud.Metatable.(*lua.LTable), isPtr
+	mt = ud.Metatable.(*lua.LTable)
+	return
 }
 
 func sliceIndex(L *lua.LState) int {

@@ -6,17 +6,17 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkArray(L *lua.LState, idx int) (reflect.Value, *lua.LTable, bool) {
+func checkArray(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
-	isPtr := false
+	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Array {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Array {
 			L.ArgError(idx, "expecting array")
 		}
 		isPtr = true
 	}
-	return ref, ud.Metatable.(*lua.LTable), isPtr
+	mt = ud.Metatable.(*lua.LTable)
+	return
 }
 
 func arrayIndex(L *lua.LState) int {

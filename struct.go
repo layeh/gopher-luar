@@ -6,17 +6,17 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkStruct(L *lua.LState, idx int) (reflect.Value, *lua.LTable, bool) {
+func checkStruct(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable, isPtr bool) {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
-	isPtr := false
+	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Struct {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
 			L.ArgError(idx, "expecting struct")
 		}
 		isPtr = true
 	}
-	return ref, ud.Metatable.(*lua.LTable), isPtr
+	mt = ud.Metatable.(*lua.LTable)
+	return
 }
 
 func structIndex(L *lua.LState) int {

@@ -6,13 +6,14 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkPtr(L *lua.LState, idx int) (reflect.Value, *lua.LTable) {
+func checkPtr(L *lua.LState, idx int) (ref reflect.Value, mt *lua.LTable) {
 	ud := L.CheckUserData(idx)
-	ref := reflect.ValueOf(ud.Value)
+	ref = reflect.ValueOf(ud.Value)
 	if ref.Kind() != reflect.Ptr {
 		L.ArgError(idx, "expecting pointer")
 	}
-	return ref, ud.Metatable.(*lua.LTable)
+	mt = ud.Metatable.(*lua.LTable)
+	return
 }
 
 func ptrIndex(L *lua.LState) int {
