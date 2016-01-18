@@ -12,7 +12,7 @@ func checkPtr(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable) {
 	if ref.Kind() != reflect.Ptr {
 		L.ArgError(idx, "expecting pointer")
 	}
-	mt = &Metatable{ud.Metatable.(*lua.LTable)}
+	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
 	return
 }
 

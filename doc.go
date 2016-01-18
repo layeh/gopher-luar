@@ -212,7 +212,7 @@
 //  p.Name = "John"
 //  print("Hello, " .. p.Name)  // prints "Hello, John"
 //
-// Thread Safety
+// Thread safety
 //
 // This package accesses and modifies the Lua state's registry. This happens
 // when functions like New are called, and potentially when luar-created values

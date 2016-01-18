@@ -15,7 +15,7 @@ func checkSlice(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr
 		}
 		isPtr = true
 	}
-	mt = &Metatable{ud.Metatable.(*lua.LTable)}
+	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
 	return
 }
 

@@ -15,7 +15,7 @@ func checkStruct(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPt
 		}
 		isPtr = true
 	}
-	mt = &Metatable{ud.Metatable.(*lua.LTable)}
+	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
 	return
 }
 

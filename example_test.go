@@ -948,6 +948,66 @@ func Example__29() {
 	// world
 }
 
+type E30_A struct {
+}
+
+func (*E30_A) Public() {
+	fmt.Println("You can call me")
+}
+
+func (E30_A) Private() {
+	fmt.Println("Should not be able to call me")
+}
+
+type E30_B struct {
+	*E30_A
+}
+
+func Example__30() {
+	const code = `
+	b:public()
+	b.E30_A:public()
+	pcall(function()
+		b:private()
+	end)
+	pcall(function()
+		b.E30_A:private()
+	end)
+	pcall(function()
+		b:Private()
+	end)
+	pcall(function()
+		b.E30_A:Private()
+	end)
+	pcall(function()
+		local a = -b.E30_A
+		a:Private()
+	end)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	b := &E30_B{
+		E30_A: &E30_A{},
+	}
+
+	mt := luar.MT(L, E30_B{})
+	mt.Blacklist("private", "Private")
+
+	mt = luar.MT(L, E30_A{})
+	mt.Whitelist("public", "Public")
+
+	L.SetGlobal("b", luar.New(L, b))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	// Output:
+	// You can call me
+	// You can call me
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
