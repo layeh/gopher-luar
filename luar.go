@@ -100,6 +100,9 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 	if hint == refTypeLuaLValue {
 		return reflect.ValueOf(v)
 	}
+
+	isPtr := false
+
 	switch converted := v.(type) {
 	case lua.LBool:
 		var val reflect.Value
@@ -159,8 +162,13 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 
 			return s
 
+		case hint.Kind() == reflect.Ptr && hint.Elem().Kind() == reflect.Struct:
+			hint = hint.Elem()
+			isPtr = true
+			fallthrough
 		case hint.Kind() == reflect.Struct:
-			s := reflect.New(hint).Elem()
+			s := reflect.New(hint)
+			t := s.Elem()
 
 			converted.ForEach(func(key, value lua.LValue) {
 				if _, ok := key.(lua.LString); !ok {
@@ -173,31 +181,14 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 				}
 
 				lValue := lValueToReflect(L, value, field.Type)
-				s.FieldByIndex(field.Index).Set(lValue)
+				t.FieldByIndex(field.Index).Set(lValue)
 			})
 
-			return s
+			if isPtr {
+				return s
+			}
 
-		case hint.Kind() == reflect.Ptr && hint.Elem().Kind() == reflect.Struct:
-			elemType := hint.Elem()
-			s := reflect.New(elemType)
-			elem := s.Elem()
-
-			converted.ForEach(func(key, value lua.LValue) {
-				if _, ok := key.(lua.LString); !ok {
-					return
-				}
-
-				field, ok := elemType.FieldByName(key.String())
-				if !ok || field.PkgPath != "" {
-					panic("invalid field " + key.String())
-				}
-
-				lValue := lValueToReflect(L, value, field.Type)
-				elem.FieldByIndex(field.Index).Set(lValue)
-			})
-
-			return s
+			return t
 
 		default:
 			return reflect.ValueOf(converted)
