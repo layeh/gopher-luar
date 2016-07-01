@@ -1008,6 +1008,36 @@ func Example__30() {
 	// You can call me
 }
 
+type E_31 struct {
+	S []string
+}
+
+func Example__31() {
+	const code = `
+	x.S = {"a", "b", nil, 3, true, "c"}
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	e := &E_31{}
+	L.SetGlobal("x", luar.New(L, e))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+	for _, v := range e.S {
+		fmt.Println(v)
+	}
+	// Output:
+	// a
+	// b
+	//
+	// 3
+	// true
+	// c
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

@@ -102,11 +102,23 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	}
 	switch converted := v.(type) {
 	case lua.LBool:
-		return reflect.ValueOf(bool(converted)).Convert(hint)
+		var val reflect.Value
+		if hint.Kind() == reflect.String {
+			val = reflect.ValueOf(converted.String())
+		} else {
+			val = reflect.ValueOf(bool(converted))
+		}
+		return val.Convert(hint)
 	case lua.LChannel:
 		return reflect.ValueOf(converted)
 	case lua.LNumber:
-		return reflect.ValueOf(converted).Convert(hint)
+		var val reflect.Value
+		if hint.Kind() == reflect.String {
+			val = reflect.ValueOf(converted.String())
+		} else {
+			val = reflect.ValueOf(converted)
+		}
+		return val.Convert(hint)
 	case *lua.LFunction:
 		return reflect.ValueOf(converted)
 	case *lua.LNilType:
@@ -116,6 +128,18 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	case lua.LString:
 		return reflect.ValueOf(string(converted)).Convert(hint)
 	case *lua.LTable:
+		if hint.Kind() == reflect.Slice {
+			elem := hint.Elem()
+			len := converted.Len()
+			s := reflect.MakeSlice(reflect.SliceOf(elem), len, len)
+			for i := 0; i < len; i++ {
+				value := converted.RawGetInt(i + 1)
+				elemValue := lValueToReflect(value, elem)
+				s.Index(i).Set(elemValue)
+			}
+			return s
+		}
+
 		return reflect.ValueOf(converted)
 	case *lua.LUserData:
 		return reflect.ValueOf(converted.Value)
