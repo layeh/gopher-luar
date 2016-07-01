@@ -128,7 +128,8 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 	case lua.LString:
 		return reflect.ValueOf(string(converted)).Convert(hint)
 	case *lua.LTable:
-		if hint.Kind() == reflect.Slice {
+		switch {
+		case hint.Kind() == reflect.Slice:
 			elemType := hint.Elem()
 			len := converted.Len()
 			s := reflect.MakeSlice(hint, len, len)
@@ -140,14 +141,13 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 			}
 
 			return s
-		}
 
-		if hint.Kind() == reflect.Map {
+		case hint.Kind() == reflect.Map:
 			keyType := hint.Elem()
 			elemType := hint.Elem()
 			s := reflect.MakeMap(hint)
 
-			converted.ForEach(func (key, value lua.LValue) {
+			converted.ForEach(func(key, value lua.LValue) {
 				if _, ok := key.(lua.LString); !ok {
 					return
 				}
@@ -158,9 +158,50 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 			})
 
 			return s
-		}
 
-		return reflect.ValueOf(converted)
+		case hint.Kind() == reflect.Struct:
+			s := reflect.New(hint).Elem()
+
+			converted.ForEach(func(key, value lua.LValue) {
+				if _, ok := key.(lua.LString); !ok {
+					return
+				}
+
+				field, ok := hint.FieldByName(key.String())
+				if !ok {
+					panic("invalid field " + key.String())
+				}
+
+				lValue := lValueToReflect(value, field.Type)
+				s.FieldByIndex(field.Index).Set(lValue)
+			})
+
+			return s
+
+		case hint.Kind() == reflect.Ptr && hint.Elem().Kind() == reflect.Struct:
+			elemType := hint.Elem()
+			s := reflect.New(elemType)
+			elem := s.Elem()
+
+			converted.ForEach(func(key, value lua.LValue) {
+				if _, ok := key.(lua.LString); !ok {
+					return
+				}
+
+				field, ok := elemType.FieldByName(key.String())
+				if !ok || field.PkgPath != "" {
+					panic("invalid field " + key.String())
+				}
+
+				lValue := lValueToReflect(value, field.Type)
+				elem.FieldByIndex(field.Index).Set(lValue)
+			})
+
+			return s
+
+		default:
+			return reflect.ValueOf(converted)
+		}
 	case *lua.LUserData:
 		return reflect.ValueOf(converted.Value)
 	}

@@ -1075,6 +1075,52 @@ func Example__32() {
 	// false
 }
 
+type E_33 struct {
+	Person
+	P Person
+}
+
+func Example__33() {
+	const code = `
+	x.Person = {
+		Name = "Bill",
+		Age = 33
+	}
+	x.P = {
+		Name = "Tim",
+		Age = 94,
+		Friend = {
+			Name = "Bob",
+			Age = 77
+		}
+	}
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	e := &E_33{}
+	L.SetGlobal("x", New(L, e))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(e.Name)
+	fmt.Println(e.Age)
+	fmt.Println(e.P.Name)
+	fmt.Println(e.P.Age)
+	fmt.Println(e.P.Friend.Name)
+	fmt.Println(e.P.Friend.Age)
+	// Output:
+	// Bill
+	// 33
+	// Tim
+	// 94
+	// Bob
+	// 77
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
