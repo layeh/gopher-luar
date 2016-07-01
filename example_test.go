@@ -1038,6 +1038,44 @@ func Example__31() {
 	// c
 }
 
+type E_32 struct {
+	S map[string]string
+}
+
+func Example__32() {
+	const code = `
+	x.S = {
+		33,
+		a = 123,
+		b = nil,
+		c = "hello",
+		d = false
+	}
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	e := &E_32{}
+	L.SetGlobal("x", luar.New(L, e))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(len(e.S))
+	fmt.Println(e.S["a"])
+	fmt.Println(e.S["b"])
+	fmt.Println(e.S["c"])
+	fmt.Println(e.S["d"])
+	// Output:
+	// 3
+	// 123
+	//
+	// hello
+	// false
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

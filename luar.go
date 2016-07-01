@@ -129,14 +129,34 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 		return reflect.ValueOf(string(converted)).Convert(hint)
 	case *lua.LTable:
 		if hint.Kind() == reflect.Slice {
-			elem := hint.Elem()
+			elemType := hint.Elem()
 			len := converted.Len()
-			s := reflect.MakeSlice(reflect.SliceOf(elem), len, len)
+			s := reflect.MakeSlice(hint, len, len)
+
 			for i := 0; i < len; i++ {
 				value := converted.RawGetInt(i + 1)
-				elemValue := lValueToReflect(value, elem)
+				elemValue := lValueToReflect(value, elemType)
 				s.Index(i).Set(elemValue)
 			}
+
+			return s
+		}
+
+		if hint.Kind() == reflect.Map {
+			keyType := hint.Elem()
+			elemType := hint.Elem()
+			s := reflect.MakeMap(hint)
+
+			converted.ForEach(func (key, value lua.LValue) {
+				if _, ok := key.(lua.LString); !ok {
+					return
+				}
+
+				lKey := lValueToReflect(key, keyType)
+				lValue := lValueToReflect(value, elemType)
+				s.SetMapIndex(lKey, lValue)
+			})
+
 			return s
 		}
 
