@@ -26,7 +26,7 @@ func (p *Person) AddNumbers(L *LState) int {
 	for i := L.GetTop(); i >= 1; i-- {
 		sum += L.CheckInt(i)
 	}
-	L.Push(lua.LString("Tim counts: " + strconv.Itoa(sum)))
+	L.Push(lua.LString(p.Name + " counts: " + strconv.Itoa(sum)))
 	return 1
 }
 
