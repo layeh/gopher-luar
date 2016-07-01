@@ -96,7 +96,7 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 	return ud
 }
 
-func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
+func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Value {
 	if hint == refTypeLuaLValue {
 		return reflect.ValueOf(v)
 	}
@@ -136,7 +136,7 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 
 			for i := 0; i < len; i++ {
 				value := converted.RawGetInt(i + 1)
-				elemValue := lValueToReflect(value, elemType)
+				elemValue := lValueToReflect(L, value, elemType)
 				s.Index(i).Set(elemValue)
 			}
 
@@ -152,8 +152,8 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 					return
 				}
 
-				lKey := lValueToReflect(key, keyType)
-				lValue := lValueToReflect(value, elemType)
+				lKey := lValueToReflect(L, key, keyType)
+				lValue := lValueToReflect(L, value, elemType)
 				s.SetMapIndex(lKey, lValue)
 			})
 
@@ -172,7 +172,7 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 					panic("invalid field " + key.String())
 				}
 
-				lValue := lValueToReflect(value, field.Type)
+				lValue := lValueToReflect(L, value, field.Type)
 				s.FieldByIndex(field.Index).Set(lValue)
 			})
 
@@ -193,7 +193,7 @@ func lValueToReflect(v lua.LValue, hint reflect.Type) reflect.Value {
 					panic("invalid field " + key.String())
 				}
 
-				lValue := lValueToReflect(value, field.Type)
+				lValue := lValueToReflect(L, value, field.Type)
 				elem.FieldByIndex(field.Index).Set(lValue)
 			})
 

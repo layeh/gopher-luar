@@ -50,7 +50,7 @@ func funcBypass(L *lua.LState) int {
 	args := make([]reflect.Value, 0, 2)
 	if refType.NumIn() == 2 {
 		receiverHint := refType.In(0)
-		receiver := lValueToReflect(L.Get(1), receiverHint)
+		receiver := lValueToReflect(L, L.Get(1), receiverHint)
 		if receiver.Type() != receiverHint {
 			L.RaiseError("incorrect receiver type")
 		}
@@ -81,7 +81,7 @@ func funcRegular(L *lua.LState) int {
 		} else {
 			hint = refType.In(i)
 		}
-		args[i] = lValueToReflect(L.Get(i+1), hint)
+		args[i] = lValueToReflect(L, L.Get(i+1), hint)
 	}
 	ret := ref.Call(args)
 	if len(ret) == 1 && ret[0].Type() == refTypeLuaLValueSlice {

@@ -70,6 +70,6 @@ func structNewIndex(L *lua.LState) int {
 	if !field.CanSet() {
 		L.RaiseError("cannot set field " + key)
 	}
-	field.Set(lValueToReflect(value, field.Type()))
+	field.Set(lValueToReflect(L, value, field.Type()))
 	return 0
 }

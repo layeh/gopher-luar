@@ -63,7 +63,7 @@ func arrayNewIndex(L *lua.LState) int {
 	if index < 1 || index > ref.Len() {
 		L.ArgError(2, "index out of range")
 	}
-	ref.Index(index - 1).Set(lValueToReflect(value, ref.Type().Elem()))
+	ref.Index(index - 1).Set(lValueToReflect(L, value, ref.Type().Elem()))
 	return 0
 }
 
