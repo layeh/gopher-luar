@@ -1,10 +1,9 @@
-package luar_test
+package luar
 
 import (
 	"fmt"
 	"strconv"
 
-	"github.com/layeh/gopher-luar"
 	"github.com/yuin/gopher-lua"
 )
 
@@ -22,7 +21,7 @@ func (p Person) String() string {
 	return p.Name + " (" + strconv.Itoa(p.Age) + ")"
 }
 
-func (p *Person) AddNumbers(L *luar.LState) int {
+func (p *Person) AddNumbers(L *LState) int {
 	sum := 0
 	for i := L.GetTop(); i >= 1; i-- {
 		sum += L.CheckInt(i)
@@ -56,8 +55,8 @@ func Example__1() {
 		Age:  40,
 	}
 
-	L.SetGlobal("user1", luar.New(L, tim))
-	L.SetGlobal("user2", luar.New(L, john))
+	L.SetGlobal("user1", New(L, tim))
+	L.SetGlobal("user2", New(L, john))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -103,8 +102,8 @@ func Example__2() {
 		"DEF": 456,
 	}
 
-	L.SetGlobal("things", luar.New(L, things))
-	L.SetGlobal("thangs", luar.New(L, thangs))
+	L.SetGlobal("things", New(L, things))
+	L.SetGlobal("thangs", New(L, thangs))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -151,9 +150,9 @@ func Example__3() {
 		Name: "Tim",
 	}
 
-	L.SetGlobal("user1", luar.New(L, tim))
-	L.SetGlobal("Person", luar.NewType(L, Person{}))
-	L.SetGlobal("People", luar.NewType(L, map[string]*Person{}))
+	L.SetGlobal("user1", New(L, tim))
+	L.SetGlobal("Person", NewType(L, Person{}))
+	L.SetGlobal("People", NewType(L, map[string]*Person{}))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -183,8 +182,8 @@ func Example__4() {
 		return "Hello, " + p.Name
 	}
 
-	L.SetGlobal("person", luar.New(L, tim))
-	L.SetGlobal("getHello", luar.New(L, fn))
+	L.SetGlobal("person", New(L, tim))
+	L.SetGlobal("getHello", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -211,7 +210,7 @@ func Example__5() {
 		close(ch)
 	}()
 
-	L.SetGlobal("ch", luar.New(L, ch))
+	L.SetGlobal("ch", New(L, ch))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -243,7 +242,7 @@ func Example__6() {
 		"FR": "France",
 	}
 
-	L.SetGlobal("countries", luar.New(L, countries))
+	L.SetGlobal("countries", New(L, countries))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -271,7 +270,7 @@ func Example__7() {
 		}
 	}
 
-	L.SetGlobal("fn", luar.New(L, fn))
+	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -310,7 +309,7 @@ func Example__8() {
 		return tbl
 	}
 
-	L.SetGlobal("fn", luar.New(L, fn))
+	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -338,7 +337,7 @@ func Example__9() {
 
 	items := make([]string, 0, 10)
 
-	L.SetGlobal("items", luar.New(L, items))
+	L.SetGlobal("items", New(L, items))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -366,7 +365,7 @@ func Example__10() {
 
 	type ints []int
 
-	L.SetGlobal("newInts", luar.NewType(L, ints{}))
+	L.SetGlobal("newInts", NewType(L, ints{}))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -395,9 +394,9 @@ func Example__11() {
 		Name: "John",
 	}
 
-	L.SetGlobal("p1", luar.New(L, &p1))
-	L.SetGlobal("p1_alias", luar.New(L, &p1))
-	L.SetGlobal("p2", luar.New(L, &p2))
+	L.SetGlobal("p1", New(L, &p1))
+	L.SetGlobal("p1_alias", New(L, &p1))
+	L.SetGlobal("p2", New(L, &p2))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -428,8 +427,8 @@ func Example__12() {
 		Age:  2,
 	}
 
-	L.SetGlobal("p1", luar.New(L, &p1))
-	L.SetGlobal("p2", luar.New(L, &p2))
+	L.SetGlobal("p1", New(L, &p1))
+	L.SetGlobal("p2", New(L, &p2))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -451,7 +450,7 @@ func Example__13() {
 		Name: "Tim",
 	}
 
-	L.SetGlobal("p", luar.New(L, &p))
+	L.SetGlobal("p", New(L, &p))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -474,7 +473,7 @@ func Example__14() {
 		Age:  66,
 	}
 
-	L.SetGlobal("p", luar.New(L, &p))
+	L.SetGlobal("p", New(L, &p))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -515,8 +514,8 @@ func Example__15() {
 	var arr OneString
 	arr[0] = "Test"
 
-	L.SetGlobal("e", luar.New(L, &elem))
-	L.SetGlobal("arr", luar.New(L, arr))
+	L.SetGlobal("e", New(L, &elem))
+	L.SetGlobal("arr", New(L, arr))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -544,7 +543,7 @@ func Example__16() {
 		return s
 	}
 
-	L.SetGlobal("fn", luar.New(L, fn))
+	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -563,7 +562,7 @@ func Example__17() {
 
 	str := "hello"
 
-	L.SetGlobal("ptr", luar.New(L, &str))
+	L.SetGlobal("ptr", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -585,8 +584,8 @@ func Example__18() {
 	var ptr1 *string
 	str := "hello"
 
-	L.SetGlobal("ptr1", luar.New(L, ptr1))
-	L.SetGlobal("ptr2", luar.New(L, &str))
+	L.SetGlobal("ptr1", New(L, ptr1))
+	L.SetGlobal("ptr2", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -609,7 +608,7 @@ func Example__19() {
 
 	str := "hello"
 
-	L.SetGlobal("str", luar.New(L, &str))
+	L.SetGlobal("str", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -650,8 +649,8 @@ func Example__20() {
 		},
 	}
 
-	L.SetGlobal("a", luar.New(L, a))
-	L.SetGlobal("str_ptr", luar.NewType(L, ""))
+	L.SetGlobal("a", New(L, a))
+	L.SetGlobal("str_ptr", NewType(L, ""))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -673,7 +672,7 @@ func Example__21() {
 
 	var fn func()
 
-	L.SetGlobal("fn", luar.New(L, fn))
+	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -695,8 +694,8 @@ func Example__22() {
 		fmt.Printf("%d %d %d\n", val[0], val[1], val[2])
 	}
 
-	L.SetGlobal("fn", luar.New(L, fn))
-	L.SetGlobal("arr", luar.New(L, arr))
+	L.SetGlobal("fn", New(L, fn))
+	L.SetGlobal("arr", New(L, arr))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -715,7 +714,7 @@ func Example__23() {
 
 	a := complex(float64(1), float64(2))
 
-	L.SetGlobal("a", luar.New(L, a))
+	L.SetGlobal("a", New(L, a))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -769,9 +768,9 @@ func Example__24() {
 		"x": 15,
 	}
 
-	L.SetGlobal("a", luar.New(L, a))
-	L.SetGlobal("b", luar.New(L, &b))
-	L.SetGlobal("c", luar.New(L, c))
+	L.SetGlobal("a", New(L, a))
+	L.SetGlobal("b", New(L, &b))
+	L.SetGlobal("c", New(L, c))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -802,7 +801,7 @@ func Example__25() {
 	defer L.Close()
 
 	a := E25A{}
-	L.SetGlobal("a", luar.New(L, &a))
+	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -840,7 +839,7 @@ func Example__26() {
 		Hidden: true,
 	}
 
-	L.SetGlobal("a", luar.New(L, a))
+	L.SetGlobal("a", New(L, a))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -871,8 +870,8 @@ func Example__27() {
 		Name: "bob",
 	}
 
-	L.SetGlobal("a", luar.New(L, a))
-	L.SetGlobal("b", luar.New(L, b))
+	L.SetGlobal("a", New(L, a))
+	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -907,7 +906,7 @@ func Example__28() {
 	b.Test()
 	b.Test2()
 
-	L.SetGlobal("b", luar.New(L, b))
+	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -937,7 +936,7 @@ func Example__29() {
 	a.E29_String = "hello"
 	fmt.Println(a.E29_String)
 
-	L.SetGlobal("a", luar.New(L, &a))
+	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -992,13 +991,13 @@ func Example__30() {
 		E30_A: &E30_A{},
 	}
 
-	mt := luar.MT(L, E30_B{})
+	mt := MT(L, E30_B{})
 	mt.Blacklist("private", "Private")
 
-	mt = luar.MT(L, E30_A{})
+	mt = MT(L, E30_A{})
 	mt.Whitelist("public", "Public")
 
-	L.SetGlobal("b", luar.New(L, b))
+	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -1021,7 +1020,7 @@ func Example__31() {
 	defer L.Close()
 
 	e := &E_31{}
-	L.SetGlobal("x", luar.New(L, e))
+	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -1057,7 +1056,7 @@ func Example__32() {
 	defer L.Close()
 
 	e := &E_32{}
-	L.SetGlobal("x", luar.New(L, e))
+	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -1084,7 +1083,7 @@ func ExampleLState() {
 	L := lua.NewState()
 	defer L.Close()
 
-	sum := func(L *luar.LState) int {
+	sum := func(L *LState) int {
 		total := 0
 		for i := 1; i <= L.GetTop(); i++ {
 			total += L.CheckInt(i)
@@ -1093,7 +1092,7 @@ func ExampleLState() {
 		return 1
 	}
 
-	L.SetGlobal("sum", luar.New(L, sum))
+	L.SetGlobal("sum", New(L, sum))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -1111,7 +1110,7 @@ func ExampleNewType() {
 		Artist string
 	}
 
-	L.SetGlobal("Song", luar.NewType(L, Song{}))
+	L.SetGlobal("Song", NewType(L, Song{}))
 	L.DoString(`
 		s = Song()
 		s.Title = "Montana"
