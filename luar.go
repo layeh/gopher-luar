@@ -66,7 +66,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getMetatable(L, val)
+		ud.Metatable = getMetatableFromValue(L, val)
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val)

@@ -20,7 +20,7 @@ func MT(L *lua.LState, value interface{}) *Metatable {
 	switch val.Type().Kind() {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		return &Metatable{
-			LTable: getMetatable(L, val),
+			LTable: getMetatableFromValue(L, val),
 			l:      L,
 		}
 	default:

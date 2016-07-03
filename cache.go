@@ -125,10 +125,9 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 	}
 }
 
-func getMetatable(L *lua.LState, value reflect.Value) *lua.LTable {
+func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	cache := getMTCache(L)
 
-	vtype := value.Type()
 	if vtype.Kind() == reflect.Ptr {
 		vtype = vtype.Elem()
 	}
@@ -191,6 +190,11 @@ func getMetatable(L *lua.LState, value reflect.Value) *lua.LTable {
 
 	cache.regular[vtype] = mt
 	return mt
+}
+
+func getMetatableFromValue(L *lua.LState, value reflect.Value) *lua.LTable {
+	vtype := value.Type()
+	return getMetatable(L, vtype)
 }
 
 func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
