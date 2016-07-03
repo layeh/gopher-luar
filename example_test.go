@@ -1078,6 +1078,7 @@ func Example__32() {
 type E_33 struct {
 	Person
 	P Person
+	P2 Person `luar:"other"`
 }
 
 func Example__33() {
@@ -1093,6 +1094,10 @@ func Example__33() {
 			Name = "Bob",
 			Age = 77
 		}
+	}
+	x.other = {
+		Name = "Dale",
+		Age = 26
 	}
 	`
 
@@ -1112,6 +1117,8 @@ func Example__33() {
 	fmt.Println(e.P.Age)
 	fmt.Println(e.P.Friend.Name)
 	fmt.Println(e.P.Friend.Age)
+	fmt.Println(e.P2.Name)
+	fmt.Println(e.P2.Age)
 	// Output:
 	// Bill
 	// 33
@@ -1119,6 +1126,8 @@ func Example__33() {
 	// 94
 	// Bob
 	// 77
+	// Dale
+	// 26
 }
 
 func ExampleLState() {
