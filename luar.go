@@ -113,7 +113,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 		}
 		return val.Convert(hint)
 	case lua.LChannel:
-		return reflect.ValueOf(converted)
+		return reflect.ValueOf(converted).Convert(hint)
 	case lua.LNumber:
 		var val reflect.Value
 		if hint.Kind() == reflect.String {
@@ -123,7 +123,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 		}
 		return val.Convert(hint)
 	case *lua.LFunction:
-		return reflect.ValueOf(converted)
+		return reflect.ValueOf(converted).Convert(hint)
 	case *lua.LNilType:
 		switch hint.Kind() {
 		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
@@ -132,7 +132,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 			panic("cannot convert nil to " + hint.String())
 		}
 	case *lua.LState:
-		return reflect.ValueOf(converted)
+		return reflect.ValueOf(converted).Convert(hint)
 	case lua.LString:
 		return reflect.ValueOf(string(converted)).Convert(hint)
 	case *lua.LTable:
@@ -202,10 +202,10 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 			return t
 
 		default:
-			return reflect.ValueOf(converted)
+			return reflect.ValueOf(converted).Convert(hint)
 		}
 	case *lua.LUserData:
-		return reflect.ValueOf(converted.Value)
+		return reflect.ValueOf(converted.Value).Convert(hint)
 	}
 	panic("fatal lValueToReflect error")
 }
