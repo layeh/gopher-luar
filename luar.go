@@ -125,7 +125,12 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 	case *lua.LFunction:
 		return reflect.ValueOf(converted)
 	case *lua.LNilType:
-		return reflect.Zero(hint)
+		switch hint.Kind() {
+		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
+			return reflect.Zero(hint)
+		default:
+			panic("cannot convert nil to " + hint.String())
+		}
 	case *lua.LState:
 		return reflect.ValueOf(converted)
 	case lua.LString:

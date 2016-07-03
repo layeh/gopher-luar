@@ -1013,7 +1013,7 @@ type E_31 struct {
 
 func Example__31() {
 	const code = `
-	x.S = {"a", "b", nil, 3, true, "c"}
+	x.S = {"a", "b", "", 3, true, "c"}
 	`
 
 	L := lua.NewState()
