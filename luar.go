@@ -170,15 +170,21 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 			s := reflect.New(hint)
 			t := s.Elem()
 
+			mt := &Metatable{
+				LTable: getMetatable(L, hint),
+			}
+
 			converted.ForEach(func(key, value lua.LValue) {
 				if _, ok := key.(lua.LString); !ok {
 					return
 				}
 
-				field, ok := hint.FieldByName(key.String())
-				if !ok {
-					panic("invalid field " + key.String())
+				fieldName := key.String()
+				index := mt.fieldIndex(fieldName)
+				if index == nil {
+					panic("invalid field " + fieldName)
 				}
+				field := hint.FieldByIndex(index)
 
 				lValue := lValueToReflect(L, value, field.Type)
 				t.FieldByIndex(field.Index).Set(lValue)

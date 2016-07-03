@@ -1077,7 +1077,7 @@ func Example__32() {
 
 type E_33 struct {
 	Person
-	P Person
+	P  Person
 	P2 Person `luar:"other"`
 }
 
@@ -1128,6 +1128,44 @@ func Example__33() {
 	// 77
 	// Dale
 	// 26
+}
+
+type E_34 struct {
+	A string `luar:"q"`
+	B int    `luar:"other"`
+	C int    `luar:"-"`
+}
+
+func Example__34() {
+	const code = `
+	_ = x ^ {
+		q = "Cat",
+		other = 675
+	}
+	pcall(function()
+		_ = x ^ {
+			C = 333
+		}
+	end)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	e := &E_34{}
+	L.SetGlobal("x", New(L, e))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(e.A)
+	fmt.Println(e.B)
+	fmt.Println(e.C)
+	// Output:
+	// Cat
+	// 675
+	// 0
 }
 
 func ExampleLState() {
