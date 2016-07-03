@@ -31,7 +31,7 @@ func MT(L *lua.LState, value interface{}) *Metatable {
 func (m *Metatable) original() *lua.LTable {
 	original, ok := m.RawGetString("original").(*lua.LTable)
 	if !ok {
-		panic("gopher-luar: corrupt luar metatable")
+		m.l.RaiseError("gopher-luar: corrupt luar metatable")
 	}
 	return original
 }

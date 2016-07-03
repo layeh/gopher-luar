@@ -129,7 +129,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
 			return reflect.Zero(hint)
 		default:
-			panic("cannot convert nil to " + hint.String())
+			L.RaiseError("cannot convert nil to %s", hint.String())
 		}
 	case *lua.LState:
 		return reflect.ValueOf(converted).Convert(hint)
@@ -187,7 +187,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 				fieldName := key.String()
 				index := mt.fieldIndex(fieldName)
 				if index == nil {
-					panic("invalid field " + fieldName)
+					L.RaiseError("invalid field %s", fieldName)
 				}
 				field := hint.FieldByIndex(index)
 
@@ -207,5 +207,6 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 	case *lua.LUserData:
 		return reflect.ValueOf(converted.Value).Convert(hint)
 	}
-	panic("fatal lValueToReflect error")
+	L.RaiseError("fatal lValueToReflect error")
+	return reflect.Value{} // never returns
 }

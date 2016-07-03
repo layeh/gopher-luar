@@ -26,7 +26,7 @@ func newMTCache() *mtCache {
 func getMTCache(L *lua.LState) *mtCache {
 	registry, ok := L.Get(lua.RegistryIndex).(*lua.LTable)
 	if !ok {
-		panic("gopher-luar: corrupt lua registry")
+		L.RaiseError("gopher-luar: corrupt lua registry")
 	}
 	lCache, ok := registry.RawGetString(cacheKey).(*lua.LUserData)
 	if !ok {
@@ -36,7 +36,7 @@ func getMTCache(L *lua.LState) *mtCache {
 	}
 	cache, ok := lCache.Value.(*mtCache)
 	if !ok {
-		panic("gopher-luar: corrupt luar metatable cache")
+		L.RaiseError("gopher-luar: corrupt luar metatable cache")
 	}
 	return cache
 }
