@@ -189,6 +189,38 @@
 //  ---
 //  print(s:len()) -- prints "2"
 //
+// Lua to Go conversions
+//
+// The Lua types are automatically converted to match the output Go type, as
+// described below:
+//
+//  Lua type    Go kind/type
+//  -----------------------------------------------------
+//  LBool       bool
+//              string ("true" or "false")
+//  LChannel    chan lua.LValue
+//  LNumber     numeric value
+//              string (strconv.Itoa)
+//  LFunction   func
+//  LNilType    chan, func, interface, map, ptr, slice, unsafe pointer
+//  LState      *lua.LState
+//  LString     string
+//  LTable      slice
+//              map
+//              struct
+//              *struct
+//  LUserData   underlying lua.LUserData.Value type
+//
+// Example creating a Go slice from Lua:
+//  type Group struct {
+//      Names []string
+//  }
+//
+//  g := new(Group)
+//  L.SetGlobal("g", luar.New(L, g))
+//  ---
+//  g.Names = {"Tim", "Frank", "George"}
+//
 // New types
 //
 // Type constructors can be created using NewType. When called, it returns a
