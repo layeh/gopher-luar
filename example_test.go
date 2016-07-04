@@ -1206,6 +1206,10 @@ func Example__35() {
 
 	fmt.Println(e.Fn2("hello", 1, 2))
 	fmt.Println(e.Fn2("hello", 1, 2, 3))
+
+	if L.GetTop() != 0 {
+		panic("expecting GetTop to return 0, got " + strconv.Itoa(L.GetTop()))
+	}
 	// Output:
 	// >A< 1
 	// >B< 2

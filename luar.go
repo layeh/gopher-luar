@@ -153,6 +153,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 			}
 
 			L.Call(len(args)+varadicCount, hint.NumOut())
+			defer L.Pop(hint.NumOut())
 
 			ret := make([]reflect.Value, hint.NumOut())
 
