@@ -1168,6 +1168,52 @@ func Example__34() {
 	// 0
 }
 
+type E_35 struct {
+	Fn  func(a string) (string, int)
+	Fn2 func(a string, b ...int) string
+}
+
+func Example__35() {
+	const code = `
+	i = 0
+	x.Fn = function(str)
+		i = i + 1
+		return ">" .. str .. "<", i
+	end
+
+	x.Fn2 = function(str, a, b, c)
+		if type(a) == "number" and type(b) == "number" and type(c) == "number" then
+			return str
+		end
+		return ""
+	end
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	e := &E_35{}
+	L.SetGlobal("x", New(L, e))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	for ch := 'A'; ch <= 'C'; ch++ {
+		str, i := e.Fn(string(ch))
+		fmt.Printf("%s %d\n", str, i)
+	}
+
+	fmt.Println(e.Fn2("hello", 1, 2))
+	fmt.Println(e.Fn2("hello", 1, 2, 3))
+	// Output:
+	// >A< 1
+	// >B< 2
+	// >C< 3
+	//
+	// hello
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

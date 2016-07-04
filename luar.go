@@ -123,7 +123,47 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 		}
 		return val.Convert(hint)
 	case *lua.LFunction:
-		return reflect.ValueOf(converted).Convert(hint)
+		fn := func(args []reflect.Value) []reflect.Value {
+			L.Push(converted)
+
+			varadicCount := 0
+
+			for i, arg := range args {
+				if hint.IsVariadic() && i+1 == len(args) {
+					// arg is the varadic slice
+					varadicCount = arg.Len()
+					for j := 0; j < varadicCount; j++ {
+						arg := arg.Index(j)
+						if !arg.CanInterface() {
+							L.Pop(i + j + 1)
+							L.RaiseError("unable to Interface argument %d", i+j)
+						}
+						L.Push(New(L, arg.Interface()))
+					}
+					// recount for varadic slice that appeared
+					varadicCount--
+					break
+				}
+
+				if !arg.CanInterface() {
+					L.Pop(i + 1)
+					L.RaiseError("unable to Interface argument %d", i)
+				}
+				L.Push(New(L, arg.Interface()))
+			}
+
+			L.Call(len(args)+varadicCount, hint.NumOut())
+
+			ret := make([]reflect.Value, hint.NumOut())
+
+			for i := 0; i < hint.NumOut(); i++ {
+				outHint := hint.Out(i)
+				ret[i] = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint)
+			}
+
+			return ret
+		}
+		return reflect.MakeFunc(hint, fn)
 	case *lua.LNilType:
 		switch hint.Kind() {
 		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
