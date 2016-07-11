@@ -1218,6 +1218,34 @@ func Example__35() {
 	// hello
 }
 
+type E_36 struct {
+	F1 *lua.LFunction
+}
+
+func Example__36() {
+	const code = `
+	x.F1 = function(str)
+		print("Hello World")
+	end
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	e := &E_36{}
+	L.SetGlobal("x", New(L, e))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	L.Push(e.F1)
+	L.Call(0, 0)
+
+	// Output:
+	// Hello World
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

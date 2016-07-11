@@ -97,7 +97,7 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 }
 
 func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Value {
-	if hint == refTypeLuaLValue {
+	if hint.Implements(refTypeLuaLValue) {
 		return reflect.ValueOf(v)
 	}
 
