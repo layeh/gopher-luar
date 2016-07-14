@@ -1246,6 +1246,40 @@ func Example__36() {
 	// Hello World
 }
 
+func Example__37() {
+	const code = `
+	for i, x in s() do
+		print(i, x)
+	end
+	for i, x in e() do
+		print(i, x)
+	end
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := []string{
+		"hello",
+		"there",
+		"tim",
+	}
+
+	e := []string{}
+
+	L.SetGlobal("s", New(L, s))
+	L.SetGlobal("e", New(L, e))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// 1	hello
+	// 2	there
+	// 3	tim
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

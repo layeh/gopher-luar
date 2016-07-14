@@ -176,6 +176,7 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__index", L.NewFunction(sliceIndex))
 		mt.RawSetString("__newindex", L.NewFunction(sliceNewIndex))
 		mt.RawSetString("__len", L.NewFunction(sliceLen))
+		mt.RawSetString("__call", L.NewFunction(sliceCall))
 	default:
 		mt.RawSetString("__index", L.NewFunction(ptrIndex))
 	}

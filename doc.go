@@ -103,6 +103,9 @@
 //  ---
 //  letters = letters:append("o", "u")
 //
+// Like maps, calling a slice value (e.g. slice()) returns an iterator over its
+// values.
+//
 // Arrays
 //
 // Arrays can be indexed and have their length queried. Only pointers to

@@ -75,6 +75,28 @@ func sliceLen(L *lua.LState) int {
 	return 1
 }
 
+func sliceCall(L *lua.LState) int {
+	ref, _, isPtr := checkSlice(L, 1)
+	if isPtr {
+		L.RaiseError("invalid operation on slice pointer")
+	}
+
+	i := 0
+	fn := func(L *lua.LState) int {
+		if i >= ref.Len() {
+			return 0
+		}
+		item := ref.Index(i).Interface()
+		L.Push(lua.LNumber(i + 1))
+		L.Push(New(L, item))
+		i++
+		return 2
+	}
+
+	L.Push(L.NewFunction(fn))
+	return 1
+}
+
 // slice methods
 
 func sliceCapacity(L *lua.LState) int {
