@@ -1254,6 +1254,12 @@ func Example__37() {
 	for i, x in e() do
 		print(i, x)
 	end
+	for i, x in a() do
+		print(i, x)
+	end
+	for i, x in ap() do
+		print(i, x)
+	end
 	`
 
 	L := lua.NewState()
@@ -1267,8 +1273,12 @@ func Example__37() {
 
 	e := []string{}
 
+	a := [...]string{"x", "y"}
+
 	L.SetGlobal("s", New(L, s))
 	L.SetGlobal("e", New(L, e))
+	L.SetGlobal("a", New(L, a))
+	L.SetGlobal("ap", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -1278,6 +1288,10 @@ func Example__37() {
 	// 1	hello
 	// 2	there
 	// 3	tim
+	// 1	x
+	// 2	y
+	// 1	x
+	// 2	y
 }
 
 func ExampleLState() {

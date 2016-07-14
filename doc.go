@@ -103,13 +103,16 @@
 //  ---
 //  letters = letters:append("o", "u")
 //
-// Like maps, calling a slice value (e.g. slice()) returns an iterator over its
+// Like maps, calling a slice (e.g. slice()) returns an iterator over its
 // values.
 //
 // Arrays
 //
 // Arrays can be indexed and have their length queried. Only pointers to
 // arrays can their contents modified.
+//
+// Like slices and maps, calling an array (e.g. array()) returns an iterator
+// over its values.
 //
 // Example:
 //  var arr [2]string

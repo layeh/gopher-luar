@@ -73,3 +73,23 @@ func arrayLen(L *lua.LState) int {
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
+
+func arrayCall(L *lua.LState) int {
+	ref, _, _ := checkArray(L, 1)
+	ref = reflect.Indirect(ref)
+
+	i := 0
+	fn := func(L *lua.LState) int {
+		if i >= ref.Len() {
+			return 0
+		}
+		item := ref.Index(i).Interface()
+		L.Push(lua.LNumber(i + 1))
+		L.Push(New(L, item))
+		i++
+		return 2
+	}
+
+	L.Push(L.NewFunction(fn))
+	return 1
+}

@@ -150,6 +150,7 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__index", L.NewFunction(arrayIndex))
 		mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
 		mt.RawSetString("__len", L.NewFunction(arrayLen))
+		mt.RawSetString("__call", L.NewFunction(arrayCall))
 	case reflect.Chan:
 		methods.RawSetString("send", L.NewFunction(chanSend))
 		methods.RawSetString("receive", L.NewFunction(chanReceive))
