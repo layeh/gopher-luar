@@ -30,7 +30,11 @@ func arrayIndex(L *lua.LState) int {
 		if index < 1 || index > ref.Len() {
 			L.ArgError(2, "index out of range")
 		}
-		L.Push(New(L, ref.Index(index-1).Interface()))
+		val := ref.Index(index - 1)
+		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
+			val = val.Addr()
+		}
+		L.Push(New(L, val.Interface()))
 	case lua.LString:
 		if isPtr {
 			if fn := mt.ptrMethod(string(converted)); fn != nil {

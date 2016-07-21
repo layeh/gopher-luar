@@ -156,9 +156,6 @@
 //  Person.Age    -> "Age", "age"
 //  Person.Hidden -> Not accessible
 //
-// As a special case, accessing a field that is an array or struct returns
-// a pointer to that field, if possible.
-//
 // Pointers
 //
 // Pointers can be dereferenced using the unary minus (-) operator.
@@ -176,6 +173,9 @@
 //  L.SetGlobal("strptr", New(L, &str))
 //  ---
 //  print(str^"world") -- prints "world", and str's value is now "world"
+//
+// Pointers to struct and array values are returned when accessed via a struct
+// field, array index, or slice index.
 //
 // Type methods
 //

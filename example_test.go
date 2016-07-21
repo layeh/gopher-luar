@@ -1294,6 +1294,34 @@ func Example__37() {
 	// 2	y
 }
 
+func Example__38() {
+	const code = `
+	print(a[1]:AddNumbers(1, 2, 3, 4, 5))
+	print(s[1]:AddNumbers(1, 2, 3, 4, 5))
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := [...]Person{
+		{Name: "Tim"},
+	}
+	s := []Person{
+		{Name: "Tim"},
+	}
+
+	L.SetGlobal("a", New(L, &a))
+	L.SetGlobal("s", New(L, s))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// Tim counts: 15
+	// Tim counts: 15
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
