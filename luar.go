@@ -69,7 +69,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		ud.Metatable = getMetatableFromValue(L, val)
 		return ud
 	case reflect.Func:
-		return funcWrapper(L, val)
+		return funcWrapper(L, val, false)
 	case reflect.Interface:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
@@ -96,7 +96,7 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 	return ud
 }
 
-func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Value {
+func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, shouldConvertToPtr bool) reflect.Value {
 	if hint.Implements(refTypeLuaLValue) {
 		return reflect.ValueOf(v)
 	}
@@ -159,7 +159,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 
 			for i := 0; i < hint.NumOut(); i++ {
 				outHint := hint.Out(i)
-				ret[i] = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint)
+				ret[i] = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint, false)
 			}
 
 			return ret
@@ -185,7 +185,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 
 			for i := 0; i < len; i++ {
 				value := converted.RawGetInt(i + 1)
-				elemValue := lValueToReflect(L, value, elemType)
+				elemValue := lValueToReflect(L, value, elemType, false)
 				s.Index(i).Set(elemValue)
 			}
 
@@ -201,8 +201,8 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 					return
 				}
 
-				lKey := lValueToReflect(L, key, keyType)
-				lValue := lValueToReflect(L, value, elemType)
+				lKey := lValueToReflect(L, key, keyType, false)
+				lValue := lValueToReflect(L, value, elemType, false)
 				s.SetMapIndex(lKey, lValue)
 			})
 
@@ -232,7 +232,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 				}
 				field := hint.FieldByIndex(index)
 
-				lValue := lValueToReflect(L, value, field.Type)
+				lValue := lValueToReflect(L, value, field.Type, false)
 				t.FieldByIndex(field.Index).Set(lValue)
 			})
 
@@ -246,7 +246,15 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type) reflect.Val
 			return reflect.ValueOf(converted).Convert(hint)
 		}
 	case *lua.LUserData:
-		return reflect.ValueOf(converted.Value).Convert(hint)
+		val := reflect.ValueOf(converted.Value)
+		if val.Kind() != reflect.Ptr && hint.Kind() == reflect.Ptr && shouldConvertToPtr {
+			newVal := reflect.New(hint.Elem())
+			newVal.Elem().Set(val)
+			val = newVal
+		} else {
+			val = val.Convert(hint)
+		}
+		return val
 	}
 	L.RaiseError("fatal lValueToReflect error")
 	return reflect.Value{} // never returns

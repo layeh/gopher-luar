@@ -33,6 +33,10 @@ func getFunc(L *lua.LState) (ref reflect.Value, refType reflect.Type) {
 	return
 }
 
+func shouldConvertPtr(L *lua.LState) bool {
+	return bool(L.Get(lua.UpvalueIndex(2)).(lua.LBool))
+}
+
 func funcIsBypass(t reflect.Type) bool {
 	if t.NumIn() == 1 && t.NumOut() == 1 && t.In(0) == refTypeLStatePtr && t.Out(0) == refTypeInt {
 		return true
@@ -46,11 +50,16 @@ func funcIsBypass(t reflect.Type) bool {
 func funcBypass(L *lua.LState) int {
 	ref, refType := getFunc(L)
 
+	convertPtr := shouldConvertPtr(L)
+	var receiver reflect.Value
+	var ud lua.LValue
+
 	luarState := LState{L}
 	args := make([]reflect.Value, 0, 2)
 	if refType.NumIn() == 2 {
 		receiverHint := refType.In(0)
-		receiver := lValueToReflect(L, L.Get(1), receiverHint)
+		ud = L.Get(1)
+		receiver = lValueToReflect(L, ud, receiverHint, convertPtr)
 		if receiver.Type() != receiverHint {
 			L.RaiseError("incorrect receiver type")
 		}
@@ -58,7 +67,11 @@ func funcBypass(L *lua.LState) int {
 		L.Remove(1)
 	}
 	args = append(args, reflect.ValueOf(&luarState))
-	return ref.Call(args)[0].Interface().(int)
+	ret := ref.Call(args)[0].Interface().(int)
+	if receiver.IsValid() && convertPtr && receiver.Kind() == reflect.Ptr {
+		ud.(*lua.LUserData).Value = receiver.Elem().Interface()
+	}
+	return ret
 }
 
 func funcRegular(L *lua.LState) int {
@@ -73,6 +86,11 @@ func funcRegular(L *lua.LState) int {
 	if variadic && top < expected-1 {
 		L.RaiseError("invalid number of function arguments (%d or more expected, got %d)", expected-1, top)
 	}
+
+	convertPtr := shouldConvertPtr(L)
+	var receiver reflect.Value
+	var ud lua.LValue
+
 	args := make([]reflect.Value, top)
 	for i := 0; i < L.GetTop(); i++ {
 		var hint reflect.Type
@@ -81,9 +99,22 @@ func funcRegular(L *lua.LState) int {
 		} else {
 			hint = refType.In(i)
 		}
-		args[i] = lValueToReflect(L, L.Get(i+1), hint)
+		var arg reflect.Value
+		if i == 0 && convertPtr {
+			ud = L.Get(1)
+			arg = lValueToReflect(L, ud, hint, true)
+			receiver = arg
+		} else {
+			arg = lValueToReflect(L, L.Get(i+1), hint, false)
+		}
+		args[i] = arg
 	}
 	ret := ref.Call(args)
+
+	if receiver.IsValid() && convertPtr && receiver.Kind() == reflect.Ptr {
+		ud.(*lua.LUserData).Value = receiver.Elem().Interface()
+	}
+
 	if len(ret) == 1 && ret[0].Type() == refTypeLuaLValueSlice {
 		values := ret[0].Interface().([]lua.LValue)
 		for _, value := range values {
@@ -97,11 +128,12 @@ func funcRegular(L *lua.LState) int {
 	return len(ret)
 }
 
-func funcWrapper(L *lua.LState, fn reflect.Value) *lua.LFunction {
+func funcWrapper(L *lua.LState, fn reflect.Value, convertToPtr bool) *lua.LFunction {
 	up := L.NewUserData()
 	up.Value = fn
+
 	if funcIsBypass(fn.Type()) {
-		return L.NewClosure(funcBypass, up)
+		return L.NewClosure(funcBypass, up, lua.LBool(convertToPtr))
 	}
-	return L.NewClosure(funcRegular, up)
+	return L.NewClosure(funcRegular, up, lua.LBool(convertToPtr))
 }

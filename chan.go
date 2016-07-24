@@ -23,14 +23,14 @@ func chanIndex(L *lua.LState) int {
 	_, mt, isPtr := checkChan(L, 1)
 	key := L.CheckString(2)
 
-	if isPtr {
-		if fn := mt.ptrMethod(key); fn != nil {
+	if !isPtr {
+		if fn := mt.method(key); fn != nil {
 			L.Push(fn)
 			return 1
 		}
 	}
 
-	if fn := mt.method(key); fn != nil {
+	if fn := mt.ptrMethod(key); fn != nil {
 		L.Push(fn)
 		return 1
 	}
@@ -52,7 +52,7 @@ func chanLen(L *lua.LState) int {
 func chanSend(L *lua.LState) int {
 	ref, _, _ := checkChan(L, 1)
 	value := L.CheckAny(2)
-	convertedValue := lValueToReflect(L, value, ref.Type().Elem())
+	convertedValue := lValueToReflect(L, value, ref.Type().Elem(), false)
 	if convertedValue.Type() != ref.Type().Elem() {
 		L.ArgError(2, "incorrect type")
 	}

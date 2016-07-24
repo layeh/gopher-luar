@@ -41,13 +41,13 @@ func getMTCache(L *lua.LState) *mtCache {
 	return cache
 }
 
-func addMethods(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
+func addMethods(L *lua.LState, vtype reflect.Type, tbl *lua.LTable, ptrReceiver bool) {
 	for i := 0; i < vtype.NumMethod(); i++ {
 		method := vtype.Method(i)
 		if method.PkgPath != "" {
 			continue
 		}
-		fn := funcWrapper(L, method.Func)
+		fn := funcWrapper(L, method.Func, ptrReceiver)
 		tbl.RawSetString(method.Name, fn)
 		tbl.RawSetString(getUnexportedName(method.Name), fn)
 	}
@@ -182,10 +182,10 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__index", L.NewFunction(ptrIndex))
 	}
 
-	addMethods(L, reflect.PtrTo(vtype), ptrMethods)
+	addMethods(L, reflect.PtrTo(vtype), ptrMethods, true)
 	mt.RawSetString("ptr_methods", ptrMethods)
 
-	addMethods(L, vtype, methods)
+	addMethods(L, vtype, methods, false)
 	mt.RawSetString("methods", methods)
 
 	mt.RawSetString("original", L.NewTable())

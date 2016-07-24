@@ -23,14 +23,14 @@ func structIndex(L *lua.LState) int {
 	ref, mt, isPtr := checkStruct(L, 1)
 	key := L.CheckString(2)
 
-	if isPtr {
-		if fn := mt.ptrMethod(key); fn != nil {
+	if !isPtr {
+		if fn := mt.method(key); fn != nil {
 			L.Push(fn)
 			return 1
 		}
 	}
 
-	if fn := mt.method(key); fn != nil {
+	if fn := mt.ptrMethod(key); fn != nil {
 		L.Push(fn)
 		return 1
 	}
@@ -68,6 +68,6 @@ func structNewIndex(L *lua.LState) int {
 	if !field.CanSet() {
 		L.RaiseError("cannot set field " + key)
 	}
-	field.Set(lValueToReflect(L, value, field.Type()))
+	field.Set(lValueToReflect(L, value, field.Type(), false))
 	return 0
 }

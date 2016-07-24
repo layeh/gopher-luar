@@ -36,13 +36,13 @@ func arrayIndex(L *lua.LState) int {
 		}
 		L.Push(New(L, val.Interface()))
 	case lua.LString:
-		if isPtr {
-			if fn := mt.ptrMethod(string(converted)); fn != nil {
+		if !isPtr {
+			if fn := mt.method(string(converted)); fn != nil {
 				L.Push(fn)
 				return 1
 			}
 		}
-		if fn := mt.method(string(converted)); fn != nil {
+		if fn := mt.ptrMethod(string(converted)); fn != nil {
 			L.Push(fn)
 			return 1
 		}
@@ -67,7 +67,7 @@ func arrayNewIndex(L *lua.LState) int {
 	if index < 1 || index > ref.Len() {
 		L.ArgError(2, "index out of range")
 	}
-	ref.Index(index - 1).Set(lValueToReflect(L, value, ref.Type().Elem()))
+	ref.Index(index - 1).Set(lValueToReflect(L, value, ref.Type().Elem(), false))
 	return 0
 }
 

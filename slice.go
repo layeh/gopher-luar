@@ -35,13 +35,13 @@ func sliceIndex(L *lua.LState) int {
 		}
 		L.Push(New(L, val.Interface()))
 	case lua.LString:
-		if isPtr {
-			if fn := mt.ptrMethod(string(converted)); fn != nil {
+		if !isPtr {
+			if fn := mt.method(string(converted)); fn != nil {
 				L.Push(fn)
 				return 1
 			}
 		}
-		if fn := mt.method(string(converted)); fn != nil {
+		if fn := mt.ptrMethod(string(converted)); fn != nil {
 			L.Push(fn)
 			return 1
 		}
@@ -64,7 +64,7 @@ func sliceNewIndex(L *lua.LState) int {
 	if index < 1 || index > ref.Len() {
 		L.ArgError(2, "index out of range")
 	}
-	ref.Index(index - 1).Set(lValueToReflect(L, value, ref.Type().Elem()))
+	ref.Index(index - 1).Set(lValueToReflect(L, value, ref.Type().Elem(), false))
 	return 0
 }
 
@@ -115,7 +115,7 @@ func sliceAppend(L *lua.LState) int {
 	hint := ref.Type().Elem()
 	values := make([]reflect.Value, L.GetTop()-1)
 	for i := 2; i <= L.GetTop(); i++ {
-		value := lValueToReflect(L, L.Get(i), hint)
+		value := lValueToReflect(L, L.Get(i), hint, false)
 		if value.Type() != hint {
 			L.ArgError(i, "invalid type")
 		}

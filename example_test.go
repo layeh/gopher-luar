@@ -8,9 +8,10 @@ import (
 )
 
 type Person struct {
-	Name   string
-	Age    int
-	Friend *Person
+	Name       string
+	Age        int
+	Friend     *Person
+	LastAddSum int
 }
 
 func (p Person) Hello() string {
@@ -27,7 +28,12 @@ func (p *Person) AddNumbers(L *LState) int {
 		sum += L.CheckInt(i)
 	}
 	L.Push(lua.LString(p.Name + " counts: " + strconv.Itoa(sum)))
+	p.LastAddSum = sum
 	return 1
+}
+
+func (p *Person) IncreaseAge() {
+	p.Age++
 }
 
 func Example__1() {
@@ -1297,7 +1303,14 @@ func Example__37() {
 func Example__38() {
 	const code = `
 	print(a[1]:AddNumbers(1, 2, 3, 4, 5))
-	print(s[1]:AddNumbers(1, 2, 3, 4, 5))
+	print(s[1]:AddNumbers(1, 2, 3, 4))
+	print(s[1].LastAddSum)
+	print(p:AddNumbers(1, 2, 3, 4, 5))
+	print(p.LastAddSum)
+
+	print(p.Age)
+	p:IncreaseAge()
+	print(p.Age)
 	`
 
 	L := lua.NewState()
@@ -1307,11 +1320,12 @@ func Example__38() {
 		{Name: "Tim"},
 	}
 	s := []Person{
-		{Name: "Tim"},
+		{Name: "Tim", Age: 32},
 	}
 
 	L.SetGlobal("a", New(L, &a))
 	L.SetGlobal("s", New(L, s))
+	L.SetGlobal("p", New(L, s[0]))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -1319,7 +1333,12 @@ func Example__38() {
 
 	// Output:
 	// Tim counts: 15
+	// Tim counts: 10
+	// 10
 	// Tim counts: 15
+	// 15
+	// 32
+	// 33
 }
 
 func ExampleLState() {
