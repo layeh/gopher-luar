@@ -3,6 +3,7 @@ package luar
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/yuin/gopher-lua"
 )
@@ -1300,6 +1301,12 @@ func Example__37() {
 	// 2	y
 }
 
+type E38String string
+
+func (s *E38String) ToUpper() {
+	*s = E38String(strings.ToUpper(string(*s)))
+}
+
 func Example__38() {
 	const code = `
 	print(a[1]:AddNumbers(1, 2, 3, 4, 5))
@@ -1311,6 +1318,10 @@ func Example__38() {
 	print(p.Age)
 	p:IncreaseAge()
 	print(p.Age)
+
+	print(-str)
+	str:ToUpper()
+	print(-str)
 	`
 
 	L := lua.NewState()
@@ -1323,9 +1334,12 @@ func Example__38() {
 		{Name: "Tim", Age: 32},
 	}
 
+	str := E38String("Hello World")
+
 	L.SetGlobal("a", New(L, &a))
 	L.SetGlobal("s", New(L, s))
 	L.SetGlobal("p", New(L, s[0]))
+	L.SetGlobal("str", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
@@ -1339,6 +1353,8 @@ func Example__38() {
 	// 15
 	// 32
 	// 33
+	// Hello World
+	// HELLO WORLD
 }
 
 func ExampleLState() {

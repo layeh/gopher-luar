@@ -52,7 +52,7 @@ func chanLen(L *lua.LState) int {
 func chanSend(L *lua.LState) int {
 	ref, _, _ := checkChan(L, 1)
 	value := L.CheckAny(2)
-	convertedValue := lValueToReflect(L, value, ref.Type().Elem(), false)
+	convertedValue := lValueToReflect(L, value, ref.Type().Elem(), nil)
 	if convertedValue.Type() != ref.Type().Elem() {
 		L.ArgError(2, "incorrect type")
 	}

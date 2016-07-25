@@ -96,7 +96,7 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 	return ud
 }
 
-func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, shouldConvertToPtr bool) reflect.Value {
+func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) reflect.Value {
 	if hint.Implements(refTypeLuaLValue) {
 		return reflect.ValueOf(v)
 	}
@@ -159,7 +159,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, shouldConve
 
 			for i := 0; i < hint.NumOut(); i++ {
 				outHint := hint.Out(i)
-				ret[i] = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint, false)
+				ret[i] = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint, nil)
 			}
 
 			return ret
@@ -185,7 +185,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, shouldConve
 
 			for i := 0; i < len; i++ {
 				value := converted.RawGetInt(i + 1)
-				elemValue := lValueToReflect(L, value, elemType, false)
+				elemValue := lValueToReflect(L, value, elemType, nil)
 				s.Index(i).Set(elemValue)
 			}
 
@@ -201,8 +201,8 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, shouldConve
 					return
 				}
 
-				lKey := lValueToReflect(L, key, keyType, false)
-				lValue := lValueToReflect(L, value, elemType, false)
+				lKey := lValueToReflect(L, key, keyType, nil)
+				lValue := lValueToReflect(L, value, elemType, nil)
 				s.SetMapIndex(lKey, lValue)
 			})
 
@@ -232,7 +232,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, shouldConve
 				}
 				field := hint.FieldByIndex(index)
 
-				lValue := lValueToReflect(L, value, field.Type, false)
+				lValue := lValueToReflect(L, value, field.Type, nil)
 				t.FieldByIndex(field.Index).Set(lValue)
 			})
 
@@ -247,12 +247,16 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, shouldConve
 		}
 	case *lua.LUserData:
 		val := reflect.ValueOf(converted.Value)
-		if val.Kind() != reflect.Ptr && hint.Kind() == reflect.Ptr && shouldConvertToPtr {
+		if tryConvertPtr != nil && val.Kind() != reflect.Ptr && hint.Kind() == reflect.Ptr && val.Type() == hint.Elem() {
 			newVal := reflect.New(hint.Elem())
 			newVal.Elem().Set(val)
 			val = newVal
+			*tryConvertPtr = true
 		} else {
 			val = val.Convert(hint)
+			if tryConvertPtr != nil {
+				*tryConvertPtr = false
+			}
 		}
 		return val
 	}
