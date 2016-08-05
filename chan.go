@@ -6,21 +6,8 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkChan(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
-	ud := L.CheckUserData(idx)
-	ref = reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Chan {
-		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Chan {
-			L.ArgError(idx, "expecting channel or channel pointer")
-		}
-		isPtr = true
-	}
-	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
-	return
-}
-
 func chanIndex(L *lua.LState) int {
-	_, mt, isPtr := checkChan(L, 1)
+	_, mt, isPtr := check(L, 1, reflect.Chan)
 	key := L.CheckString(2)
 
 	if !isPtr {
@@ -39,7 +26,7 @@ func chanIndex(L *lua.LState) int {
 }
 
 func chanLen(L *lua.LState) int {
-	ref, _, isPtr := checkChan(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Chan)
 	if isPtr {
 		L.RaiseError("invalid operation on chan pointer")
 	}
@@ -50,7 +37,7 @@ func chanLen(L *lua.LState) int {
 // chan methods
 
 func chanSend(L *lua.LState) int {
-	ref, _, _ := checkChan(L, 1)
+	ref, _, _ := check(L, 1, reflect.Chan)
 	value := L.CheckAny(2)
 	convertedValue := lValueToReflect(L, value, ref.Type().Elem(), nil)
 	if convertedValue.Type() != ref.Type().Elem() {
@@ -61,7 +48,7 @@ func chanSend(L *lua.LState) int {
 }
 
 func chanReceive(L *lua.LState) int {
-	ref, _, _ := checkChan(L, 1)
+	ref, _, _ := check(L, 1, reflect.Chan)
 
 	value, ok := ref.Recv()
 	if !ok {
@@ -75,7 +62,7 @@ func chanReceive(L *lua.LState) int {
 }
 
 func chanClose(L *lua.LState) int {
-	ref, _, _ := checkChan(L, 1)
+	ref, _, _ := check(L, 1, reflect.Chan)
 	ref.Close()
 	return 0
 }

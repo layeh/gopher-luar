@@ -6,21 +6,8 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkMap(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
-	ud := L.CheckUserData(idx)
-	ref = reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Map {
-		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Map {
-			L.ArgError(idx, "expecting map or map pointer")
-		}
-		isPtr = true
-	}
-	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
-	return
-}
-
 func mapIndex(L *lua.LState) int {
-	ref, mt, isPtr := checkMap(L, 1)
+	ref, mt, isPtr := check(L, 1, reflect.Map)
 	key := L.CheckAny(2)
 
 	if isPtr {
@@ -60,7 +47,7 @@ func mapIndex(L *lua.LState) int {
 }
 
 func mapNewIndex(L *lua.LState) int {
-	ref, _, isPtr := checkMap(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Map)
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}
@@ -83,7 +70,7 @@ func mapNewIndex(L *lua.LState) int {
 }
 
 func mapLen(L *lua.LState) int {
-	ref, _, isPtr := checkMap(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Map)
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}
@@ -92,7 +79,7 @@ func mapLen(L *lua.LState) int {
 }
 
 func mapCall(L *lua.LState) int {
-	ref, _, isPtr := checkMap(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Map)
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}

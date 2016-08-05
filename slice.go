@@ -6,21 +6,8 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkSlice(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
-	ud := L.CheckUserData(idx)
-	ref = reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Slice {
-		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Slice {
-			L.ArgError(idx, "expecting slice or slice pointer")
-		}
-		isPtr = true
-	}
-	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
-	return
-}
-
 func sliceIndex(L *lua.LState) int {
-	ref, mt, isPtr := checkSlice(L, 1)
+	ref, mt, isPtr := check(L, 1, reflect.Slice)
 	key := L.CheckAny(2)
 
 	switch converted := key.(type) {
@@ -53,7 +40,7 @@ func sliceIndex(L *lua.LState) int {
 }
 
 func sliceNewIndex(L *lua.LState) int {
-	ref, _, isPtr := checkSlice(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Slice)
 	index := L.CheckInt(2)
 	value := L.CheckAny(3)
 
@@ -69,7 +56,7 @@ func sliceNewIndex(L *lua.LState) int {
 }
 
 func sliceLen(L *lua.LState) int {
-	ref, _, isPtr := checkSlice(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Slice)
 
 	if isPtr {
 		L.RaiseError("invalid operation on slice pointer")
@@ -80,7 +67,7 @@ func sliceLen(L *lua.LState) int {
 }
 
 func sliceCall(L *lua.LState) int {
-	ref, _, isPtr := checkSlice(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Slice)
 	if isPtr {
 		L.RaiseError("invalid operation on slice pointer")
 	}
@@ -104,13 +91,13 @@ func sliceCall(L *lua.LState) int {
 // slice methods
 
 func sliceCapacity(L *lua.LState) int {
-	ref, _, _ := checkSlice(L, 1)
+	ref, _, _ := check(L, 1, reflect.Slice)
 	L.Push(lua.LNumber(ref.Cap()))
 	return 1
 }
 
 func sliceAppend(L *lua.LState) int {
-	ref, _, _ := checkSlice(L, 1)
+	ref, _, _ := check(L, 1, reflect.Slice)
 
 	hint := ref.Type().Elem()
 	values := make([]reflect.Value, L.GetTop()-1)

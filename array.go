@@ -6,21 +6,8 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkArray(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable, isPtr bool) {
-	ud := L.CheckUserData(idx)
-	ref = reflect.ValueOf(ud.Value)
-	if ref.Kind() != reflect.Array {
-		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Array {
-			L.ArgError(idx, "expecting array or array pointer")
-		}
-		isPtr = true
-	}
-	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
-	return
-}
-
 func arrayIndex(L *lua.LState) int {
-	ref, mt, isPtr := checkArray(L, 1)
+	ref, mt, isPtr := check(L, 1, reflect.Array)
 	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
@@ -54,7 +41,7 @@ func arrayIndex(L *lua.LState) int {
 }
 
 func arrayNewIndex(L *lua.LState) int {
-	ref, _, isPtr := checkArray(L, 1)
+	ref, _, isPtr := check(L, 1, reflect.Array)
 
 	if !isPtr {
 		L.RaiseError("invalid operation on array")
@@ -72,14 +59,14 @@ func arrayNewIndex(L *lua.LState) int {
 }
 
 func arrayLen(L *lua.LState) int {
-	ref, _, _ := checkArray(L, 1)
+	ref, _, _ := check(L, 1, reflect.Array)
 	ref = reflect.Indirect(ref)
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func arrayCall(L *lua.LState) int {
-	ref, _, _ := checkArray(L, 1)
+	ref, _, _ := check(L, 1, reflect.Array)
 	ref = reflect.Indirect(ref)
 
 	i := 0

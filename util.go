@@ -9,6 +9,20 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
+func check(L *lua.LState, idx int, kind reflect.Kind) (ref reflect.Value, mt *Metatable, isPtr bool) {
+	ud := L.CheckUserData(idx)
+	ref = reflect.ValueOf(ud.Value)
+	if ref.Kind() != kind {
+		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != kind {
+			s := kind.String()
+			L.ArgError(idx, "expecting "+s+" or "+s+" pointer")
+		}
+		isPtr = true
+	}
+	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
+	return
+}
+
 func tostring(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := ud.Value
