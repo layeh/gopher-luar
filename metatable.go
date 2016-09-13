@@ -135,7 +135,7 @@ func (m *Metatable) transparentPointers() bool {
 
 func (m *Metatable) reflectOptions() ReflectOptions {
 	return ReflectOptions{
-		Immutable: m.immutable(),
+		Immutable:           m.immutable(),
 		TransparentPointers: m.transparentPointers(),
 	}
 }

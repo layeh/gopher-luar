@@ -1575,8 +1575,8 @@ func TestExample__Immutable8(t *testing.T) {
 }
 
 type Family struct {
-	Mother Person
-	Father Person
+	Mother   Person
+	Father   Person
 	Children []Person
 }
 
@@ -1627,7 +1627,7 @@ func TestExample__Immutable10(t *testing.T) {
 			Name: "Tim",
 		},
 		Children: []Person{
-			{ Name: "Bill" },
+			{Name: "Bill"},
 		},
 	}
 
@@ -1660,7 +1660,7 @@ func TestExample__Immutable11(t *testing.T) {
 			Name: "Tim",
 		},
 		Children: []Person{
-			{ Name: "Bill" },
+			{Name: "Bill"},
 		},
 	}
 

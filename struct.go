@@ -63,8 +63,6 @@ func structIndex(L *lua.LState) int {
 		field = field.Addr()
 	}
 
-
-
 	L.Push(NewWithOptions(L, field.Interface(), mt.reflectOptions()))
 	return 1
 }
