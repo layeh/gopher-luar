@@ -1714,3 +1714,172 @@ func TestExample__Immutable13(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+type TransparentSample struct {
+	B *string
+}
+
+type TransparentSampleWrapper struct {
+	A *TransparentSample
+}
+
+func TestExample__TransparentPointers1(t *testing.T) {
+	// Access an undefined pointer field - should auto populate with zero
+	// value as if a non-pointer object
+	const code = `
+	print(a.B)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := TransparentSample{}
+
+	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	// Output:
+	//
+}
+
+func TestExample__TransparentPointers2(t *testing.T) {
+	// Access an undefined nested pointer field - should auto populate
+	// with zero values as if a non-pointer object
+	const code = `
+	print(s.A.B)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := TransparentSampleWrapper{}
+
+	L.SetGlobal("s", NewWithOptions(L, &s, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	// Output:
+	//
+}
+
+func TestExample__TransparentPointers3(t *testing.T) {
+	// Set an undefined nested pointer field - should get assigned like
+	// a regular non-pointer field
+	const code = `
+	s.A.B = "hello, world!"
+	print(s.A.B)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := TransparentSampleWrapper{}
+
+	L.SetGlobal("s", NewWithOptions(L, &s, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	// Output:
+	// hello, world!
+}
+
+func TestExample__TransparentPointers4(t *testing.T) {
+	// Check equality on a pointer field - should act like a plain field
+	const code = `
+	print(a.B == "foo")
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := TransparentSample{}
+	val := "foo"
+	a.B = &val
+
+	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	// Output:
+	// true
+}
+
+func TestExample__TransparentPointers5(t *testing.T) {
+	// Access a pointer field in the normal pointer way - should error
+	const code = `
+	_ = a.B ^ "hello"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := TransparentSample{}
+	val := "foo"
+	a.B = &val
+
+	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "cannot perform pow operation between string and string") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+type SampleStructWithSlice struct {
+	List []string
+}
+
+func TestExample__TransparentPointers6(t *testing.T) {
+	// Access an undefined slice field - should be automatically created
+	const code = `
+	print(#a.List)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := SampleStructWithSlice{}
+
+	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	// Output:
+	// 0
+}
+
+func TestExample__TransparentPointers7(t *testing.T) {
+	// Append to an undefined slice field - should be fine
+	const code = `
+	a.List = a.List:append("hi")
+	print(#a.List)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := SampleStructWithSlice{}
+
+	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	// Output:
+	// 1
+}
