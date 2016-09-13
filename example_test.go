@@ -38,7 +38,13 @@ func (p *Person) IncreaseAge() {
 	p.Age++
 }
 
-func TestExample__1(t *testing.T) {
+type Family struct {
+	Mother   Person
+	Father   Person
+	Children []Person
+}
+
+func TestStructUsage(t *testing.T) {
 	const code = `
 	print(user1.Name)
 	print(user1.Age)
@@ -78,7 +84,7 @@ func TestExample__1(t *testing.T) {
 	// Hello, John
 }
 
-func TestExample__2(t *testing.T) {
+func TestMapAndSlice(t *testing.T) {
 	const code = `
 	for i = 1, #things do
 		print(things[i])
@@ -138,7 +144,7 @@ func TestExample__2(t *testing.T) {
 	// false
 }
 
-func TestExample__3(t *testing.T) {
+func TestStructConstructorAndMap(t *testing.T) {
 	const code = `
 	user2 = Person()
 	user2.Name = "John"
@@ -174,7 +180,7 @@ func TestExample__3(t *testing.T) {
 	// 2
 }
 
-func TestExample__4(t *testing.T) {
+func TestGoFunc(t *testing.T) {
 	const code = `
 	print(getHello(person))
 	`
@@ -200,7 +206,7 @@ func TestExample__4(t *testing.T) {
 	// Hello, Tim
 }
 
-func TestExample__5(t *testing.T) {
+func TestChan(t *testing.T) {
 	const code = `
 	print(ch:receive())
 	ch:send("John")
@@ -229,7 +235,7 @@ func TestExample__5(t *testing.T) {
 	// nil	false
 }
 
-func TestExample__6(t *testing.T) {
+func TestMap(t *testing.T) {
 	const code = `
 	local sorted = {}
 	for k, v in countries() do
@@ -261,7 +267,7 @@ func TestExample__6(t *testing.T) {
 	// Japan
 }
 
-func TestExample__7(t *testing.T) {
+func TestFuncVariadic(t *testing.T) {
 	const code = `
 	fn("a", 1, 2, 3)
 	fn("b")
@@ -293,7 +299,7 @@ func TestExample__7(t *testing.T) {
 	// 4
 }
 
-func TestExample__8(t *testing.T) {
+func TestLuaFuncVariadic(t *testing.T) {
 	const code = `
 	for _, x in ipairs(fn(1, 2, 3)) do
 		print(x)
@@ -329,7 +335,7 @@ func TestExample__8(t *testing.T) {
 	// 4
 }
 
-func TestExample__9(t *testing.T) {
+func TestSlice(t *testing.T) {
 	const code = `
 	print(#items)
 	print(items:capacity())
@@ -359,7 +365,7 @@ func TestExample__9(t *testing.T) {
 	// world
 }
 
-func TestExample__10(t *testing.T) {
+func TestSliceCapacity(t *testing.T) {
 	const code = `
 	ints = newInts(1)
 	print(#ints, ints:capacity())
@@ -383,7 +389,7 @@ func TestExample__10(t *testing.T) {
 	// 0	10
 }
 
-func TestExample__11(t *testing.T) {
+func TestStructPtrEquality(t *testing.T) {
 	const code = `
 	print(-p1 == -p1)
 	print(-p1 == -p1_alias)
@@ -417,7 +423,7 @@ func TestExample__11(t *testing.T) {
 	// false
 }
 
-func TestExample__12(t *testing.T) {
+func TestStructStringer(t *testing.T) {
 	const code = `
 	print(p1)
 	print(p2)
@@ -446,7 +452,7 @@ func TestExample__12(t *testing.T) {
 	// John (2)
 }
 
-func TestExample__13(t *testing.T) {
+func TestPtrMethod(t *testing.T) {
 	const code = `
 	print(p:AddNumbers(1, 2, 3, 4, 5))
 	`
@@ -467,7 +473,7 @@ func TestExample__13(t *testing.T) {
 	// Tim counts: 15
 }
 
-func TestExample__14(t *testing.T) {
+func TestStruct(t *testing.T) {
 	const code = `
 	print(p:hello())
 	print(p.age)
@@ -497,7 +503,7 @@ func (o OneString) Print() {
 	fmt.Println(o[0])
 }
 
-func TestExample__15(t *testing.T) {
+func TestArray(t *testing.T) {
 	const code = `
 	print(#e.V, e.V[1], e.V[2])
 	e.V[1] = "World"
@@ -535,7 +541,7 @@ func TestExample__15(t *testing.T) {
 	// Test
 }
 
-func TestExample__16(t *testing.T) {
+func TestLuaFunc(t *testing.T) {
 	const code = `
 	print(fn("tim", 5))
 	`
@@ -560,7 +566,7 @@ func TestExample__16(t *testing.T) {
 	// tim	tim	tim	tim	tim
 }
 
-func TestExample__17(t *testing.T) {
+func TestPtrIndirection(t *testing.T) {
 	const code = `
 	print(-ptr)
 	`
@@ -579,7 +585,7 @@ func TestExample__17(t *testing.T) {
 	// hello
 }
 
-func TestExample__18(t *testing.T) {
+func TestPtrEquality(t *testing.T) {
 	const code = `
 	print(ptr1 == nil)
 	print(ptr2 == nil)
@@ -604,7 +610,7 @@ func TestExample__18(t *testing.T) {
 	// false
 }
 
-func TestExample__19(t *testing.T) {
+func TestPtrAssignment(t *testing.T) {
 	const code = `
 	print(-str)
 	print(str ^ "world")
@@ -627,16 +633,16 @@ func TestExample__19(t *testing.T) {
 	// world
 }
 
-type Example__20_A struct {
-	*Example__20_B
+type AnonymousFieldsA struct {
+	*AnonymousFieldsB
 }
 
-type Example__20_B struct {
+type AnonymousFieldsB struct {
 	Value *string
 	Person
 }
 
-func TestExample__20(t *testing.T) {
+func TestAnonymousFields(t *testing.T) {
 	const code = `
 	print(a.Value == nil)
 	a.Value = str_ptr()
@@ -649,8 +655,8 @@ func TestExample__20(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := Example__20_A{
-		Example__20_B: &Example__20_B{
+	a := AnonymousFieldsA{
+		AnonymousFieldsB: &AnonymousFieldsB{
 			Person: Person{
 				Name: "Tim",
 			},
@@ -670,7 +676,7 @@ func TestExample__20(t *testing.T) {
 	// Tim
 }
 
-func TestExample__21(t *testing.T) {
+func TestEmptyFunc(t *testing.T) {
 	const code = `
 	print(fn == nil)
 	`
@@ -689,7 +695,7 @@ func TestExample__21(t *testing.T) {
 	// true
 }
 
-func TestExample__22(t *testing.T) {
+func TestFuncArray(t *testing.T) {
 	const code = `
 	fn(arr)
 	`
@@ -712,7 +718,7 @@ func TestExample__22(t *testing.T) {
 	// 1 2 3
 }
 
-func TestExample__23(t *testing.T) {
+func TestComplex(t *testing.T) {
 	const code = `
 	b = a
 	`
@@ -758,7 +764,7 @@ func (m MapAlias) Y() int {
 	return len(m)
 }
 
-func TestExample__24(t *testing.T) {
+func TestTypeAlias(t *testing.T) {
 	const code = `
 	print(a:Test())
 	local len1 = b:Len()
@@ -789,18 +795,18 @@ func TestExample__24(t *testing.T) {
 	// 15	1
 }
 
-type E25B struct {
+type StructPtrFuncB struct {
 }
 
-func (*E25B) Test() {
+func (*StructPtrFuncB) Test() {
 	fmt.Println("Pointer test")
 }
 
-type E25A struct {
-	B E25B
+type StructPtrFuncA struct {
+	B StructPtrFuncB
 }
 
-func TestExample__25(t *testing.T) {
+func TestStructPtrFunc(t *testing.T) {
 	const code = `
 	a.b:Test()
 	`
@@ -808,7 +814,7 @@ func TestExample__25(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := E25A{}
+	a := StructPtrFuncA{}
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
@@ -820,14 +826,14 @@ func TestExample__25(t *testing.T) {
 	// Pointer test
 }
 
-type E26A struct {
+type HiddenFieldNamesA struct {
 	Name   string `luar:"name"`
 	Name2  string `luar:"Name"`
 	Str    string
 	Hidden bool `luar:"-"`
 }
 
-func TestExample__26(t *testing.T) {
+func TestHiddenFieldNames(t *testing.T) {
 	const code = `
 	print(a.name)
 	print(a.Name)
@@ -840,7 +846,7 @@ func TestExample__26(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := &E26A{
+	a := &HiddenFieldNamesA{
 		Name:   "tim",
 		Name2:  "bob",
 		Str:    "asd123",
@@ -861,7 +867,7 @@ func TestExample__26(t *testing.T) {
 	// nil
 }
 
-func TestExample__27(t *testing.T) {
+func TestStructPtrAssignment(t *testing.T) {
 	const code = `
 	print(a.Name)
 	_ = a ^ -b
@@ -889,17 +895,17 @@ func TestExample__27(t *testing.T) {
 	// bob
 }
 
-type E28_Chan chan string
+type PtrNonPtrChanMethodsA chan string
 
-func (*E28_Chan) Test() {
-	fmt.Println("E28_Chan.Test")
+func (*PtrNonPtrChanMethodsA) Test() {
+	fmt.Println("PtrNonPtrMethods_A.Test")
 }
 
-func (E28_Chan) Test2() {
-	fmt.Println("E28_Chan.Test2")
+func (PtrNonPtrChanMethodsA) Test2() {
+	fmt.Println("PtrNonPtrMethods_A.Test2")
 }
 
-func TestExample__28(t *testing.T) {
+func TestPtrNonPtrChanMethods(t *testing.T) {
 	const code = `
 	b:Test()
 	b:Test2()
@@ -908,7 +914,7 @@ func TestExample__28(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := make(E28_Chan)
+	a := make(PtrNonPtrChanMethodsA)
 	b := &a
 
 	b.Test()
@@ -926,13 +932,13 @@ func TestExample__28(t *testing.T) {
 	// E28_Chan.Test2
 }
 
-type E29_String string
+type StructFieldA string
 
-type E29_A struct {
-	E29_String
+type StructFieldB struct {
+	StructFieldA
 }
 
-func TestExample__29(t *testing.T) {
+func TestStructField(t *testing.T) {
 	const code = `
 	a.E29_String = "world"
 	`
@@ -940,37 +946,37 @@ func TestExample__29(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := E29_A{}
-	a.E29_String = "hello"
-	fmt.Println(a.E29_String)
+	a := StructFieldB{}
+	a.StructFieldA = "hello"
+	fmt.Println(a.StructFieldA)
 
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(a.E29_String)
+	fmt.Println(a.StructFieldA)
 	// Output:
 	// hello
 	// world
 }
 
-type E30_A struct {
+type StructBlacklistA struct {
 }
 
-func (*E30_A) Public() {
+func (*StructBlacklistA) Public() {
 	fmt.Println("You can call me")
 }
 
-func (E30_A) Private() {
+func (StructBlacklistA) Private() {
 	fmt.Println("Should not be able to call me")
 }
 
-type E30_B struct {
-	*E30_A
+type StructBlacklistB struct {
+	*StructBlacklistA
 }
 
-func TestExample__30(t *testing.T) {
+func TestStructBlacklist(t *testing.T) {
 	const code = `
 	b:public()
 	b.E30_A:public()
@@ -995,14 +1001,14 @@ func TestExample__30(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	b := &E30_B{
-		E30_A: &E30_A{},
+	b := &StructBlacklistB{
+		StructBlacklistA: &StructBlacklistA{},
 	}
 
-	mt := MT(L, E30_B{})
+	mt := MT(L, StructBlacklistB{})
 	mt.Blacklist("private", "Private")
 
-	mt = MT(L, E30_A{})
+	mt = MT(L, StructBlacklistA{})
 	mt.Whitelist("public", "Public")
 
 	L.SetGlobal("b", New(L, b))
@@ -1015,11 +1021,11 @@ func TestExample__30(t *testing.T) {
 	// You can call me
 }
 
-type E_31 struct {
+type SliceAssignmentA struct {
 	S []string
 }
 
-func TestExample__31(t *testing.T) {
+func TestSliceAssignment(t *testing.T) {
 	const code = `
 	x.S = {"a", "b", "", 3, true, "c"}
 	`
@@ -1027,7 +1033,7 @@ func TestExample__31(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_31{}
+	e := &SliceAssignmentA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1045,11 +1051,11 @@ func TestExample__31(t *testing.T) {
 	// c
 }
 
-type E_32 struct {
+type SliceTableAssignmentA struct {
 	S map[string]string
 }
 
-func TestExample__32(t *testing.T) {
+func TestSliceTableAssignment(t *testing.T) {
 	const code = `
 	x.S = {
 		33,
@@ -1063,7 +1069,7 @@ func TestExample__32(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_32{}
+	e := &SliceTableAssignmentA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1083,13 +1089,13 @@ func TestExample__32(t *testing.T) {
 	// false
 }
 
-type E_33 struct {
+type FieldNameResolutionA struct {
 	Person
 	P  Person
 	P2 Person `luar:"other"`
 }
 
-func TestExample__33(t *testing.T) {
+func TestFieldNameResolution(t *testing.T) {
 	const code = `
 	x.Person = {
 		Name = "Bill",
@@ -1112,7 +1118,7 @@ func TestExample__33(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_33{}
+	e := &FieldNameResolutionA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1138,13 +1144,13 @@ func TestExample__33(t *testing.T) {
 	// 26
 }
 
-type E_34 struct {
+type PCallA struct {
 	A string `luar:"q"`
 	B int    `luar:"other"`
 	C int    `luar:"-"`
 }
 
-func TestExample__34(t *testing.T) {
+func TestPCall(t *testing.T) {
 	const code = `
 	_ = x ^ {
 		q = "Cat",
@@ -1160,7 +1166,7 @@ func TestExample__34(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_34{}
+	e := &PCallA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1176,12 +1182,12 @@ func TestExample__34(t *testing.T) {
 	// 0
 }
 
-type E_35 struct {
+type LuaFuncDefinitionA struct {
 	Fn  func(a string) (string, int)
 	Fn2 func(a string, b ...int) string
 }
 
-func TestExample__35(t *testing.T) {
+func TestLuaFuncDefinition(t *testing.T) {
 	const code = `
 	i = 0
 	x.Fn = function(str)
@@ -1200,7 +1206,7 @@ func TestExample__35(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_35{}
+	e := &LuaFuncDefinitionA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1226,11 +1232,11 @@ func TestExample__35(t *testing.T) {
 	// hello
 }
 
-type E_36 struct {
+type LuaFuncPtrA struct {
 	F1 *lua.LFunction
 }
 
-func TestExample__36(t *testing.T) {
+func TestLuaFuncPtr(t *testing.T) {
 	const code = `
 	x.F1 = function(str)
 		print("Hello World")
@@ -1240,7 +1246,7 @@ func TestExample__36(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_36{}
+	e := &LuaFuncPtrA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1254,7 +1260,7 @@ func TestExample__36(t *testing.T) {
 	// Hello World
 }
 
-func TestExample__37(t *testing.T) {
+func TestSliceAndArrayTypes(t *testing.T) {
 	const code = `
 	for i, x in s() do
 		print(i, x)
@@ -1302,13 +1308,13 @@ func TestExample__37(t *testing.T) {
 	// 2	y
 }
 
-type E38String string
+type StructArrayAndSliceA string
 
-func (s *E38String) ToUpper() {
-	*s = E38String(strings.ToUpper(string(*s)))
+func (s *StructArrayAndSliceA) ToUpper() {
+	*s = StructArrayAndSliceA(strings.ToUpper(string(*s)))
 }
 
-func TestExample__38(t *testing.T) {
+func TestStructArrayAndSlice(t *testing.T) {
 	const code = `
 	print(a[1]:AddNumbers(1, 2, 3, 4, 5))
 	print(s[1]:AddNumbers(1, 2, 3, 4))
@@ -1335,7 +1341,7 @@ func TestExample__38(t *testing.T) {
 		{Name: "Tim", Age: 32},
 	}
 
-	str := E38String("Hello World")
+	str := StructArrayAndSliceA("Hello World")
 
 	L.SetGlobal("a", New(L, &a))
 	L.SetGlobal("s", New(L, s))
@@ -1358,7 +1364,7 @@ func TestExample__38(t *testing.T) {
 	// HELLO WORLD
 }
 
-func TestExampleLState(t *testing.T) {
+func TestLStateFunc(t *testing.T) {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
 	`
@@ -1384,7 +1390,7 @@ func TestExampleLState(t *testing.T) {
 	// 15
 }
 
-func TestExampleNewType(t *testing.T) {
+func TestNewType(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
@@ -1404,7 +1410,7 @@ func TestExampleNewType(t *testing.T) {
 	// Tycho - Montana
 }
 
-func TestExample__Immutable1(t *testing.T) {
+func TestImmutableStructFieldModify(t *testing.T) {
 	// Modifying a field on an immutable struct - should error
 	const code = `
 	p.Name = "Tom"
@@ -1429,7 +1435,7 @@ func TestExample__Immutable1(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable2(t *testing.T) {
+func TestImmutableStructPtrFunc(t *testing.T) {
 	// Calling a pointer function on an immutable struct - should error
 	const code = `
 	p:IncreaseAge()
@@ -1454,7 +1460,7 @@ func TestExample__Immutable2(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable3(t *testing.T) {
+func TestImmutableStructFieldAccess(t *testing.T) {
 	// Accessing a field and calling a regular function on an immutable
 	// struct - should be fine
 	const code = `
@@ -1477,7 +1483,7 @@ func TestExample__Immutable3(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable4(t *testing.T) {
+func TestImmutableSliceAssignment(t *testing.T) {
 	// Attempting to modify an immutable slice - should error
 	const code = `
 	s[1] = "hi"
@@ -1498,7 +1504,7 @@ func TestExample__Immutable4(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable5(t *testing.T) {
+func TestImmutableSliceAppend(t *testing.T) {
 	// Attempting to append to an immutable slice - should error
 	const code = `
 	s = s:append("hi")
@@ -1519,7 +1525,7 @@ func TestExample__Immutable5(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable6(t *testing.T) {
+func TestImmutableSliceAccess(t *testing.T) {
 	// Attempting to access a member of an immutable slice - should be fine
 	const code = `
 	print(s[1])
@@ -1536,7 +1542,7 @@ func TestExample__Immutable6(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable7(t *testing.T) {
+func TestImmutableMapAssignment(t *testing.T) {
 	// Attempting to modify an immutable map - should error
 	const code = `
 	m["newKey"] = "hi"
@@ -1557,7 +1563,7 @@ func TestExample__Immutable7(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable8(t *testing.T) {
+func TestImmutableMapAccess(t *testing.T) {
 	// Attempting to access a member of an immutable map - should be fine
 	const code = `
 	print(m["first"])
@@ -1574,13 +1580,7 @@ func TestExample__Immutable8(t *testing.T) {
 	}
 }
 
-type Family struct {
-	Mother   Person
-	Father   Person
-	Children []Person
-}
-
-func TestExample__Immutable9(t *testing.T) {
+func TestImmutableNestedStructField(t *testing.T) {
 	// Attempt to modify a nested field on an immutable struct - should error
 	const code = `
 	f.Mother.Name = "Laura"
@@ -1609,7 +1609,7 @@ func TestExample__Immutable9(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable10(t *testing.T) {
+func TestImmutableNestedStructSliceField(t *testing.T) {
 	// Attempt to modify a nested field in a nested slice, on an immutable
 	// struct - should error
 	const code = `
@@ -1642,7 +1642,7 @@ func TestExample__Immutable10(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable11(t *testing.T) {
+func TestImmutableNestedStructPtrSliceField(t *testing.T) {
 	// Attempt to modify a nested field in a nested slice, on an immutable
 	// struct pointer - should error
 	const code = `
@@ -1675,7 +1675,7 @@ func TestExample__Immutable11(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable12(t *testing.T) {
+func TestImmutablePointerAssignment(t *testing.T) {
 	// Attempt to modify the value of an immutable pointer - should error
 	const code = `
 	_ = str ^ "world"
@@ -1697,7 +1697,7 @@ func TestExample__Immutable12(t *testing.T) {
 	}
 }
 
-func TestExample__Immutable13(t *testing.T) {
+func TestImmutablePointerAccess(t *testing.T) {
 	// Attempt to access the value of an immutable pointer - should be fine
 	const code = `
 	print(-str)
@@ -1715,15 +1715,15 @@ func TestExample__Immutable13(t *testing.T) {
 	}
 }
 
-type TransparentSample struct {
+type TransparentPtrAccessA struct {
 	B *string
 }
 
-type TransparentSampleWrapper struct {
-	A *TransparentSample
+type TransparentPtrAccessB struct {
+	A *TransparentPtrAccessA
 }
 
-func TestExample__TransparentPointers1(t *testing.T) {
+func TestTransparentPtrAccess(t *testing.T) {
 	// Access an undefined pointer field - should auto populate with zero
 	// value as if a non-pointer object
 	const code = `
@@ -1733,7 +1733,7 @@ func TestExample__TransparentPointers1(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := TransparentSample{}
+	a := TransparentPtrAccessA{}
 
 	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
 
@@ -1745,7 +1745,7 @@ func TestExample__TransparentPointers1(t *testing.T) {
 	//
 }
 
-func TestExample__TransparentPointers2(t *testing.T) {
+func TestTransparentNestedStructPtrAccess(t *testing.T) {
 	// Access an undefined nested pointer field - should auto populate
 	// with zero values as if a non-pointer object
 	const code = `
@@ -1755,7 +1755,7 @@ func TestExample__TransparentPointers2(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	s := TransparentSampleWrapper{}
+	s := TransparentPtrAccessB{}
 
 	L.SetGlobal("s", NewWithOptions(L, &s, ReflectOptions{TransparentPointers: true}))
 
@@ -1767,7 +1767,7 @@ func TestExample__TransparentPointers2(t *testing.T) {
 	//
 }
 
-func TestExample__TransparentPointers3(t *testing.T) {
+func TestTransparentNestedStructPtrAssignment(t *testing.T) {
 	// Set an undefined nested pointer field - should get assigned like
 	// a regular non-pointer field
 	const code = `
@@ -1778,7 +1778,7 @@ func TestExample__TransparentPointers3(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	s := TransparentSampleWrapper{}
+	s := TransparentPtrAccessB{}
 
 	L.SetGlobal("s", NewWithOptions(L, &s, ReflectOptions{TransparentPointers: true}))
 
@@ -1790,7 +1790,7 @@ func TestExample__TransparentPointers3(t *testing.T) {
 	// hello, world!
 }
 
-func TestExample__TransparentPointers4(t *testing.T) {
+func TestTransparentPtrEquality(t *testing.T) {
 	// Check equality on a pointer field - should act like a plain field
 	const code = `
 	print(a.B == "foo")
@@ -1799,7 +1799,7 @@ func TestExample__TransparentPointers4(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := TransparentSample{}
+	a := TransparentPtrAccessA{}
 	val := "foo"
 	a.B = &val
 
@@ -1813,7 +1813,7 @@ func TestExample__TransparentPointers4(t *testing.T) {
 	// true
 }
 
-func TestExample__TransparentPointers5(t *testing.T) {
+func TestTransparentPtrPowOp(t *testing.T) {
 	// Access a pointer field in the normal pointer way - should error
 	const code = `
 	_ = a.B ^ "hello"
@@ -1822,7 +1822,7 @@ func TestExample__TransparentPointers5(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := TransparentSample{}
+	a := TransparentPtrAccessA{}
 	val := "foo"
 	a.B = &val
 
@@ -1837,11 +1837,11 @@ func TestExample__TransparentPointers5(t *testing.T) {
 	}
 }
 
-type SampleStructWithSlice struct {
+type TransparentStructSliceFieldA struct {
 	List []string
 }
 
-func TestExample__TransparentPointers6(t *testing.T) {
+func TestTransparentStructSliceField(t *testing.T) {
 	// Access an undefined slice field - should be automatically created
 	const code = `
 	print(#a.List)
@@ -1850,7 +1850,7 @@ func TestExample__TransparentPointers6(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := SampleStructWithSlice{}
+	a := TransparentStructSliceFieldA{}
 
 	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
 
@@ -1862,7 +1862,7 @@ func TestExample__TransparentPointers6(t *testing.T) {
 	// 0
 }
 
-func TestExample__TransparentPointers7(t *testing.T) {
+func TestTransparentStructSliceAppend(t *testing.T) {
 	// Append to an undefined slice field - should be fine
 	const code = `
 	a.List = a.List:append("hi")
@@ -1872,7 +1872,7 @@ func TestExample__TransparentPointers7(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := SampleStructWithSlice{}
+	a := TransparentStructSliceFieldA{}
 
 	L.SetGlobal("a", NewWithOptions(L, &a, ReflectOptions{TransparentPointers: true}))
 
