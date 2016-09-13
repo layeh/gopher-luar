@@ -35,15 +35,21 @@ func structIndex(L *lua.LState) int {
 	if (field.Kind() == reflect.Struct || field.Kind() == reflect.Array) && field.CanAddr() {
 		field = field.Addr()
 	}
-	L.Push(New(L, field.Interface()))
+	L.Push(NewWithOptions(L, field.Interface(), mt.reflectOptions()))
 	return 1
 }
 
 func structNewIndex(L *lua.LState) int {
 	ref, mt, isPtr := check(L, 1, reflect.Struct)
+
+	if mt.immutable() {
+		L.RaiseError("invalid operation on immutable struct")
+	}
+
 	if isPtr {
 		ref = ref.Elem()
 	}
+
 	key := L.CheckString(2)
 	value := L.CheckAny(3)
 

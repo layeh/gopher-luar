@@ -42,15 +42,21 @@ func mapIndex(L *lua.LState) int {
 
 		return 0
 	}
-	L.Push(New(L, item.Interface()))
+	L.Push(NewWithOptions(L, item.Interface(), mt.reflectOptions()))
 	return 1
 }
 
 func mapNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Map)
+	ref, mt, isPtr := check(L, 1, reflect.Map)
+
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}
+
+	if mt.immutable() {
+		L.RaiseError("invalid operation on immutable map")
+	}
+
 	key := L.CheckAny(2)
 	value := L.CheckAny(3)
 

@@ -39,6 +39,36 @@ import (
 //  Struct          *LUserData       Yes
 //  UnsafePointer   *LUserData       No
 func New(L *lua.LState, value interface{}) lua.LValue {
+	return NewWithOptions(L, value, ReflectOptions{})
+}
+
+// NewType returns a new type creator for the given value's type.
+//
+// When the lua.LValue is called, a new value will be created that is the
+// same type as value's type.
+func NewType(L *lua.LState, value interface{}) lua.LValue {
+	val := reflect.TypeOf(value)
+	ud := L.NewUserData()
+	ud.Value = val
+	ud.Metatable = getTypeMetatable(L, val)
+
+	return ud
+}
+
+// ReflectOptions is a configuration that is used to alter the behavior of a
+// reflected gopher-luar object.
+type ReflectOptions struct {
+	// Controls whether or not the value of the reflected object can be modified.
+	// Only works for a subset of types that utilize a custom metatable - arrays,
+	// maps, pointers, slices and structs.
+	Immutable bool
+	// For structs, will auto-populate and auto-indirect pointer fields.
+	TransparentPointers bool
+}
+
+// NewWithOptions extends New, in order to allow configuring special reflection
+// behavior via a ReflectOptions parameter.
+func NewWithOptions(L *lua.LState, value interface{}, opts ReflectOptions) lua.LValue {
 	if value == nil {
 		return lua.LNil
 	}
@@ -66,7 +96,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getMetatableFromValue(L, val)
+		ud.Metatable = getMetatableFromValue(L, val, opts)
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val, false)
@@ -81,19 +111,6 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		ud.Value = val.Interface()
 		return ud
 	}
-}
-
-// NewType returns a new type creator for the given value's type.
-//
-// When the lua.LValue is called, a new value will be created that is the
-// same type as value's type.
-func NewType(L *lua.LState, value interface{}) lua.LValue {
-	val := reflect.TypeOf(value)
-	ud := L.NewUserData()
-	ud.Value = val
-	ud.Metatable = getTypeMetatable(L, val)
-
-	return ud
 }
 
 func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) reflect.Value {
@@ -217,7 +234,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			t := s.Elem()
 
 			mt := &Metatable{
-				LTable: getMetatable(L, hint),
+				LTable: getMetatable(L, hint, ReflectOptions{}),
 			}
 
 			converted.ForEach(func(key, value lua.LValue) {

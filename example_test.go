@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"testing"
 
 	"github.com/yuin/gopher-lua"
 )
@@ -37,7 +38,7 @@ func (p *Person) IncreaseAge() {
 	p.Age++
 }
 
-func Example__1() {
+func TestExample__1(t *testing.T) {
 	const code = `
 	print(user1.Name)
 	print(user1.Age)
@@ -66,7 +67,7 @@ func Example__1() {
 	L.SetGlobal("user2", New(L, john))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// Tim
@@ -77,7 +78,7 @@ func Example__1() {
 	// Hello, John
 }
 
-func Example__2() {
+func TestExample__2(t *testing.T) {
 	const code = `
 	for i = 1, #things do
 		print(things[i])
@@ -113,7 +114,7 @@ func Example__2() {
 	L.SetGlobal("thangs", New(L, thangs))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	fmt.Println()
@@ -137,7 +138,7 @@ func Example__2() {
 	// false
 }
 
-func Example__3() {
+func TestExample__3(t *testing.T) {
 	const code = `
 	user2 = Person()
 	user2.Name = "John"
@@ -162,7 +163,7 @@ func Example__3() {
 	L.SetGlobal("People", NewType(L, map[string]*Person{}))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
@@ -173,7 +174,7 @@ func Example__3() {
 	// 2
 }
 
-func Example__4() {
+func TestExample__4(t *testing.T) {
 	const code = `
 	print(getHello(person))
 	`
@@ -193,13 +194,13 @@ func Example__4() {
 	L.SetGlobal("getHello", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// Hello, Tim
 }
 
-func Example__5() {
+func TestExample__5(t *testing.T) {
 	const code = `
 	print(ch:receive())
 	ch:send("John")
@@ -220,7 +221,7 @@ func Example__5() {
 	L.SetGlobal("ch", New(L, ch))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// Tim	true
@@ -228,7 +229,7 @@ func Example__5() {
 	// nil	false
 }
 
-func Example__6() {
+func TestExample__6(t *testing.T) {
 	const code = `
 	local sorted = {}
 	for k, v in countries() do
@@ -252,7 +253,7 @@ func Example__6() {
 	L.SetGlobal("countries", New(L, countries))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// Canada
@@ -260,7 +261,7 @@ func Example__6() {
 	// Japan
 }
 
-func Example__7() {
+func TestExample__7(t *testing.T) {
 	const code = `
 	fn("a", 1, 2, 3)
 	fn("b")
@@ -280,7 +281,7 @@ func Example__7() {
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// a
@@ -292,7 +293,7 @@ func Example__7() {
 	// 4
 }
 
-func Example__8() {
+func TestExample__8(t *testing.T) {
 	const code = `
 	for _, x in ipairs(fn(1, 2, 3)) do
 		print(x)
@@ -319,7 +320,7 @@ func Example__8() {
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// 3
@@ -328,7 +329,7 @@ func Example__8() {
 	// 4
 }
 
-func Example__9() {
+func TestExample__9(t *testing.T) {
 	const code = `
 	print(#items)
 	print(items:capacity())
@@ -347,7 +348,7 @@ func Example__9() {
 	L.SetGlobal("items", New(L, items))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// 0
@@ -358,7 +359,7 @@ func Example__9() {
 	// world
 }
 
-func Example__10() {
+func TestExample__10(t *testing.T) {
 	const code = `
 	ints = newInts(1)
 	print(#ints, ints:capacity())
@@ -375,14 +376,14 @@ func Example__10() {
 	L.SetGlobal("newInts", NewType(L, ints{}))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// 1	1
 	// 0	10
 }
 
-func Example__11() {
+func TestExample__11(t *testing.T) {
 	const code = `
 	print(-p1 == -p1)
 	print(-p1 == -p1_alias)
@@ -406,7 +407,7 @@ func Example__11() {
 	L.SetGlobal("p2", New(L, &p2))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// true
@@ -416,7 +417,7 @@ func Example__11() {
 	// false
 }
 
-func Example__12() {
+func TestExample__12(t *testing.T) {
 	const code = `
 	print(p1)
 	print(p2)
@@ -438,14 +439,14 @@ func Example__12() {
 	L.SetGlobal("p2", New(L, &p2))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// Tim (99)
 	// John (2)
 }
 
-func Example__13() {
+func TestExample__13(t *testing.T) {
 	const code = `
 	print(p:AddNumbers(1, 2, 3, 4, 5))
 	`
@@ -460,13 +461,13 @@ func Example__13() {
 	L.SetGlobal("p", New(L, &p))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// Tim counts: 15
 }
 
-func Example__14() {
+func TestExample__14(t *testing.T) {
 	const code = `
 	print(p:hello())
 	print(p.age)
@@ -483,7 +484,7 @@ func Example__14() {
 	L.SetGlobal("p", New(L, &p))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// Hello, Tim
@@ -496,7 +497,7 @@ func (o OneString) Print() {
 	fmt.Println(o[0])
 }
 
-func Example__15() {
+func TestExample__15(t *testing.T) {
 	const code = `
 	print(#e.V, e.V[1], e.V[2])
 	e.V[1] = "World"
@@ -525,7 +526,7 @@ func Example__15() {
 	L.SetGlobal("arr", New(L, arr))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// 2	Hello	World
@@ -534,7 +535,7 @@ func Example__15() {
 	// Test
 }
 
-func Example__16() {
+func TestExample__16(t *testing.T) {
 	const code = `
 	print(fn("tim", 5))
 	`
@@ -553,13 +554,13 @@ func Example__16() {
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// tim	tim	tim	tim	tim
 }
 
-func Example__17() {
+func TestExample__17(t *testing.T) {
 	const code = `
 	print(-ptr)
 	`
@@ -572,13 +573,13 @@ func Example__17() {
 	L.SetGlobal("ptr", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// hello
 }
 
-func Example__18() {
+func TestExample__18(t *testing.T) {
 	const code = `
 	print(ptr1 == nil)
 	print(ptr2 == nil)
@@ -595,7 +596,7 @@ func Example__18() {
 	L.SetGlobal("ptr2", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// true
@@ -603,7 +604,7 @@ func Example__18() {
 	// false
 }
 
-func Example__19() {
+func TestExample__19(t *testing.T) {
 	const code = `
 	print(-str)
 	print(str ^ "world")
@@ -618,7 +619,7 @@ func Example__19() {
 	L.SetGlobal("str", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// hello
@@ -635,7 +636,7 @@ type Example__20_B struct {
 	Person
 }
 
-func Example__20() {
+func TestExample__20(t *testing.T) {
 	const code = `
 	print(a.Value == nil)
 	a.Value = str_ptr()
@@ -660,7 +661,7 @@ func Example__20() {
 	L.SetGlobal("str_ptr", NewType(L, ""))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// true
@@ -669,7 +670,7 @@ func Example__20() {
 	// Tim
 }
 
-func Example__21() {
+func TestExample__21(t *testing.T) {
 	const code = `
 	print(fn == nil)
 	`
@@ -682,13 +683,13 @@ func Example__21() {
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// true
 }
 
-func Example__22() {
+func TestExample__22(t *testing.T) {
 	const code = `
 	fn(arr)
 	`
@@ -705,13 +706,13 @@ func Example__22() {
 	L.SetGlobal("arr", New(L, arr))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// 1 2 3
 }
 
-func Example__23() {
+func TestExample__23(t *testing.T) {
 	const code = `
 	b = a
 	`
@@ -724,7 +725,7 @@ func Example__23() {
 	L.SetGlobal("a", New(L, a))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	b := L.GetGlobal("b").(*lua.LUserData).Value.(complex128)
 	fmt.Println(a == b)
@@ -757,7 +758,7 @@ func (m MapAlias) Y() int {
 	return len(m)
 }
 
-func Example__24() {
+func TestExample__24(t *testing.T) {
 	const code = `
 	print(a:Test())
 	local len1 = b:Len()
@@ -780,7 +781,7 @@ func Example__24() {
 	L.SetGlobal("c", New(L, c))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// I'm a "chan string" alias
@@ -799,7 +800,7 @@ type E25A struct {
 	B E25B
 }
 
-func Example__25() {
+func TestExample__25(t *testing.T) {
 	const code = `
 	a.b:Test()
 	`
@@ -811,7 +812,7 @@ func Example__25() {
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	a.B.Test()
 	// Output:
@@ -826,7 +827,7 @@ type E26A struct {
 	Hidden bool `luar:"-"`
 }
 
-func Example__26() {
+func TestExample__26(t *testing.T) {
 	const code = `
 	print(a.name)
 	print(a.Name)
@@ -849,7 +850,7 @@ func Example__26() {
 	L.SetGlobal("a", New(L, a))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// tim
@@ -860,7 +861,7 @@ func Example__26() {
 	// nil
 }
 
-func Example__27() {
+func TestExample__27(t *testing.T) {
 	const code = `
 	print(a.Name)
 	_ = a ^ -b
@@ -881,7 +882,7 @@ func Example__27() {
 	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// tim
@@ -898,7 +899,7 @@ func (E28_Chan) Test2() {
 	fmt.Println("E28_Chan.Test2")
 }
 
-func Example__28() {
+func TestExample__28(t *testing.T) {
 	const code = `
 	b:Test()
 	b:Test2()
@@ -916,7 +917,7 @@ func Example__28() {
 	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// E28_Chan.Test
@@ -931,7 +932,7 @@ type E29_A struct {
 	E29_String
 }
 
-func Example__29() {
+func TestExample__29(t *testing.T) {
 	const code = `
 	a.E29_String = "world"
 	`
@@ -946,7 +947,7 @@ func Example__29() {
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	fmt.Println(a.E29_String)
 	// Output:
@@ -969,7 +970,7 @@ type E30_B struct {
 	*E30_A
 }
 
-func Example__30() {
+func TestExample__30(t *testing.T) {
 	const code = `
 	b:public()
 	b.E30_A:public()
@@ -1007,7 +1008,7 @@ func Example__30() {
 	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// You can call me
@@ -1018,7 +1019,7 @@ type E_31 struct {
 	S []string
 }
 
-func Example__31() {
+func TestExample__31(t *testing.T) {
 	const code = `
 	x.S = {"a", "b", "", 3, true, "c"}
 	`
@@ -1030,7 +1031,7 @@ func Example__31() {
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	for _, v := range e.S {
 		fmt.Println(v)
@@ -1048,7 +1049,7 @@ type E_32 struct {
 	S map[string]string
 }
 
-func Example__32() {
+func TestExample__32(t *testing.T) {
 	const code = `
 	x.S = {
 		33,
@@ -1066,7 +1067,7 @@ func Example__32() {
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	fmt.Println(len(e.S))
@@ -1088,7 +1089,7 @@ type E_33 struct {
 	P2 Person `luar:"other"`
 }
 
-func Example__33() {
+func TestExample__33(t *testing.T) {
 	const code = `
 	x.Person = {
 		Name = "Bill",
@@ -1115,7 +1116,7 @@ func Example__33() {
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	fmt.Println(e.Name)
@@ -1143,7 +1144,7 @@ type E_34 struct {
 	C int    `luar:"-"`
 }
 
-func Example__34() {
+func TestExample__34(t *testing.T) {
 	const code = `
 	_ = x ^ {
 		q = "Cat",
@@ -1163,7 +1164,7 @@ func Example__34() {
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	fmt.Println(e.A)
@@ -1180,7 +1181,7 @@ type E_35 struct {
 	Fn2 func(a string, b ...int) string
 }
 
-func Example__35() {
+func TestExample__35(t *testing.T) {
 	const code = `
 	i = 0
 	x.Fn = function(str)
@@ -1203,7 +1204,7 @@ func Example__35() {
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	for ch := 'A'; ch <= 'C'; ch++ {
@@ -1215,7 +1216,7 @@ func Example__35() {
 	fmt.Println(e.Fn2("hello", 1, 2, 3))
 
 	if L.GetTop() != 0 {
-		panic("expecting GetTop to return 0, got " + strconv.Itoa(L.GetTop()))
+		t.Fatal("expecting GetTop to return 0, got " + strconv.Itoa(L.GetTop()))
 	}
 	// Output:
 	// >A< 1
@@ -1229,7 +1230,7 @@ type E_36 struct {
 	F1 *lua.LFunction
 }
 
-func Example__36() {
+func TestExample__36(t *testing.T) {
 	const code = `
 	x.F1 = function(str)
 		print("Hello World")
@@ -1243,7 +1244,7 @@ func Example__36() {
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	L.Push(e.F1)
@@ -1253,7 +1254,7 @@ func Example__36() {
 	// Hello World
 }
 
-func Example__37() {
+func TestExample__37(t *testing.T) {
 	const code = `
 	for i, x in s() do
 		print(i, x)
@@ -1288,7 +1289,7 @@ func Example__37() {
 	L.SetGlobal("ap", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	// Output:
@@ -1307,7 +1308,7 @@ func (s *E38String) ToUpper() {
 	*s = E38String(strings.ToUpper(string(*s)))
 }
 
-func Example__38() {
+func TestExample__38(t *testing.T) {
 	const code = `
 	print(a[1]:AddNumbers(1, 2, 3, 4, 5))
 	print(s[1]:AddNumbers(1, 2, 3, 4))
@@ -1342,7 +1343,7 @@ func Example__38() {
 	L.SetGlobal("str", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	// Output:
@@ -1357,7 +1358,7 @@ func Example__38() {
 	// HELLO WORLD
 }
 
-func ExampleLState() {
+func TestExampleLState(t *testing.T) {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
 	`
@@ -1377,13 +1378,13 @@ func ExampleLState() {
 	L.SetGlobal("sum", New(L, sum))
 
 	if err := L.DoString(code); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	// Output:
 	// 15
 }
 
-func ExampleNewType() {
+func TestExampleNewType(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
@@ -1401,4 +1402,315 @@ func ExampleNewType() {
 	`)
 	// Output:
 	// Tycho - Montana
+}
+
+func TestExample__Immutable1(t *testing.T) {
+	// Modifying a field on an immutable struct - should error
+	const code = `
+	p.Name = "Tom"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+		Age:  66,
+	}
+
+	L.SetGlobal("p", NewWithOptions(L, p, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable2(t *testing.T) {
+	// Calling a pointer function on an immutable struct - should error
+	const code = `
+	p:IncreaseAge()
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+		Age:  66,
+	}
+
+	L.SetGlobal("p", NewWithOptions(L, &p, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "attempt to call a non-function object") {
+		t.Fatal("Expected call error, got:", err)
+	}
+}
+
+func TestExample__Immutable3(t *testing.T) {
+	// Accessing a field and calling a regular function on an immutable
+	// struct - should be fine
+	const code = `
+	p:Hello()
+	print(p.Name)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+		Age:  66,
+	}
+
+	L.SetGlobal("p", NewWithOptions(L, p, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExample__Immutable4(t *testing.T) {
+	// Attempting to modify an immutable slice - should error
+	const code = `
+	s[1] = "hi"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := []string{"first", "second"}
+	L.SetGlobal("s", NewWithOptions(L, s, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable slice") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable5(t *testing.T) {
+	// Attempting to append to an immutable slice - should error
+	const code = `
+	s = s:append("hi")
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := []string{"first", "second"}
+	L.SetGlobal("s", NewWithOptions(L, s, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable slice") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable6(t *testing.T) {
+	// Attempting to access a member of an immutable slice - should be fine
+	const code = `
+	print(s[1])
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := []string{"first", "second"}
+	L.SetGlobal("s", NewWithOptions(L, s, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExample__Immutable7(t *testing.T) {
+	// Attempting to modify an immutable map - should error
+	const code = `
+	m["newKey"] = "hi"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	m := map[string]string{"first": "foo", "second": "bar"}
+	L.SetGlobal("m", NewWithOptions(L, m, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable map") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable8(t *testing.T) {
+	// Attempting to access a member of an immutable map - should be fine
+	const code = `
+	print(m["first"])
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	m := map[string]string{"first": "foo", "second": "bar"}
+	L.SetGlobal("m", NewWithOptions(L, m, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+}
+
+type Family struct {
+	Mother Person
+	Father Person
+	Children []Person
+}
+
+func TestExample__Immutable9(t *testing.T) {
+	// Attempt to modify a nested field on an immutable struct - should error
+	const code = `
+	f.Mother.Name = "Laura"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	f := Family{
+		Mother: Person{
+			Name: "Luara",
+		},
+		Father: Person{
+			Name: "Tim",
+		},
+	}
+
+	L.SetGlobal("f", NewWithOptions(L, f, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable10(t *testing.T) {
+	// Attempt to modify a nested field in a nested slice, on an immutable
+	// struct - should error
+	const code = `
+	f.Children[1].Name = "Bill"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	f := Family{
+		Mother: Person{
+			Name: "Luara",
+		},
+		Father: Person{
+			Name: "Tim",
+		},
+		Children: []Person{
+			{ Name: "Bill" },
+		},
+	}
+
+	L.SetGlobal("f", NewWithOptions(L, f, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable11(t *testing.T) {
+	// Attempt to modify a nested field in a nested slice, on an immutable
+	// struct pointer - should error
+	const code = `
+	f.Children[1].Name = "Bill"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	f := Family{
+		Mother: Person{
+			Name: "Luara",
+		},
+		Father: Person{
+			Name: "Tim",
+		},
+		Children: []Person{
+			{ Name: "Bill" },
+		},
+	}
+
+	L.SetGlobal("f", NewWithOptions(L, &f, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable12(t *testing.T) {
+	// Attempt to modify the value of an immutable pointer - should error
+	const code = `
+	_ = str ^ "world"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	str := "hello"
+
+	L.SetGlobal("str", NewWithOptions(L, &str, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation for immutable pointer") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestExample__Immutable13(t *testing.T) {
+	// Attempt to access the value of an immutable pointer - should be fine
+	const code = `
+	print(-str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	str := "hello"
+
+	L.SetGlobal("str", NewWithOptions(L, &str, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
 }
