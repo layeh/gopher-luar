@@ -48,7 +48,7 @@ type outputLogger struct {
 	Lines []string
 }
 
-func (l *outputLogger) Log(lines... interface{}) {
+func (l *outputLogger) Log(lines ...interface{}) {
 	if len(lines) == 0 {
 		l.Lines = append(l.Lines, "")
 		return
@@ -65,7 +65,7 @@ func (l *outputLogger) Equals(other []string) bool {
 	if len(l.Lines) != len(other) {
 		return false
 	}
-	for i, line := range(l.Lines) {
+	for i, line := range l.Lines {
 		if line != other[i] {
 			return false
 		}
@@ -115,7 +115,7 @@ func TestStructUsage(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Tim",
 		"30",
@@ -174,7 +174,7 @@ func TestMapAndSlice(t *testing.T) {
 	logger.Log(thangs["GHI"])
 	_, ok := thangs["ABC"]
 	logger.Log(ok)
-	
+
 	expected := []string{
 		"cake",
 		"wallet",
@@ -226,7 +226,7 @@ func TestStructConstructorAndMap(t *testing.T) {
 
 	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
 	logger.Log(len(everyone))
-	
+
 	expected := []string{
 		"John",
 		"Tim",
@@ -260,7 +260,7 @@ func TestGoFunc(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Hello, Tim",
 	}
@@ -293,7 +293,7 @@ func TestChan(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Tim	true",
 		"John	true",
@@ -331,7 +331,7 @@ func TestMap(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Canada",
 		"France",
@@ -365,7 +365,7 @@ func TestFuncVariadic(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"a",
 		"1",
@@ -410,7 +410,7 @@ func TestLuaFuncVariadic(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"3",
 		"2",
@@ -444,7 +444,7 @@ func TestSlice(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"0",
 		"10",
@@ -478,7 +478,7 @@ func TestSliceCapacity(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"1	1",
 		"0	10",
@@ -515,7 +515,7 @@ func TestStructPtrEquality(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"true",
 		"true",
@@ -553,7 +553,7 @@ func TestStructStringer(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Tim (99)",
 		"John (2)",
@@ -581,7 +581,7 @@ func TestPtrMethod(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Tim counts: 15",
 	}
@@ -610,7 +610,7 @@ func TestStruct(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Hello, Tim",
 		"66",
@@ -658,7 +658,7 @@ func TestArray(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"2	Hello	World",
 		"2	World	Hello",
@@ -692,7 +692,7 @@ func TestLuaFunc(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"tim	tim	tim	tim	tim",
 	}
@@ -717,7 +717,7 @@ func TestPtrIndirection(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"hello",
 	}
@@ -746,7 +746,7 @@ func TestPtrEquality(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"true",
 		"false",
@@ -775,7 +775,7 @@ func TestPtrAssignment(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"hello",
 		"world",
@@ -823,7 +823,7 @@ func TestAnonymousFields(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"true",
 		"false",
@@ -851,7 +851,7 @@ func TestEmptyFunc(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"true",
 	}
@@ -880,7 +880,7 @@ func TestFuncArray(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"1	2	3",
 	}
@@ -907,7 +907,7 @@ func TestComplex(t *testing.T) {
 	}
 	b := L.GetGlobal("b").(*lua.LUserData).Value.(complex128)
 	logger.Log(a == b)
-	
+
 	expected := []string{
 		"true",
 	}
@@ -967,7 +967,7 @@ func TestTypeAlias(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"I'm a \"chan string\" alias",
 		"2	3",
@@ -1005,7 +1005,7 @@ func TestStructPtrFunc(t *testing.T) {
 		t.Fatal(err)
 	}
 	logger.Log(a.B.Test())
-	
+
 	expected := []string{
 		"Pointer test",
 		"Pointer test",
@@ -1048,7 +1048,7 @@ func TestHiddenFieldNames(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"tim",
 		"bob",
@@ -1086,7 +1086,7 @@ func TestStructPtrAssignment(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"tim",
 		"bob",
@@ -1127,7 +1127,7 @@ func TestPtrNonPtrChanMethods(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"Test",
 		"Test2",
@@ -1164,7 +1164,7 @@ func TestStructField(t *testing.T) {
 		t.Fatal(err)
 	}
 	logger.Log(a.StructFieldA)
-	
+
 	expected := []string{
 		"hello",
 		"world",
@@ -1230,7 +1230,7 @@ func TestStructBlacklist(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"You can call me",
 		"You can call me",
@@ -1262,7 +1262,7 @@ func TestSliceAssignment(t *testing.T) {
 	for _, v := range e.S {
 		logger.Log(v)
 	}
-	
+
 	expected := []string{
 		"a",
 		"b",
@@ -1307,7 +1307,7 @@ func TestSliceTableAssignment(t *testing.T) {
 	logger.Log(e.S["b"])
 	logger.Log(e.S["c"])
 	logger.Log(e.S["d"])
-	
+
 	expected := []string{
 		"3",
 		"123",
@@ -1365,7 +1365,7 @@ func TestFieldNameResolution(t *testing.T) {
 	logger.Log(e.P.Friend.Age)
 	logger.Log(e.P2.Name)
 	logger.Log(e.P2.Age)
-	
+
 	expected := []string{
 		"Bill",
 		"33",
@@ -1414,7 +1414,7 @@ func TestPCall(t *testing.T) {
 	logger.Log(e.A)
 	logger.Log(e.B)
 	logger.Log(e.C)
-	
+
 	expected := []string{
 		"Cat",
 		"675",
@@ -1468,7 +1468,7 @@ func TestLuaFuncDefinition(t *testing.T) {
 	if L.GetTop() != 0 {
 		t.Fatal("expecting GetTop to return 0, got " + strconv.Itoa(L.GetTop()))
 	}
-	
+
 	expected := []string{
 		">A<	1",
 		">B<	2",
@@ -1506,7 +1506,6 @@ func TestLuaFuncPtr(t *testing.T) {
 	L.Push(e.F1)
 	L.Call(0, 0)
 
-	
 	expected := []string{
 		"Hello World",
 	}
@@ -1554,7 +1553,6 @@ func TestSliceAndArrayTypes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	
 	expected := []string{
 		"1	hello",
 		"2	there",
@@ -1614,7 +1612,6 @@ func TestStructArrayAndSlice(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	
 	expected := []string{
 		"Tim counts: 15",
 		"Tim counts: 10",
@@ -1654,7 +1651,7 @@ func TestLStateFunc(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"15",
 	}
@@ -1680,7 +1677,7 @@ func TestNewType(t *testing.T) {
 		s.Artist = "Tycho"
 		log(s.Artist .. " - " .. s.Title)
 	`)
-	
+
 	expected := []string{
 		"Tycho - Montana",
 	}
@@ -2107,7 +2104,7 @@ func TestTransparentPtrAccess(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"foo",
 	}
@@ -2139,7 +2136,6 @@ func TestTransparentPtrAssignment(t *testing.T) {
 	a := TransparentPtrAccessA{}
 	b := TransparentPtrAccessB{
 		Str: &val,
-
 	}
 	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
 	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
@@ -2147,7 +2143,7 @@ func TestTransparentPtrAssignment(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"assigned ptr value",
 		"new value",
@@ -2175,7 +2171,6 @@ func TestTransparentPtrValueAssignment(t *testing.T) {
 	a := TransparentPtrAccessA{}
 	b := TransparentPtrAccessB{
 		Str: &val,
-
 	}
 	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
 	// Non-pointer
@@ -2192,6 +2187,32 @@ func TestTransparentPtrValueAssignment(t *testing.T) {
 
 	if !logger.Equals(expected) {
 		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
+	}
+}
+
+func TestTransparentValueAccess(t *testing.T) {
+	// Attempt to access a nil pointer field on a transparent pointer
+	// struct that was reflected by value. Since we can't actually set
+	// values back to a struct that was reflected by value (as
+	// opposed to by reference), an error will result.
+	const code = `
+	print(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	b := TransparentPtrAccessB{}
+
+	// Non-pointer
+	L.SetGlobal("b", New(L, b, ReflectOptions{TransparentPointers: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "cannot transparently create pointer field Str") {
+		t.Fatal("Expected invalid operation error, got:", err)
 	}
 }
 
@@ -2212,7 +2233,7 @@ func TestTransparentNestedStructPtrAccess(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"",
 	}
@@ -2240,7 +2261,7 @@ func TestTransparentNestedStructPtrAssignment(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	expected := []string{
 		"hello, world!",
 	}
@@ -2269,7 +2290,6 @@ func TestTransparentPtrEquality(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	
 	expected := []string{
 		"true",
 	}
@@ -2324,7 +2344,6 @@ func TestTransparentStructSliceField(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	
 	expected := []string{
 		"0",
 	}
@@ -2383,7 +2402,6 @@ func TestTransparentNestedStructVar(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	
 	expected := []string{
 		"hello, world!",
 	}
@@ -2415,7 +2433,6 @@ func TestTransparentSliceElementVar(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	
 	expected := []string{
 		"hello, world!",
 	}

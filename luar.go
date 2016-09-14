@@ -38,7 +38,7 @@ import (
 //  String          LString          No
 //  Struct          *LUserData       Yes
 //  UnsafePointer   *LUserData       No
-func New(L *lua.LState, value interface{}, opts... ReflectOptions) lua.LValue {
+func New(L *lua.LState, value interface{}, opts ...ReflectOptions) lua.LValue {
 	var reflectOptions ReflectOptions
 	if len(opts) > 0 {
 		reflectOptions = opts[0]
