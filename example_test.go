@@ -77,6 +77,13 @@ func newOutputLogger() *outputLogger {
 	return &outputLogger{[]string{}}
 }
 
+func newStateWithLogger() (*lua.LState, *outputLogger) {
+	L := lua.NewState()
+	logger := newOutputLogger()
+	L.SetGlobal("log", New(L, logger.Log))
+	return L, logger
+}
+
 func TestStructUsage(t *testing.T) {
 	const code = `
 	log(user1.Name)
@@ -89,11 +96,8 @@ func TestStructUsage(t *testing.T) {
 	log(hello(user2))
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	tim := &Person{
 		Name: "Tim",
@@ -142,11 +146,8 @@ func TestMapAndSlice(t *testing.T) {
 	thangs.ABC = nil
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	things := []string{
 		"cake",
@@ -208,11 +209,8 @@ func TestStructConstructorAndMap(t *testing.T) {
 	everyone["john"] = user2
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	tim := &Person{
 		Name: "Tim",
@@ -245,11 +243,8 @@ func TestGoFunc(t *testing.T) {
 	log(getHello(person))
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	tim := &Person{
 		Name: "Tim",
@@ -282,11 +277,8 @@ func TestChan(t *testing.T) {
 	log(ch:receive())
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	ch := make(chan string)
 	go func() {
@@ -325,11 +317,8 @@ func TestMap(t *testing.T) {
 	end
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	countries := map[string]string{
 		"JP": "Japan",
@@ -361,11 +350,8 @@ func TestFuncVariadic(t *testing.T) {
 	fn("c", 4)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	fn := func(str string, extra ...int) {
 		logger.Log(str)
@@ -408,11 +394,8 @@ func TestLuaFuncVariadic(t *testing.T) {
 	end
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	fn := func(x ...float64) *lua.LTable {
 		tbl := L.NewTable()
@@ -451,11 +434,8 @@ func TestSlice(t *testing.T) {
 	log(items[2])
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	items := make([]string, 0, 10)
 
@@ -488,11 +468,8 @@ func TestSliceCapacity(t *testing.T) {
 	log(#ints, ints:capacity())
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	type ints []int
 
@@ -521,11 +498,8 @@ func TestStructPtrEquality(t *testing.T) {
 	log(p1 == p2)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	p1 := Person{
 		Name: "Tim",
@@ -561,11 +535,8 @@ func TestStructStringer(t *testing.T) {
 	log(p2)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	p1 := Person{
 		Name: "Tim",
@@ -598,11 +569,8 @@ func TestPtrMethod(t *testing.T) {
 	log(p:AddNumbers(1, 2, 3, 4, 5))
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	p := Person{
 		Name: "Tim",
@@ -629,11 +597,8 @@ func TestStruct(t *testing.T) {
 	log(p.age)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	p := Person{
 		Name: "Tim",
@@ -677,11 +642,8 @@ func TestArray(t *testing.T) {
 		V [2]string
 	}
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	var elem Elem
 	elem.V[0] = "Hello"
@@ -714,11 +676,8 @@ func TestLuaFunc(t *testing.T) {
 	log(fn("tim", 5))
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	fn := func(name string, count int) []lua.LValue {
 		s := make([]lua.LValue, count)
@@ -748,11 +707,8 @@ func TestPtrIndirection(t *testing.T) {
 	log(-ptr)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	str := "hello"
 
@@ -778,11 +734,8 @@ func TestPtrEquality(t *testing.T) {
 	log(ptr1 == ptr2)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	var ptr1 *string
 	str := "hello"
@@ -812,11 +765,8 @@ func TestPtrAssignment(t *testing.T) {
 	log(-str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	str := "hello"
 
@@ -856,11 +806,8 @@ func TestAnonymousFields(t *testing.T) {
 	log(a.Name)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := AnonymousFieldsA{
 		AnonymousFieldsB: &AnonymousFieldsB{
@@ -894,11 +841,8 @@ func TestEmptyFunc(t *testing.T) {
 	log(fn == nil)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	var fn func()
 
@@ -922,11 +866,8 @@ func TestFuncArray(t *testing.T) {
 	fn(arr)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	arr := [3]int{1, 2, 3}
 	fn := func(val [3]int) {
@@ -954,11 +895,8 @@ func TestComplex(t *testing.T) {
 	b = a
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := complex(float64(1), float64(2))
 
@@ -1013,11 +951,8 @@ func TestTypeAlias(t *testing.T) {
 	log(c.x, c:y())
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := make(ChanAlias)
 	var b SliceAlias = []string{"Hello", "world"}
@@ -1060,11 +995,8 @@ func TestStructPtrFunc(t *testing.T) {
 	log(a.b:Test())
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := StructPtrFuncA{}
 	L.SetGlobal("a", New(L, &a))
@@ -1101,11 +1033,8 @@ func TestHiddenFieldNames(t *testing.T) {
 	log(a.hidden)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := &HiddenFieldNamesA{
 		Name:   "tim",
@@ -1141,11 +1070,8 @@ func TestStructPtrAssignment(t *testing.T) {
 	log(a.Name)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := &Person{
 		Name: "tim",
@@ -1187,11 +1113,8 @@ func TestPtrNonPtrChanMethods(t *testing.T) {
 	log(b:Test2())
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := make(PtrNonPtrChanMethodsA)
 	b := &a
@@ -1228,11 +1151,8 @@ func TestStructField(t *testing.T) {
 	a.StructFieldA = "world"
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := StructFieldB{}
 	a.StructFieldA = "hello"
@@ -1292,11 +1212,8 @@ func TestStructBlacklist(t *testing.T) {
 	end)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	b := &StructBlacklistB{
 		StructBlacklistA: &StructBlacklistA{},
@@ -1333,11 +1250,8 @@ func TestSliceAssignment(t *testing.T) {
 	x.S = {"a", "b", "", 3, true, "c"}
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	e := &SliceAssignmentA{}
 	L.SetGlobal("x", New(L, e))
@@ -1378,11 +1292,8 @@ func TestSliceTableAssignment(t *testing.T) {
 	}
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	e := &SliceTableAssignmentA{}
 	L.SetGlobal("x", New(L, e))
@@ -1436,11 +1347,8 @@ func TestFieldNameResolution(t *testing.T) {
 	}
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	e := &FieldNameResolutionA{}
 	L.SetGlobal("x", New(L, e))
@@ -1493,11 +1401,8 @@ func TestPCall(t *testing.T) {
 	end)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	e := &PCallA{}
 	L.SetGlobal("x", New(L, e))
@@ -1542,11 +1447,8 @@ func TestLuaFuncDefinition(t *testing.T) {
 	end
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	e := &LuaFuncDefinitionA{}
 	L.SetGlobal("x", New(L, e))
@@ -1591,11 +1493,8 @@ func TestLuaFuncPtr(t *testing.T) {
 	end
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	e := &LuaFuncPtrA{}
 	L.SetGlobal("x", New(L, e))
@@ -1633,11 +1532,8 @@ func TestSliceAndArrayTypes(t *testing.T) {
 	end
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	s := []string{
 		"hello",
@@ -1697,11 +1593,8 @@ func TestStructArrayAndSlice(t *testing.T) {
 	log(-str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := [...]Person{
 		{Name: "Tim"},
@@ -1744,11 +1637,8 @@ func TestLStateFunc(t *testing.T) {
 	log(sum(1, 2, 3, 4, 5))
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	sum := func(L *LState) int {
 		total := 0
@@ -1775,11 +1665,8 @@ func TestLStateFunc(t *testing.T) {
 }
 
 func TestNewType(t *testing.T) {
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	type Song struct {
 		Title  string
@@ -1812,9 +1699,6 @@ func TestImmutableStructFieldModify(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
-
 	p := Person{
 		Name: "Tim",
 		Age:  66,
@@ -1840,9 +1724,6 @@ func TestImmutableStructPtrFunc(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
-
 	p := Person{
 		Name: "Tim",
 		Age:  66,
@@ -1863,15 +1744,12 @@ func TestImmutableStructFieldAccess(t *testing.T) {
 	// Accessing a field and calling a regular function on an immutable
 	// struct - should be fine
 	const code = `
-	p:Hello()
+	log(p:Hello())
 	log(p.Name)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	p := Person{
 		Name: "Tim",
@@ -1883,6 +1761,15 @@ func TestImmutableStructFieldAccess(t *testing.T) {
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
 	}
+
+	expected := []string{
+		"Hello, Tim",
+		"Tim",
+	}
+
+	if !logger.Equals(expected) {
+		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
+	}
 }
 
 func TestImmutableSliceAssignment(t *testing.T) {
@@ -1893,9 +1780,6 @@ func TestImmutableSliceAssignment(t *testing.T) {
 
 	L := lua.NewState()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	s := []string{"first", "second"}
 	L.SetGlobal("s", New(L, s, ReflectOptions{Immutable: true}))
@@ -1916,10 +1800,6 @@ func TestImmutableSliceAppend(t *testing.T) {
 	`
 
 	L := lua.NewState()
-	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	s := []string{"first", "second"}
 	L.SetGlobal("s", New(L, s, ReflectOptions{Immutable: true}))
@@ -1939,17 +1819,22 @@ func TestImmutableSliceAccess(t *testing.T) {
 	log(s[1])
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	s := []string{"first", "second"}
 	L.SetGlobal("s", New(L, s, ReflectOptions{Immutable: true}))
 
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
+	}
+
+	expected := []string{
+		"first",
+	}
+
+	if !logger.Equals(expected) {
+		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
 	}
 }
 
@@ -1961,9 +1846,6 @@ func TestImmutableMapAssignment(t *testing.T) {
 
 	L := lua.NewState()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	m := map[string]string{"first": "foo", "second": "bar"}
 	L.SetGlobal("m", New(L, m, ReflectOptions{Immutable: true}))
@@ -1983,17 +1865,22 @@ func TestImmutableMapAccess(t *testing.T) {
 	log(m["first"])
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	m := map[string]string{"first": "foo", "second": "bar"}
 	L.SetGlobal("m", New(L, m, ReflectOptions{Immutable: true}))
 
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
+	}
+
+	expected := []string{
+		"foo",
+	}
+
+	if !logger.Equals(expected) {
+		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
 	}
 }
 
@@ -2005,9 +1892,6 @@ func TestImmutableNestedStructField(t *testing.T) {
 
 	L := lua.NewState()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	f := Family{
 		Mother: Person{
@@ -2040,9 +1924,6 @@ func TestImmutableNestedStructFieldVar(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
-
 	f := Family{
 		Mother: Person{
 			Name: "Luara",
@@ -2072,9 +1953,6 @@ func TestImmutableNestedStructSliceField(t *testing.T) {
 
 	L := lua.NewState()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	f := Family{
 		Mother: Person{
@@ -2109,9 +1987,6 @@ func TestImmutableNestedStructPtrSliceField(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
-
 	f := Family{
 		Mother: Person{
 			Name: "Luara",
@@ -2144,9 +2019,6 @@ func TestImmutablePointerAssignment(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
-
 	str := "hello"
 
 	L.SetGlobal("str", New(L, &str, ReflectOptions{Immutable: true}))
@@ -2166,11 +2038,8 @@ func TestImmutablePointerAccess(t *testing.T) {
 	log(-str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	str := "hello"
 
@@ -2178,6 +2047,14 @@ func TestImmutablePointerAccess(t *testing.T) {
 
 	if err := L.DoString(code); err != nil {
 		t.Fatal(err)
+	}
+
+	expected := []string{
+		"hello",
+	}
+
+	if !logger.Equals(expected) {
+		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
 	}
 }
 
@@ -2196,11 +2073,8 @@ func TestTransparentPtrAccess(t *testing.T) {
 	log(b.Str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	val := "foo"
 	b := TransparentPtrAccessB{}
@@ -2236,11 +2110,8 @@ func TestTransparentPtrAssignment(t *testing.T) {
 	log(a.B.Str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	val := "assigned ptr value"
 	a := TransparentPtrAccessA{}
@@ -2273,11 +2144,8 @@ func TestTransparentNestedStructPtrAccess(t *testing.T) {
 	log(a.B.Str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := TransparentPtrAccessA{}
 
@@ -2304,11 +2172,8 @@ func TestTransparentNestedStructPtrAssignment(t *testing.T) {
 	log(a.B.Str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := TransparentPtrAccessA{}
 
@@ -2333,11 +2198,8 @@ func TestTransparentPtrEquality(t *testing.T) {
 	log(b.Str == "foo")
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	b := TransparentPtrAccessB{}
 	val := "foo"
@@ -2368,9 +2230,6 @@ func TestTransparentPtrPowOp(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
-
 	b := TransparentPtrAccessB{}
 	val := "foo"
 	b.Str = &val
@@ -2396,11 +2255,8 @@ func TestTransparentStructSliceField(t *testing.T) {
 	log(#a.List)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := TransparentStructSliceFieldA{}
 
@@ -2427,11 +2283,8 @@ func TestTransparentStructSliceAppend(t *testing.T) {
 	log(#a.List)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	a := TransparentStructSliceFieldA{}
 
@@ -2458,11 +2311,8 @@ func TestTransparentNestedStructVar(t *testing.T) {
 	log(b.Str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	val := "hello, world!"
 	a := TransparentPtrAccessA{
@@ -2494,11 +2344,8 @@ func TestTransparentSliceElementVar(t *testing.T) {
 	`
 
 	val := "hello, world!"
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	list := []TransparentPtrAccessA{
 		{&TransparentPtrAccessB{&val}},
@@ -2527,11 +2374,8 @@ func TestImmutableTransparentPtrFieldAccess(t *testing.T) {
 	log(b.Str)
 	`
 
-	L := lua.NewState()
+	L, logger := newStateWithLogger()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	val := "foo"
 	b := TransparentPtrAccessB{}
@@ -2561,9 +2405,6 @@ func TestImmutableTransparentPtrFieldAssignment(t *testing.T) {
 
 	L := lua.NewState()
 	defer L.Close()
-
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
 
 	val := "foo"
 	b := TransparentPtrAccessB{}
