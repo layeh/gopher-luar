@@ -677,7 +677,7 @@ func TestArray(t *testing.T) {
 		V [2]string
 	}
 
-	L := lua.NewState(lua.Options{IncludeGoStackTrace: true})
+	L := lua.NewState()
 	defer L.Close()
 
 	logger := newOutputLogger()
@@ -2223,9 +2223,16 @@ func TestTransparentPtrAccess(t *testing.T) {
 
 func TestTransparentPtrAssignment(t *testing.T) {
 	// Assign one pointer value to another, with the left side
-	// transparent - requires indirection of the right side
+	// transparent - requires indirection of the right side since
+	// the left behaves like a non-pointer field. They should
+	// also be separate objects at that point - no shared address.
+	// This is distinct from regular pointer assignment, where
+	// modifying a value would change it for both references.
 	const code = `
 	a.B = -b
+	log(a.B.Str)
+	b.Str = "new value"
+	log(b.Str)
 	log(a.B.Str)
 	`
 
@@ -2249,6 +2256,8 @@ func TestTransparentPtrAssignment(t *testing.T) {
 	}
 	
 	expected := []string{
+		"assigned ptr value",
+		"new value",
 		"assigned ptr value",
 	}
 
@@ -2295,7 +2304,7 @@ func TestTransparentNestedStructPtrAssignment(t *testing.T) {
 	log(a.B.Str)
 	`
 
-	L := lua.NewState(lua.Options{IncludeGoStackTrace: true})
+	L := lua.NewState()
 	defer L.Close()
 
 	logger := newOutputLogger()
@@ -2485,7 +2494,7 @@ func TestTransparentSliceElementVar(t *testing.T) {
 	`
 
 	val := "hello, world!"
-	L := lua.NewState(lua.Options{IncludeGoStackTrace: true})
+	L := lua.NewState()
 	defer L.Close()
 
 	logger := newOutputLogger()
@@ -2511,3 +2520,62 @@ func TestTransparentSliceElementVar(t *testing.T) {
 	}
 }
 
+func TestImmutableTransparentPtrFieldAccess(t *testing.T) {
+	// Access a transparent pointer field on an immutable
+	// struct - should be fine
+	const code = `
+	log(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	logger := newOutputLogger()
+	L.SetGlobal("log", New(L, logger.Log))
+
+	val := "foo"
+	b := TransparentPtrAccessB{}
+	b.Str = &val
+
+	L.SetGlobal("b", New(L, &b, ReflectOptions{Immutable: true, TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	expected := []string{
+		"foo",
+	}
+
+	if !logger.Equals(expected) {
+		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
+	}
+}
+
+func TestImmutableTransparentPtrFieldAssignment(t *testing.T) {
+	// Attempt to modify a transparent pointer field on an
+	// immutable struct - should error
+	const code = `
+	b.Str = "bar"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	logger := newOutputLogger()
+	L.SetGlobal("log", New(L, logger.Log))
+
+	val := "foo"
+	b := TransparentPtrAccessB{}
+	b.Str = &val
+
+	L.SetGlobal("b", New(L, &b, ReflectOptions{Immutable: true, TransparentPointers: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
