@@ -42,7 +42,7 @@ func mapIndex(L *lua.LState) int {
 
 		return 0
 	}
-	L.Push(NewWithOptions(L, item.Interface(), mt.reflectOptions()))
+	L.Push(New(L, item.Interface(), mt.reflectOptions()))
 	return 1
 }
 

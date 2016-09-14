@@ -21,7 +21,7 @@ func arrayIndex(L *lua.LState) int {
 		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
 			val = val.Addr()
 		}
-		L.Push(NewWithOptions(L, val.Interface(), mt.reflectOptions()))
+		L.Push(New(L, val.Interface(), mt.reflectOptions()))
 	case lua.LString:
 		if !isPtr {
 			if fn := mt.method(string(converted)); fn != nil {

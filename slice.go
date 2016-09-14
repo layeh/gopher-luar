@@ -8,6 +8,7 @@ import (
 
 func sliceIndex(L *lua.LState) int {
 	ref, mt, isPtr := check(L, 1, reflect.Slice)
+	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
 	switch converted := key.(type) {
@@ -20,7 +21,7 @@ func sliceIndex(L *lua.LState) int {
 		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
 			val = val.Addr()
 		}
-		L.Push(NewWithOptions(L, val.Interface(), mt.reflectOptions()))
+		L.Push(New(L, val.Interface(), mt.reflectOptions()))
 	case lua.LString:
 		if !isPtr {
 			if fn := mt.method(string(converted)); fn != nil {

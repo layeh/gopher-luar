@@ -38,37 +38,12 @@ import (
 //  String          LString          No
 //  Struct          *LUserData       Yes
 //  UnsafePointer   *LUserData       No
-func New(L *lua.LState, value interface{}) lua.LValue {
-	return NewWithOptions(L, value, ReflectOptions{})
-}
+func New(L *lua.LState, value interface{}, opts... ReflectOptions) lua.LValue {
+	var reflectOptions ReflectOptions
+	if len(opts) > 0 {
+		reflectOptions = opts[0]
+	}
 
-// NewType returns a new type creator for the given value's type.
-//
-// When the lua.LValue is called, a new value will be created that is the
-// same type as value's type.
-func NewType(L *lua.LState, value interface{}) lua.LValue {
-	val := reflect.TypeOf(value)
-	ud := L.NewUserData()
-	ud.Value = val
-	ud.Metatable = getTypeMetatable(L, val)
-
-	return ud
-}
-
-// ReflectOptions is a configuration that is used to alter the behavior of a
-// reflected gopher-luar object.
-type ReflectOptions struct {
-	// Controls whether or not the value of the reflected object can be modified.
-	// Only works for a subset of types that utilize a custom metatable - arrays,
-	// maps, pointers, slices and structs.
-	Immutable bool
-	// For structs, will auto-populate and auto-indirect pointer fields.
-	TransparentPointers bool
-}
-
-// NewWithOptions extends New, in order to allow configuring special reflection
-// behavior via a ReflectOptions parameter.
-func NewWithOptions(L *lua.LState, value interface{}, opts ReflectOptions) lua.LValue {
 	if value == nil {
 		return lua.LNil
 	}
@@ -96,7 +71,7 @@ func NewWithOptions(L *lua.LState, value interface{}, opts ReflectOptions) lua.L
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getMetatableFromValue(L, val, opts)
+		ud.Metatable = getMetatableFromValue(L, val, reflectOptions)
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val, false)
@@ -111,6 +86,34 @@ func NewWithOptions(L *lua.LState, value interface{}, opts ReflectOptions) lua.L
 		ud.Value = val.Interface()
 		return ud
 	}
+}
+
+// ReflectOptions is a configuration that can be used to alter the behavior of a
+// reflected gopher-luar object.
+type ReflectOptions struct {
+	// Controls whether or not the value of the reflected object can be modified.
+	// Only works for a subset of types that utilize a custom metatable - arrays,
+	// maps, pointers, slices and structs. Child elements/fields inherit the
+	// immutable property, even when assigned to new variables.
+	Immutable bool
+	// For structs, will auto-populate and auto-indirect pointer fields. This
+	// makes structs with pointer fields behave like their non-pointer counterparts.
+	// Fields are populated with a zero-value object upon first access, and can
+	// have values assigned directly without use of the pow (^) operator.
+	TransparentPointers bool
+}
+
+// NewType returns a new type creator for the given value's type.
+//
+// When the lua.LValue is called, a new value will be created that is the
+// same type as value's type.
+func NewType(L *lua.LState, value interface{}) lua.LValue {
+	val := reflect.TypeOf(value)
+	ud := L.NewUserData()
+	ud.Value = val
+	ud.Metatable = getTypeMetatable(L, val)
+
+	return ud
 }
 
 func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) reflect.Value {

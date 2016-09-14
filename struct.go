@@ -39,14 +39,13 @@ func structIndex(L *lua.LState) int {
 		}
 	case reflect.Ptr:
 		if mt.transparentPointers() {
-			// Initialize pointers on first access if they're a struct
+			// Initialize pointers on first access
 			if !field.IsValid() || field.IsNil() {
-				if field.Type().Elem().Kind() == reflect.Struct {
-					field.Set(reflect.New(field.Type().Elem()))
-				}
+				field.Set(reflect.New(field.Type().Elem()))
 			}
-			// Otherwise return the value of the pointer
-			if field.Elem().IsValid() && field.Elem().Type().Kind() != reflect.Struct {
+
+			// Return the value of the pointer
+			if field.Elem().IsValid() {
 				field = field.Elem()
 			}
 		}
@@ -63,7 +62,7 @@ func structIndex(L *lua.LState) int {
 		field = field.Addr()
 	}
 
-	L.Push(NewWithOptions(L, field.Interface(), mt.reflectOptions()))
+	L.Push(New(L, field.Interface(), mt.reflectOptions()))
 	return 1
 }
 
