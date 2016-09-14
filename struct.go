@@ -33,10 +33,6 @@ func structIndex(L *lua.LState) int {
 	}
 
 	switch field.Kind() {
-	case reflect.Array, reflect.Struct:
-		if field.CanAddr() {
-			field = field.Addr()
-		}
 	case reflect.Ptr:
 		if mt.transparentPointers() {
 			// Initialize pointers on first access
@@ -87,16 +83,14 @@ func structNewIndex(L *lua.LState) int {
 	field := ref.FieldByIndex(index)
 
 	if mt.transparentPointers() {
-		hint := field.Type()
+		// With transparent pointers, we are going to get passed the new value
+		// by... value, not by reference. Thus, if the current field is a
+		// pointer type, we need some extra work to reflect a new object for
+		// assignment to the field.
 		if field.Type().Kind() == reflect.Ptr {
-			hint = field.Type().Elem()
-		}
+			hint := field.Type().Elem()
+			goValue := lValueToReflect(L, value, hint, nil)
 
-		goValue := lValueToReflect(L, value, hint, nil)
-
-		// If we're setting a pointer from a plain value, then we need to put it into addressable memory and
-		// assign the pointer value instead
-		if field.Type().Kind() == reflect.Ptr && goValue.Type().Kind() != reflect.Ptr {
 			field.Set(reflect.New(goValue.Type()))
 			field.Elem().Set(goValue)
 			return 0
