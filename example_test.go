@@ -78,7 +78,7 @@ func newOutputLogger() *outputLogger {
 }
 
 func newStateWithLogger() (*lua.LState, *outputLogger) {
-	L := lua.NewState()
+	L := lua.NewState(lua.Options{IncludeGoStackTrace: true})
 	logger := newOutputLogger()
 	L.SetGlobal("log", New(L, logger.Log))
 	return L, logger
@@ -2058,6 +2058,28 @@ func TestImmutablePointerAccess(t *testing.T) {
 	}
 }
 
+func TestImmutableChanClose(t *testing.T) {
+	// Attempt to close an immutable channel - should error
+	const code = `
+	ch:close()
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	ch := make(chan string)
+
+	L.SetGlobal("ch", New(L, ch, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "cannot close immutable channel") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
 type TransparentPtrAccessB struct {
 	Str *string
 }
@@ -2129,6 +2151,42 @@ func TestTransparentPtrAssignment(t *testing.T) {
 	expected := []string{
 		"assigned ptr value",
 		"new value",
+		"assigned ptr value",
+	}
+
+	if !logger.Equals(expected) {
+		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
+	}
+}
+
+func TestTransparentPtrValueAssignment(t *testing.T) {
+	// Assign a non-pointer struct value to a pointer field -
+	// should be fine
+	const code = `
+	a.B = b
+	log(a.B.Str)
+	log(b.Str)
+	`
+
+	L, logger := newStateWithLogger()
+	defer L.Close()
+
+	val := "assigned ptr value"
+	a := TransparentPtrAccessA{}
+	b := TransparentPtrAccessB{
+		Str: &val,
+
+	}
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+	// Non-pointer
+	L.SetGlobal("b", New(L, b, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		t.Fatal(err)
+	}
+
+	expected := []string{
+		"assigned ptr value",
 		"assigned ptr value",
 	}
 

@@ -62,7 +62,12 @@ func chanReceive(L *lua.LState) int {
 }
 
 func chanClose(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Chan)
+	ref, mt, _ := check(L, 1, reflect.Chan)
+
+	if mt.immutable() {
+		L.RaiseError("cannot close immutable channel")
+	}
+
 	ref.Close()
 	return 0
 }

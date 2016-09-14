@@ -91,6 +91,11 @@ func structNewIndex(L *lua.LState) int {
 			hint := field.Type().Elem()
 			goValue := lValueToReflect(L, value, hint, nil)
 
+			if !field.CanSet() {
+				// Can happen if the field is on a struct reflected by
+				// value instead of by reference.
+				L.RaiseError("cannot set field " + key)
+			}
 			field.Set(reflect.New(goValue.Type()))
 			field.Elem().Set(goValue)
 			return 0
