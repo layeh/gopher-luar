@@ -32,24 +32,26 @@ func structIndex(L *lua.LState) int {
 		L.RaiseError("cannot interface field " + key)
 	}
 
-	switch field.Kind() {
-	case reflect.Ptr:
-		if mt.transparentPointers() {
-			// Initialize pointers on first access
-			if !field.IsValid() || field.IsNil() {
-				field.Set(reflect.New(field.Type().Elem()))
-			}
+	if field.CanSet() {
+		switch field.Kind() {
+		case reflect.Ptr:
+			if mt.transparentPointers() {
+				// Initialize pointers on first access
+				if !field.IsValid() || field.IsNil() {
+					field.Set(reflect.New(field.Type().Elem()))
+				}
 
-			// Return the value of the pointer
-			if field.Elem().IsValid() {
-				field = field.Elem()
+				// Return the value of the pointer
+				if field.Elem().IsValid() {
+					field = field.Elem()
+				}
 			}
-		}
-	case reflect.Slice:
-		if mt.transparentPointers() {
-			// Initialize slices on first access
-			if !field.IsValid() || field.IsNil() {
-				field.Set(reflect.MakeSlice(field.Type(), 0, 10))
+		case reflect.Slice:
+			if mt.transparentPointers() {
+				// Initialize slices on first access
+				if !field.IsValid() || field.IsNil() {
+					field.Set(reflect.MakeSlice(field.Type(), 0, 10))
+				}
 			}
 		}
 	}

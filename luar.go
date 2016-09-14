@@ -99,7 +99,8 @@ type ReflectOptions struct {
 	// For structs, will auto-populate and auto-indirect pointer fields. This
 	// makes structs with pointer fields behave like their non-pointer counterparts.
 	// Fields are populated with a zero-value object upon first access, and can
-	// have values assigned directly without use of the pow (^) operator.
+	// have values assigned directly without use of the pow (^) operator. Note
+	// that fields can only be set if the struct is reflected by reference.
 	TransparentPointers bool
 }
 
