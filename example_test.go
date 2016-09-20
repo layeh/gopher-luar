@@ -44,59 +44,19 @@ type Family struct {
 	Children []Person
 }
 
-type outputLogger struct {
-	Lines []string
-}
-
-func (l *outputLogger) Log(lines ...interface{}) {
-	if len(lines) == 0 {
-		l.Lines = append(l.Lines, "")
-		return
-	}
-
-	linesStr := []string{}
-	for _, line := range lines {
-		linesStr = append(linesStr, fmt.Sprintf("%v", line))
-	}
-	l.Lines = append(l.Lines, strings.Join(linesStr, "\t"))
-}
-
-func (l *outputLogger) Equals(other []string) bool {
-	if len(l.Lines) != len(other) {
-		return false
-	}
-	for i, line := range l.Lines {
-		if line != other[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func newOutputLogger() *outputLogger {
-	return &outputLogger{[]string{}}
-}
-
-func newStateWithLogger() (*lua.LState, *outputLogger) {
-	L := lua.NewState(lua.Options{IncludeGoStackTrace: true})
-	logger := newOutputLogger()
-	L.SetGlobal("log", New(L, logger.Log))
-	return L, logger
-}
-
-func TestStructUsage(t *testing.T) {
+func ExampleStructUsage() {
 	const code = `
-	log(user1.Name)
-	log(user1.Age)
-	log(user1:Hello())
+	print(user1.Name)
+	print(user1.Age)
+	print(user1:Hello())
 
-	log(user2.Name)
-	log(user2.Age)
+	print(user2.Name)
+	print(user2.Age)
 	hello = user2.Hello
-	log(hello(user2))
+	print(hello(user2))
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	tim := &Person{
@@ -113,40 +73,35 @@ func TestStructUsage(t *testing.T) {
 	L.SetGlobal("user2", New(L, john))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Tim",
-		"30",
-		"Hello, Tim",
-		"John",
-		"40",
-		"Hello, John",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Tim
+	// 30
+	// Hello, Tim
+	// John
+	// 40
+	// Hello, John
 }
 
-func TestMapAndSlice(t *testing.T) {
+func ExampleMapAndSlice() {
 	const code = `
 	for i = 1, #things do
-		log(things[i])
+		print(things[i])
 	end
 	things[1] = "cookie"
 
-	log()
+	print()
 
-	log(thangs.ABC)
-	log(thangs.DEF)
-	log(thangs.GHI)
+	print(thangs.ABC)
+	print(thangs.DEF)
+	print(thangs.GHI)
 	thangs.GHI = 789
 	thangs.ABC = nil
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	things := []string{
@@ -166,50 +121,45 @@ func TestMapAndSlice(t *testing.T) {
 	L.SetGlobal("thangs", New(L, thangs))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	logger.Log()
-	logger.Log(things[0])
-	logger.Log(thangs["GHI"])
+	fmt.Println()
+	fmt.Println(things[0])
+	fmt.Println(thangs["GHI"])
 	_, ok := thangs["ABC"]
-	logger.Log(ok)
+	fmt.Println(ok)
 
-	expected := []string{
-		"cake",
-		"wallet",
-		"calendar",
-		"phone",
-		"speaker",
-		"",
-		"123",
-		"456",
-		"<nil>",
-		"",
-		"cookie",
-		"789",
-		"false",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// cake
+	// wallet
+	// calendar
+	// phone
+	// speaker
+	// 
+	// 123
+	// 456
+	// nil
+	// 
+	// cookie
+	// 789
+	// false
 }
 
-func TestStructConstructorAndMap(t *testing.T) {
+func ExampleStructConstructorAndMap() {
 	const code = `
 	user2 = Person()
 	user2.Name = "John"
 	user2.Friend = user1
-	log(user2.Name)
-	log(user2.Friend.Name)
+	print(user2.Name)
+	print(user2.Friend.Name)
 
 	everyone = People()
 	everyone["tim"] = user1
 	everyone["john"] = user2
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	tim := &Person{
@@ -221,29 +171,24 @@ func TestStructConstructorAndMap(t *testing.T) {
 	L.SetGlobal("People", NewType(L, map[string]*Person{}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
 	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
-	logger.Log(len(everyone))
+	fmt.Println(len(everyone))
 
-	expected := []string{
-		"John",
-		"Tim",
-		"2",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// John
+	// Tim
+	// 2
 }
 
-func TestGoFunc(t *testing.T) {
+func ExampleGoFunc() {
 	const code = `
-	log(getHello(person))
+	print(getHello(person))
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	tim := &Person{
@@ -258,54 +203,44 @@ func TestGoFunc(t *testing.T) {
 	L.SetGlobal("getHello", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Hello, Tim",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Hello, Tim
 }
 
-func TestChan(t *testing.T) {
+func ExampleChan() {
 	const code = `
-	log(ch:receive())
+	print(ch:receive())
 	ch:send("John")
-	log(ch:receive())
+	print(ch:receive())
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	ch := make(chan string)
 	go func() {
 		ch <- "Tim"
 		name, ok := <-ch
-		logger.Log(name, ok)
+		fmt.Printf("%s\t%v\n", name, ok)
 		close(ch)
 	}()
 
 	L.SetGlobal("ch", New(L, ch))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Tim	true",
-		"John	true",
-		"<nil>	false",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Tim	true
+	// John	true
+	// nil	false
 }
 
-func TestMap(t *testing.T) {
+func ExampleMap() {
 	const code = `
 	local sorted = {}
 	for k, v in countries() do
@@ -313,11 +248,11 @@ func TestMap(t *testing.T) {
 	end
 	table.sort(sorted)
 	for i = 1, #sorted do
-		log(sorted[i])
+		print(sorted[i])
 	end
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	countries := map[string]string{
@@ -329,72 +264,62 @@ func TestMap(t *testing.T) {
 	L.SetGlobal("countries", New(L, countries))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Canada",
-		"France",
-		"Japan",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Canada
+	// France
+	// Japan
 }
 
-func TestFuncVariadic(t *testing.T) {
+func ExampleFuncVariadic() {
 	const code = `
 	fn("a", 1, 2, 3)
 	fn("b")
 	fn("c", 4)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	fn := func(str string, extra ...int) {
-		logger.Log(str)
+		fmt.Printf("%s\n", str)
 		for _, x := range extra {
-			logger.Log(x)
+			fmt.Printf("%d\n", x)
 		}
 	}
 
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"a",
-		"1",
-		"2",
-		"3",
-		"b",
-		"c",
-		"4",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// a
+	// 1
+	// 2
+	// 3
+	// b
+	// c
+	// 4
 }
 
-func TestLuaFuncVariadic(t *testing.T) {
+func ExampleLuaFuncVariadic() {
 	const code = `
 	for _, x in ipairs(fn(1, 2, 3)) do
-		log(x)
+		print(x)
 	end
 	for _, x in ipairs(fn()) do
-		log(x)
+		print(x)
 	end
 	for _, x in ipairs(fn(4)) do
-		log(x)
+		print(x)
 	end
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	fn := func(x ...float64) *lua.LTable {
@@ -408,33 +333,28 @@ func TestLuaFuncVariadic(t *testing.T) {
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"3",
-		"2",
-		"1",
-		"4",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 3
+	// 2
+	// 1
+	// 4
 }
 
-func TestSlice(t *testing.T) {
+func ExampleSlice() {
 	const code = `
-	log(#items)
-	log(items:capacity())
+	print(#items)
+	print(items:capacity())
 	items = items:append("hello", "world")
-	log(#items)
-	log(items:capacity())
-	log(items[1])
-	log(items[2])
+	print(#items)
+	print(items:capacity())
+	print(items[1])
+	print(items[2])
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	items := make([]string, 0, 10)
@@ -442,33 +362,28 @@ func TestSlice(t *testing.T) {
 	L.SetGlobal("items", New(L, items))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"0",
-		"10",
-		"2",
-		"10",
-		"hello",
-		"world",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 0
+	// 10
+	// 2
+	// 10
+	// hello
+	// world
 }
 
-func TestSliceCapacity(t *testing.T) {
+func ExampleSliceCapacity() {
 	const code = `
 	ints = newInts(1)
-	log(#ints, ints:capacity())
+	print(#ints, ints:capacity())
 
 	ints = newInts(0, 10)
-	log(#ints, ints:capacity())
+	print(#ints, ints:capacity())
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	type ints []int
@@ -476,29 +391,24 @@ func TestSliceCapacity(t *testing.T) {
 	L.SetGlobal("newInts", NewType(L, ints{}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"1	1",
-		"0	10",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 1	1
+	// 0	10
 }
 
-func TestStructPtrEquality(t *testing.T) {
+func ExampleStructPtrEquality() {
 	const code = `
-	log(-p1 == -p1)
-	log(-p1 == -p1_alias)
-	log(p1 == p1)
-	log(p1 == p1_alias)
-	log(p1 == p2)
+	print(-p1 == -p1)
+	print(-p1 == -p1_alias)
+	print(p1 == p1)
+	print(p1 == p1_alias)
+	print(p1 == p2)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	p1 := Person{
@@ -513,29 +423,24 @@ func TestStructPtrEquality(t *testing.T) {
 	L.SetGlobal("p2", New(L, &p2))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"true",
-		"true",
-		"true",
-		"true",
-		"false",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// true
+	// true
+	// true
+	// true
+	// false
 }
 
-func TestStructStringer(t *testing.T) {
+func ExampleStructStringer() {
 	const code = `
-	log(p1)
-	log(p2)
+	print(p1)
+	print(p2)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	p1 := Person{
@@ -551,25 +456,20 @@ func TestStructStringer(t *testing.T) {
 	L.SetGlobal("p2", New(L, &p2))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Tim (99)",
-		"John (2)",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Tim (99)
+	// John (2)
 }
 
-func TestPtrMethod(t *testing.T) {
+func ExamplePtrMethod() {
 	const code = `
-	log(p:AddNumbers(1, 2, 3, 4, 5))
+	print(p:AddNumbers(1, 2, 3, 4, 5))
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	p := Person{
@@ -579,25 +479,20 @@ func TestPtrMethod(t *testing.T) {
 	L.SetGlobal("p", New(L, &p))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Tim counts: 15",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Tim counts: 15
 }
 
-func TestStruct(t *testing.T) {
+func ExampleStruct() {
 	const code = `
-	log(p:hello())
-	log(p.age)
+	print(p:hello())
+	print(p.age)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	p := Person{
@@ -608,17 +503,12 @@ func TestStruct(t *testing.T) {
 	L.SetGlobal("p", New(L, &p))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Hello, Tim",
-		"66",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Hello, Tim
+	// 66
 }
 
 type OneString [1]string
@@ -627,22 +517,22 @@ func (o OneString) Log() string {
 	return o[0]
 }
 
-func TestArray(t *testing.T) {
+func ExampleArray() {
 	const code = `
-	log(#e.V, e.V[1], e.V[2])
+	print(#e.V, e.V[1], e.V[2])
 	e.V[1] = "World"
 	e.V[2] = "Hello"
-	log(#e.V, e.V[1], e.V[2])
+	print(#e.V, e.V[1], e.V[2])
 
-	log(#arr, arr[1])
-	log(arr:Log())
+	print(#arr, arr[1])
+	print(arr:log())
 	`
 
 	type Elem struct {
 		V [2]string
 	}
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	var elem Elem
@@ -656,27 +546,22 @@ func TestArray(t *testing.T) {
 	L.SetGlobal("arr", New(L, arr))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"2	Hello	World",
-		"2	World	Hello",
-		"1	Test",
-		"Test",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 2	Hello	World
+	// 2	World	Hello
+	// 1	Test
+	// Test
 }
 
-func TestLuaFunc(t *testing.T) {
+func ExampleLuaFunc() {
 	const code = `
-	log(fn("tim", 5))
+	print(fn("tim", 5))
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	fn := func(name string, count int) []lua.LValue {
@@ -690,24 +575,19 @@ func TestLuaFunc(t *testing.T) {
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"tim	tim	tim	tim	tim",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// tim	tim	tim	tim	tim
 }
 
-func TestPtrIndirection(t *testing.T) {
+func ExamplePtrIndirection() {
 	const code = `
-	log(-ptr)
+	print(-ptr)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	str := "hello"
@@ -715,26 +595,21 @@ func TestPtrIndirection(t *testing.T) {
 	L.SetGlobal("ptr", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"hello",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// hello
 }
 
-func TestPtrEquality(t *testing.T) {
+func ExamplePtrEquality() {
 	const code = `
-	log(ptr1 == nil)
-	log(ptr2 == nil)
-	log(ptr1 == ptr2)
+	print(ptr1 == nil)
+	print(ptr2 == nil)
+	print(ptr1 == ptr2)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	var ptr1 *string
@@ -744,28 +619,23 @@ func TestPtrEquality(t *testing.T) {
 	L.SetGlobal("ptr2", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"true",
-		"false",
-		"false",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// true
+	// false
+	// false
 }
 
-func TestPtrAssignment(t *testing.T) {
+func ExamplePtrAssignment() {
 	const code = `
-	log(-str)
-	log(str ^ "world")
-	log(-str)
+	print(-str)
+	print(str ^ "world")
+	print(-str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	str := "hello"
@@ -773,18 +643,13 @@ func TestPtrAssignment(t *testing.T) {
 	L.SetGlobal("str", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"hello",
-		"world",
-		"world",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// hello
+	// world
+	// world
 }
 
 type AnonymousFieldsA struct {
@@ -796,17 +661,17 @@ type AnonymousFieldsB struct {
 	Person
 }
 
-func TestAnonymousFields(t *testing.T) {
+func ExampleAnonymousFields() {
 	const code = `
-	log(a.Value == nil)
+	print(a.Value == nil)
 	a.Value = str_ptr()
 	_ = a.Value ^ "hello"
-	log(a.Value == nil)
-	log(-a.Value)
-	log(a.Name)
+	print(a.Value == nil)
+	print(-a.Value)
+	print(a.Name)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := AnonymousFieldsA{
@@ -821,27 +686,22 @@ func TestAnonymousFields(t *testing.T) {
 	L.SetGlobal("str_ptr", NewType(L, ""))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"true",
-		"false",
-		"hello",
-		"Tim",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// true
+	// false
+	// hello
+	// Tim
 }
 
-func TestEmptyFunc(t *testing.T) {
+func ExampleEmptyFunc() {
 	const code = `
-	log(fn == nil)
+	print(fn == nil)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	var fn func()
@@ -849,53 +709,43 @@ func TestEmptyFunc(t *testing.T) {
 	L.SetGlobal("fn", New(L, fn))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"true",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// true
 }
 
-func TestFuncArray(t *testing.T) {
+func ExampleFuncArray() {
 	const code = `
 	fn(arr)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	arr := [3]int{1, 2, 3}
 	fn := func(val [3]int) {
-		logger.Log(val[0], val[1], val[2])
+		fmt.Printf("%d %d %d\n", val[0], val[1], val[2])
 	}
 
 	L.SetGlobal("fn", New(L, fn))
 	L.SetGlobal("arr", New(L, arr))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"1	2	3",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 1 2 3
 }
 
-func TestComplex(t *testing.T) {
+func ExampleComplex() {
 	const code = `
 	b = a
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := complex(float64(1), float64(2))
@@ -903,18 +753,13 @@ func TestComplex(t *testing.T) {
 	L.SetGlobal("a", New(L, a))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 	b := L.GetGlobal("b").(*lua.LUserData).Value.(complex128)
-	logger.Log(a == b)
+	fmt.Println(a == b)
 
-	expected := []string{
-		"true",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// true
 }
 
 type ChanAlias chan string
@@ -942,16 +787,16 @@ func (m MapAlias) Y() int {
 	return len(m)
 }
 
-func TestTypeAlias(t *testing.T) {
+func ExampleTypeAlias() {
 	const code = `
-	log(a:Test())
+	print(a:Test())
 	local len1 = b:Len()
 	b:Append("!")
-	log(len1, b:len())
-	log(c.x, c:y())
+	print(len1, b:len())
+	print(c.x, c:y())
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := make(ChanAlias)
@@ -965,18 +810,13 @@ func TestTypeAlias(t *testing.T) {
 	L.SetGlobal("c", New(L, c))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"I'm a \"chan string\" alias",
-		"2	3",
-		"15	1",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// I'm a "chan string" alias
+	// 2	3
+	// 15	1
 }
 
 type StructPtrFuncB struct {
@@ -990,30 +830,25 @@ type StructPtrFuncA struct {
 	B StructPtrFuncB
 }
 
-func TestStructPtrFunc(t *testing.T) {
+func ExampleStructPtrFunc() {
 	const code = `
-	log(a.b:Test())
+	print(a.b:Test())
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := StructPtrFuncA{}
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
-	logger.Log(a.B.Test())
+	fmt.Println(a.B.Test())
 
-	expected := []string{
-		"Pointer test",
-		"Pointer test",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Pointer test
+	// Pointer test
 }
 
 type HiddenFieldNamesA struct {
@@ -1023,17 +858,17 @@ type HiddenFieldNamesA struct {
 	Hidden bool `luar:"-"`
 }
 
-func TestHiddenFieldNames(t *testing.T) {
+func ExampleHiddenFieldNames() {
 	const code = `
-	log(a.name)
-	log(a.Name)
-	log(a.str)
-	log(a.Str)
-	log(a.Hidden)
-	log(a.hidden)
+	print(a.name)
+	print(a.Name)
+	print(a.str)
+	print(a.Str)
+	print(a.Hidden)
+	print(a.hidden)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := &HiddenFieldNamesA{
@@ -1046,31 +881,26 @@ func TestHiddenFieldNames(t *testing.T) {
 	L.SetGlobal("a", New(L, a))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"tim",
-		"bob",
-		"asd123",
-		"asd123",
-		"<nil>",
-		"<nil>",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// tim
+	// bob
+	// asd123
+	// asd123
+	// nil
+	// nil
 }
 
-func TestStructPtrAssignment(t *testing.T) {
+func ExampleStructPtrAssignment() {
 	const code = `
-	log(a.Name)
+	print(a.Name)
 	_ = a ^ -b
-	log(a.Name)
+	print(a.Name)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := &Person{
@@ -1084,17 +914,12 @@ func TestStructPtrAssignment(t *testing.T) {
 	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"tim",
-		"bob",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// tim
+	// bob
 }
 
 type PtrNonPtrChanMethodsA chan string
@@ -1107,37 +932,32 @@ func (PtrNonPtrChanMethodsA) Test2() string {
 	return "Test2"
 }
 
-func TestPtrNonPtrChanMethods(t *testing.T) {
+func ExamplePtrNonPtrChanMethods() {
 	const code = `
-	log(b:Test())
-	log(b:Test2())
+	print(b:Test())
+	print(b:Test2())
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := make(PtrNonPtrChanMethodsA)
 	b := &a
 
-	logger.Log(b.Test())
-	logger.Log(b.Test2())
+	fmt.Println(b.Test())
+	fmt.Println(b.Test2())
 
 	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Test",
-		"Test2",
-		"Test",
-		"Test2",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Test
+	// Test2
+	// Test
+	// Test2
 }
 
 type StructFieldA string
@@ -1146,33 +966,28 @@ type StructFieldB struct {
 	StructFieldA
 }
 
-func TestStructField(t *testing.T) {
+func ExampleStructField() {
 	const code = `
 	a.StructFieldA = "world"
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := StructFieldB{}
 	a.StructFieldA = "hello"
-	logger.Log(a.StructFieldA)
+	fmt.Println(a.StructFieldA)
 
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
-	logger.Log(a.StructFieldA)
+	fmt.Println(a.StructFieldA)
 
-	expected := []string{
-		"hello",
-		"world",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// hello
+	// world
 }
 
 type StructBlacklistA struct {
@@ -1190,29 +1005,29 @@ type StructBlacklistB struct {
 	*StructBlacklistA
 }
 
-func TestStructBlacklist(t *testing.T) {
+func ExampleStructBlacklist() {
 	const code = `
-	log(b:public())
-	log(b.StructBlacklistA:public())
+	print(b:public())
+	print(b.StructBlacklistA:public())
 	pcall(function()
-		log(b:private())
+		print(b:private())
 	end)
 	pcall(function()
-		log(b.StructBlacklistA:private())
+		print(b.StructBlacklistA:private())
 	end)
 	pcall(function()
-		log(b:Private())
+		print(b:Private())
 	end)
 	pcall(function()
-		log(b.StructBlacklistA:Private())
+		print(b.StructBlacklistA:Private())
 	end)
 	pcall(function()
 		local a = -b.StructBlacklistA
-		log(a:Private())
+		print(a:Private())
 	end)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	b := &StructBlacklistB{
@@ -1228,60 +1043,50 @@ func TestStructBlacklist(t *testing.T) {
 	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"You can call me",
-		"You can call me",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// You can call me
+	// You can call me
 }
 
 type SliceAssignmentA struct {
 	S []string
 }
 
-func TestSliceAssignment(t *testing.T) {
+func ExampleSliceAssignment() {
 	const code = `
 	x.S = {"a", "b", "", 3, true, "c"}
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	e := &SliceAssignmentA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 	for _, v := range e.S {
-		logger.Log(v)
+		fmt.Println(v)
 	}
 
-	expected := []string{
-		"a",
-		"b",
-		"",
-		"3",
-		"true",
-		"c",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// a
+	// b
+	// 
+	// 3
+	// true
+	// c
 }
 
 type SliceTableAssignmentA struct {
 	S map[string]string
 }
 
-func TestSliceTableAssignment(t *testing.T) {
+func ExampleSliceTableAssignment() {
 	const code = `
 	x.S = {
 		33,
@@ -1292,33 +1097,28 @@ func TestSliceTableAssignment(t *testing.T) {
 	}
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	e := &SliceTableAssignmentA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	logger.Log(len(e.S))
-	logger.Log(e.S["a"])
-	logger.Log(e.S["b"])
-	logger.Log(e.S["c"])
-	logger.Log(e.S["d"])
+	fmt.Println(len(e.S))
+	fmt.Println(e.S["a"])
+	fmt.Println(e.S["b"])
+	fmt.Println(e.S["c"])
+	fmt.Println(e.S["d"])
 
-	expected := []string{
-		"3",
-		"123",
-		"",
-		"hello",
-		"false",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 3
+	// 123
+	// 
+	// hello
+	// false
 }
 
 type FieldNameResolutionA struct {
@@ -1327,7 +1127,7 @@ type FieldNameResolutionA struct {
 	P2 Person `luar:"other"`
 }
 
-func TestFieldNameResolution(t *testing.T) {
+func ExampleFieldNameResolution() {
 	const code = `
 	x.Person = {
 		Name = "Bill",
@@ -1347,39 +1147,34 @@ func TestFieldNameResolution(t *testing.T) {
 	}
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	e := &FieldNameResolutionA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	logger.Log(e.Name)
-	logger.Log(e.Age)
-	logger.Log(e.P.Name)
-	logger.Log(e.P.Age)
-	logger.Log(e.P.Friend.Name)
-	logger.Log(e.P.Friend.Age)
-	logger.Log(e.P2.Name)
-	logger.Log(e.P2.Age)
+	fmt.Println(e.Name)
+	fmt.Println(e.Age)
+	fmt.Println(e.P.Name)
+	fmt.Println(e.P.Age)
+	fmt.Println(e.P.Friend.Name)
+	fmt.Println(e.P.Friend.Age)
+	fmt.Println(e.P2.Name)
+	fmt.Println(e.P2.Age)
 
-	expected := []string{
-		"Bill",
-		"33",
-		"Tim",
-		"94",
-		"Bob",
-		"77",
-		"Dale",
-		"26",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Bill
+	// 33
+	// Tim
+	// 94
+	// Bob
+	// 77
+	// Dale
+	// 26
 }
 
 type PCallA struct {
@@ -1388,7 +1183,7 @@ type PCallA struct {
 	C int    `luar:"-"`
 }
 
-func TestPCall(t *testing.T) {
+func ExamplePCall() {
 	const code = `
 	_ = x ^ {
 		q = "Cat",
@@ -1401,29 +1196,24 @@ func TestPCall(t *testing.T) {
 	end)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	e := &PCallA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	logger.Log(e.A)
-	logger.Log(e.B)
-	logger.Log(e.C)
+	fmt.Println(e.A)
+	fmt.Println(e.B)
+	fmt.Println(e.C)
 
-	expected := []string{
-		"Cat",
-		"675",
-		"0",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Cat
+	// 675
+	// 0
 }
 
 type LuaFuncDefinitionA struct {
@@ -1431,7 +1221,7 @@ type LuaFuncDefinitionA struct {
 	Fn2 func(a string, b ...int) string
 }
 
-func TestLuaFuncDefinition(t *testing.T) {
+func ExampleLuaFuncDefinition() {
 	const code = `
 	i = 0
 	x.Fn = function(str)
@@ -1447,91 +1237,81 @@ func TestLuaFuncDefinition(t *testing.T) {
 	end
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	e := &LuaFuncDefinitionA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
 	for ch := 'A'; ch <= 'C'; ch++ {
 		str, i := e.Fn(string(ch))
-		logger.Log(str, i)
+		fmt.Printf("%s %d\n", str, i)
 	}
 
-	logger.Log(e.Fn2("hello", 1, 2))
-	logger.Log(e.Fn2("hello", 1, 2, 3))
+	fmt.Println(e.Fn2("hello", 1, 2))
+	fmt.Println(e.Fn2("hello", 1, 2, 3))
 
 	if L.GetTop() != 0 {
-		t.Fatal("expecting GetTop to return 0, got " + strconv.Itoa(L.GetTop()))
+		panic("expecting GetTop to return 0, got " + strconv.Itoa(L.GetTop()))
 	}
 
-	expected := []string{
-		">A<	1",
-		">B<	2",
-		">C<	3",
-		"",
-		"hello",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// >A< 1
+	// >B< 2
+	// >C< 3
+	// 
+	// hello
 }
 
 type LuaFuncPtrA struct {
 	F1 *lua.LFunction
 }
 
-func TestLuaFuncPtr(t *testing.T) {
+func ExampleLuaFuncPtr() {
 	const code = `
 	x.F1 = function(str)
-		log("Hello World")
+		print("Hello World")
 	end
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	e := &LuaFuncPtrA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
 	L.Push(e.F1)
 	L.Call(0, 0)
 
-	expected := []string{
-		"Hello World",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Hello World
 }
 
-func TestSliceAndArrayTypes(t *testing.T) {
+func ExampleSliceAndArrayTypes() {
 	const code = `
 	for i, x in s() do
-		log(i, x)
+		print(i, x)
 	end
 	for i, x in e() do
-		log(i, x)
+		print(i, x)
 	end
 	for i, x in a() do
-		log(i, x)
+		print(i, x)
 	end
 	for i, x in ap() do
-		log(i, x)
+		print(i, x)
 	end
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	s := []string{
@@ -1550,22 +1330,17 @@ func TestSliceAndArrayTypes(t *testing.T) {
 	L.SetGlobal("ap", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"1	hello",
-		"2	there",
-		"3	tim",
-		"1	x",
-		"2	y",
-		"1	x",
-		"2	y",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 1	hello
+	// 2	there
+	// 3	tim
+	// 1	x
+	// 2	y
+	// 1	x
+	// 2	y
 }
 
 type StructArrayAndSliceA string
@@ -1574,24 +1349,24 @@ func (s *StructArrayAndSliceA) ToUpper() {
 	*s = StructArrayAndSliceA(strings.ToUpper(string(*s)))
 }
 
-func TestStructArrayAndSlice(t *testing.T) {
+func ExampleStructArrayAndSlice() {
 	const code = `
-	log(a[1]:AddNumbers(1, 2, 3, 4, 5))
-	log(s[1]:AddNumbers(1, 2, 3, 4))
-	log(s[1].LastAddSum)
-	log(p:AddNumbers(1, 2, 3, 4, 5))
-	log(p.LastAddSum)
+	print(a[1]:AddNumbers(1, 2, 3, 4, 5))
+	print(s[1]:AddNumbers(1, 2, 3, 4))
+	print(s[1].LastAddSum)
+	print(p:AddNumbers(1, 2, 3, 4, 5))
+	print(p.LastAddSum)
 
-	log(p.Age)
+	print(p.Age)
 	p:IncreaseAge()
-	log(p.Age)
+	print(p.Age)
 
-	log(-str)
+	print(-str)
 	str:ToUpper()
-	log(-str)
+	print(-str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := [...]Person{
@@ -1609,32 +1384,27 @@ func TestStructArrayAndSlice(t *testing.T) {
 	L.SetGlobal("str", New(L, &str))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Tim counts: 15",
-		"Tim counts: 10",
-		"10",
-		"Tim counts: 15",
-		"15",
-		"32",
-		"33",
-		"Hello World",
-		"HELLO WORLD",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Tim counts: 15
+	// Tim counts: 10
+	// 10
+	// Tim counts: 15
+	// 15
+	// 32
+	// 33
+	// Hello World
+	// HELLO WORLD
 }
 
-func TestLStateFunc(t *testing.T) {
+func ExampleLStateFunc() {
 	const code = `
-	log(sum(1, 2, 3, 4, 5))
+	print(sum(1, 2, 3, 4, 5))
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	sum := func(L *LState) int {
@@ -1649,20 +1419,15 @@ func TestLStateFunc(t *testing.T) {
 	L.SetGlobal("sum", New(L, sum))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"15",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 15
 }
 
-func TestNewType(t *testing.T) {
-	L, logger := newStateWithLogger()
+func ExampleNewType() {
+	L := lua.NewState()
 	defer L.Close()
 
 	type Song struct {
@@ -1675,16 +1440,11 @@ func TestNewType(t *testing.T) {
 		s = Song()
 		s.Title = "Montana"
 		s.Artist = "Tycho"
-		log(s.Artist .. " - " .. s.Title)
+		print(s.Artist .. " - " .. s.Title)
 	`)
 
-	expected := []string{
-		"Tycho - Montana",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Tycho - Montana
 }
 
 func TestImmutableStructFieldModify(t *testing.T) {
@@ -1737,15 +1497,15 @@ func TestImmutableStructPtrFunc(t *testing.T) {
 	}
 }
 
-func TestImmutableStructFieldAccess(t *testing.T) {
+func ExampleImmutableStructFieldAccess() {
 	// Accessing a field and calling a regular function on an immutable
 	// struct - should be fine
 	const code = `
-	log(p:Hello())
-	log(p.Name)
+	print(p:Hello())
+	print(p.Name)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	p := Person{
@@ -1756,17 +1516,12 @@ func TestImmutableStructFieldAccess(t *testing.T) {
 	L.SetGlobal("p", New(L, p, ReflectOptions{Immutable: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"Hello, Tim",
-		"Tim",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// Hello, Tim
+	// Tim
 }
 
 func TestImmutableSliceAssignment(t *testing.T) {
@@ -1810,29 +1565,24 @@ func TestImmutableSliceAppend(t *testing.T) {
 	}
 }
 
-func TestImmutableSliceAccess(t *testing.T) {
+func ExampleImmutableSliceAccess() {
 	// Attempting to access a member of an immutable slice - should be fine
 	const code = `
-	log(s[1])
+	print(s[1])
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	s := []string{"first", "second"}
 	L.SetGlobal("s", New(L, s, ReflectOptions{Immutable: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"first",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// first
 }
 
 func TestImmutableMapAssignment(t *testing.T) {
@@ -1856,29 +1606,24 @@ func TestImmutableMapAssignment(t *testing.T) {
 	}
 }
 
-func TestImmutableMapAccess(t *testing.T) {
+func ExampleImmutableMapAccess() {
 	// Attempting to access a member of an immutable map - should be fine
 	const code = `
-	log(m["first"])
+	print(m["first"])
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	m := map[string]string{"first": "foo", "second": "bar"}
 	L.SetGlobal("m", New(L, m, ReflectOptions{Immutable: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"foo",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// foo
 }
 
 func TestImmutableNestedStructField(t *testing.T) {
@@ -2029,13 +1774,13 @@ func TestImmutablePointerAssignment(t *testing.T) {
 	}
 }
 
-func TestImmutablePointerAccess(t *testing.T) {
+func ExampleImmutablePointerAccess() {
 	// Attempt to access the value of an immutable pointer - should be fine
 	const code = `
-	log(-str)
+	print(-str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	str := "hello"
@@ -2043,16 +1788,11 @@ func TestImmutablePointerAccess(t *testing.T) {
 	L.SetGlobal("str", New(L, &str, ReflectOptions{Immutable: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"hello",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// hello
 }
 
 func TestImmutableChanClose(t *testing.T) {
@@ -2085,14 +1825,14 @@ type TransparentPtrAccessA struct {
 	B *TransparentPtrAccessB
 }
 
-func TestTransparentPtrAccess(t *testing.T) {
+func ExampleTransparentPtrAccess() {
 	// Access an undefined pointer field - should auto populate with zero
 	// value as if a non-pointer object
 	const code = `
-	log(b.Str)
+	print(b.Str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	val := "foo"
@@ -2102,19 +1842,14 @@ func TestTransparentPtrAccess(t *testing.T) {
 	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"foo",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// foo
 }
 
-func TestTransparentPtrAssignment(t *testing.T) {
+func ExampleTransparentPtrAssignment() {
 	// Assign one pointer value to another, with the left side
 	// transparent - requires indirection of the right side since
 	// the left behaves like a non-pointer field. They should
@@ -2123,13 +1858,13 @@ func TestTransparentPtrAssignment(t *testing.T) {
 	// modifying a value would change it for both references.
 	const code = `
 	a.B = -b
-	log(a.B.Str)
+	print(a.B.Str)
 	b.Str = "new value"
-	log(b.Str)
-	log(a.B.Str)
+	print(b.Str)
+	print(a.B.Str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	val := "assigned ptr value"
@@ -2141,30 +1876,25 @@ func TestTransparentPtrAssignment(t *testing.T) {
 	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"assigned ptr value",
-		"new value",
-		"assigned ptr value",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// assigned ptr value
+	// new value
+	// assigned ptr value
 }
 
-func TestTransparentPtrValueAssignment(t *testing.T) {
+func ExampleTransparentPtrValueAssignment() {
 	// Assign a non-pointer struct value to a pointer field -
 	// should be fine
 	const code = `
 	a.B = b
-	log(a.B.Str)
-	log(b.Str)
+	print(a.B.Str)
+	print(b.Str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	val := "assigned ptr value"
@@ -2177,17 +1907,12 @@ func TestTransparentPtrValueAssignment(t *testing.T) {
 	L.SetGlobal("b", New(L, b, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"assigned ptr value",
-		"assigned ptr value",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// assigned ptr value
+	// assigned ptr value
 }
 
 func TestTransparentValueAccess(t *testing.T) {
@@ -2216,14 +1941,14 @@ func TestTransparentValueAccess(t *testing.T) {
 	}
 }
 
-func TestTransparentNestedStructPtrAccess(t *testing.T) {
+func ExampleTransparentNestedStructPtrAccess() {
 	// Access an undefined nested pointer field - should auto populate
 	// with zero values as if a non-pointer object
 	const code = `
-	log(a.B.Str)
+	print(a.B.Str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := TransparentPtrAccessA{}
@@ -2231,27 +1956,22 @@ func TestTransparentNestedStructPtrAccess(t *testing.T) {
 	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 
 }
 
-func TestTransparentNestedStructPtrAssignment(t *testing.T) {
+func ExampleTransparentNestedStructPtrAssignment() {
 	// Set an undefined nested pointer field - should get assigned like
 	// a regular non-pointer field
 	const code = `
 	a.B.Str = "hello, world!"
-	log(a.B.Str)
+	print(a.B.Str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := TransparentPtrAccessA{}
@@ -2259,25 +1979,20 @@ func TestTransparentNestedStructPtrAssignment(t *testing.T) {
 	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"hello, world!",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// hello, world!
 }
 
-func TestTransparentPtrEquality(t *testing.T) {
+func ExampleTransparentPtrEquality() {
 	// Check equality on a pointer field - should act like a plain field
 	const code = `
-	log(b.Str == "foo")
+	print(b.Str == "foo")
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	b := TransparentPtrAccessB{}
@@ -2287,16 +2002,11 @@ func TestTransparentPtrEquality(t *testing.T) {
 	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"true",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// true
 }
 
 func TestTransparentPtrPowOp(t *testing.T) {
@@ -2327,13 +2037,13 @@ type TransparentStructSliceFieldA struct {
 	List []string
 }
 
-func TestTransparentStructSliceField(t *testing.T) {
+func ExampleTransparentStructSliceField() {
 	// Access an undefined slice field - should be automatically created
 	const code = `
-	log(#a.List)
+	print(#a.List)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := TransparentStructSliceFieldA{}
@@ -2341,26 +2051,21 @@ func TestTransparentStructSliceField(t *testing.T) {
 	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"0",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 0
 }
 
-func TestTransparentStructSliceAppend(t *testing.T) {
+func ExampleTransparentStructSliceAppend() {
 	// Append to an undefined slice field - should be fine
 	const code = `
 	a.List = a.List:append("hi")
-	log(#a.List)
+	print(#a.List)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	a := TransparentStructSliceFieldA{}
@@ -2368,27 +2073,22 @@ func TestTransparentStructSliceAppend(t *testing.T) {
 	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"1",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// 1
 }
 
-func TestTransparentNestedStructVar(t *testing.T) {
+func ExampleTransparentNestedStructVar() {
 	// Assign the value of a pointer field to a variable - variable should
 	// inherit the transparent reflect options
 	const code = `
 	b = a.B
-	log(b.Str)
+	print(b.Str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	val := "hello, world!"
@@ -2399,28 +2099,23 @@ func TestTransparentNestedStructVar(t *testing.T) {
 	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"hello, world!",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// hello, world!
 }
 
-func TestTransparentSliceElementVar(t *testing.T) {
+func ExampleTransparentSliceElementVar() {
 	// Assign a slice value to a variable - variable should inherit the
 	// transparent reflect options
 	const code = `
 	a = list[1]
-	log(a.B.Str)
+	print(a.B.Str)
 	`
 
 	val := "hello, world!"
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	list := []TransparentPtrAccessA{
@@ -2430,26 +2125,21 @@ func TestTransparentSliceElementVar(t *testing.T) {
 	L.SetGlobal("list", New(L, &list, ReflectOptions{TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"hello, world!",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// hello, world!
 }
 
-func TestImmutableTransparentPtrFieldAccess(t *testing.T) {
+func ExampleImmutableTransparentPtrFieldAccess() {
 	// Access a transparent pointer field on an immutable
 	// struct - should be fine
 	const code = `
-	log(b.Str)
+	print(b.Str)
 	`
 
-	L, logger := newStateWithLogger()
+	L := lua.NewState()
 	defer L.Close()
 
 	val := "foo"
@@ -2459,16 +2149,11 @@ func TestImmutableTransparentPtrFieldAccess(t *testing.T) {
 	L.SetGlobal("b", New(L, &b, ReflectOptions{Immutable: true, TransparentPointers: true}))
 
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	expected := []string{
-		"foo",
-	}
-
-	if !logger.Equals(expected) {
-		t.Fatalf("Unexpected output. Expected:\n%s\n\nActual:\n%s", expected, logger.Lines)
-	}
+	// Output:
+	// foo
 }
 
 func TestImmutableTransparentPtrFieldAssignment(t *testing.T) {
