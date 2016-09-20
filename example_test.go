@@ -136,11 +136,11 @@ func ExampleMapAndSlice() {
 	// calendar
 	// phone
 	// speaker
-	// 
+	//
 	// 123
 	// 456
 	// nil
-	// 
+	//
 	// cookie
 	// 789
 	// false
@@ -1076,7 +1076,7 @@ func ExampleSliceAssignment() {
 	// Output:
 	// a
 	// b
-	// 
+	//
 	// 3
 	// true
 	// c
@@ -1116,7 +1116,7 @@ func ExampleSliceTableAssignment() {
 	// Output:
 	// 3
 	// 123
-	// 
+	//
 	// hello
 	// false
 }
@@ -1263,7 +1263,7 @@ func ExampleLuaFuncDefinition() {
 	// >A< 1
 	// >B< 2
 	// >C< 3
-	// 
+	//
 	// hello
 }
 
@@ -1960,7 +1960,7 @@ func ExampleTransparentNestedStructPtrAccess() {
 	}
 
 	// Output:
-	// 
+	//
 }
 
 func ExampleTransparentNestedStructPtrAssignment() {
