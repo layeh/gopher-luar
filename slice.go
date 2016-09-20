@@ -8,6 +8,7 @@ import (
 
 func sliceIndex(L *lua.LState) int {
 	ref, mt, isPtr := check(L, 1, reflect.Slice)
+	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
 	switch converted := key.(type) {
@@ -20,7 +21,7 @@ func sliceIndex(L *lua.LState) int {
 		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
 			val = val.Addr()
 		}
-		L.Push(New(L, val.Interface()))
+		L.Push(New(L, val.Interface(), mt.reflectOptions()))
 	case lua.LString:
 		if !isPtr {
 			if fn := mt.method(string(converted)); fn != nil {
@@ -40,12 +41,16 @@ func sliceIndex(L *lua.LState) int {
 }
 
 func sliceNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Slice)
+	ref, mt, isPtr := check(L, 1, reflect.Slice)
 	index := L.CheckInt(2)
 	value := L.CheckAny(3)
 
 	if isPtr {
 		L.RaiseError("invalid operation on slice pointer")
+	}
+
+	if mt.immutable() {
+		L.RaiseError("invalid operation on immutable slice")
 	}
 
 	if index < 1 || index > ref.Len() {
@@ -97,7 +102,15 @@ func sliceCapacity(L *lua.LState) int {
 }
 
 func sliceAppend(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Slice)
+	ref, mt, isPtr := check(L, 1, reflect.Slice)
+
+	if isPtr {
+		L.RaiseError("invalid operation on slice pointer")
+	}
+
+	if mt.immutable() {
+		L.RaiseError("invalid operation on immutable slice")
+	}
 
 	hint := ref.Type().Elem()
 	values := make([]reflect.Value, L.GetTop()-1)

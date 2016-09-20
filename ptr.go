@@ -35,7 +35,12 @@ func ptrIndex(L *lua.LState) int {
 }
 
 func ptrPow(L *lua.LState) int {
-	ref, _ := checkPtr(L, 1)
+	ref, mt := checkPtr(L, 1)
+
+	if mt.immutable() {
+		L.RaiseError("invalid operation for immutable pointer")
+	}
+
 	val := L.CheckAny(2)
 
 	if ref.IsNil() {

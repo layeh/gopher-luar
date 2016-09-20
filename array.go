@@ -21,7 +21,7 @@ func arrayIndex(L *lua.LState) int {
 		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
 			val = val.Addr()
 		}
-		L.Push(New(L, val.Interface()))
+		L.Push(New(L, val.Interface(), mt.reflectOptions()))
 	case lua.LString:
 		if !isPtr {
 			if fn := mt.method(string(converted)); fn != nil {
@@ -41,10 +41,14 @@ func arrayIndex(L *lua.LState) int {
 }
 
 func arrayNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Array)
+	ref, mt, isPtr := check(L, 1, reflect.Array)
 
 	if !isPtr {
 		L.RaiseError("invalid operation on array")
+	}
+
+	if mt.immutable() {
+		L.RaiseError("invalid operation on immutable array")
 	}
 
 	ref = ref.Elem()

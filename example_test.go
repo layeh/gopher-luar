@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"testing"
 
 	"github.com/yuin/gopher-lua"
 )
@@ -37,7 +38,13 @@ func (p *Person) IncreaseAge() {
 	p.Age++
 }
 
-func Example__1() {
+type Family struct {
+	Mother   Person
+	Father   Person
+	Children []Person
+}
+
+func ExampleStructUsage() {
 	const code = `
 	print(user1.Name)
 	print(user1.Age)
@@ -68,6 +75,7 @@ func Example__1() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// Tim
 	// 30
@@ -77,7 +85,7 @@ func Example__1() {
 	// Hello, John
 }
 
-func Example__2() {
+func ExampleMapAndSlice() {
 	const code = `
 	for i = 1, #things do
 		print(things[i])
@@ -121,6 +129,7 @@ func Example__2() {
 	fmt.Println(thangs["GHI"])
 	_, ok := thangs["ABC"]
 	fmt.Println(ok)
+
 	// Output:
 	// cake
 	// wallet
@@ -137,7 +146,7 @@ func Example__2() {
 	// false
 }
 
-func Example__3() {
+func ExampleStructConstructorAndMap() {
 	const code = `
 	user2 = Person()
 	user2.Name = "John"
@@ -167,13 +176,14 @@ func Example__3() {
 
 	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
 	fmt.Println(len(everyone))
+
 	// Output:
 	// John
 	// Tim
 	// 2
 }
 
-func Example__4() {
+func ExampleGoFunc() {
 	const code = `
 	print(getHello(person))
 	`
@@ -195,11 +205,12 @@ func Example__4() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// Hello, Tim
 }
 
-func Example__5() {
+func ExampleChan() {
 	const code = `
 	print(ch:receive())
 	ch:send("John")
@@ -222,13 +233,14 @@ func Example__5() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// Tim	true
 	// John	true
 	// nil	false
 }
 
-func Example__6() {
+func ExampleMap() {
 	const code = `
 	local sorted = {}
 	for k, v in countries() do
@@ -254,13 +266,14 @@ func Example__6() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// Canada
 	// France
 	// Japan
 }
 
-func Example__7() {
+func ExampleFuncVariadic() {
 	const code = `
 	fn("a", 1, 2, 3)
 	fn("b")
@@ -282,6 +295,7 @@ func Example__7() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// a
 	// 1
@@ -292,7 +306,7 @@ func Example__7() {
 	// 4
 }
 
-func Example__8() {
+func ExampleLuaFuncVariadic() {
 	const code = `
 	for _, x in ipairs(fn(1, 2, 3)) do
 		print(x)
@@ -321,6 +335,7 @@ func Example__8() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// 3
 	// 2
@@ -328,7 +343,7 @@ func Example__8() {
 	// 4
 }
 
-func Example__9() {
+func ExampleSlice() {
 	const code = `
 	print(#items)
 	print(items:capacity())
@@ -349,6 +364,7 @@ func Example__9() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// 0
 	// 10
@@ -358,7 +374,7 @@ func Example__9() {
 	// world
 }
 
-func Example__10() {
+func ExampleSliceCapacity() {
 	const code = `
 	ints = newInts(1)
 	print(#ints, ints:capacity())
@@ -377,12 +393,13 @@ func Example__10() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// 1	1
 	// 0	10
 }
 
-func Example__11() {
+func ExampleStructPtrEquality() {
 	const code = `
 	print(-p1 == -p1)
 	print(-p1 == -p1_alias)
@@ -408,6 +425,7 @@ func Example__11() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// true
 	// true
@@ -416,7 +434,7 @@ func Example__11() {
 	// false
 }
 
-func Example__12() {
+func ExampleStructStringer() {
 	const code = `
 	print(p1)
 	print(p2)
@@ -440,12 +458,13 @@ func Example__12() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// Tim (99)
 	// John (2)
 }
 
-func Example__13() {
+func ExamplePtrMethod() {
 	const code = `
 	print(p:AddNumbers(1, 2, 3, 4, 5))
 	`
@@ -462,11 +481,12 @@ func Example__13() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// Tim counts: 15
 }
 
-func Example__14() {
+func ExampleStruct() {
 	const code = `
 	print(p:hello())
 	print(p.age)
@@ -485,6 +505,7 @@ func Example__14() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// Hello, Tim
 	// 66
@@ -492,11 +513,11 @@ func Example__14() {
 
 type OneString [1]string
 
-func (o OneString) Print() {
-	fmt.Println(o[0])
+func (o OneString) Log() string {
+	return o[0]
 }
 
-func Example__15() {
+func ExampleArray() {
 	const code = `
 	print(#e.V, e.V[1], e.V[2])
 	e.V[1] = "World"
@@ -504,7 +525,7 @@ func Example__15() {
 	print(#e.V, e.V[1], e.V[2])
 
 	print(#arr, arr[1])
-	arr:Print()
+	print(arr:log())
 	`
 
 	type Elem struct {
@@ -527,6 +548,7 @@ func Example__15() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// 2	Hello	World
 	// 2	World	Hello
@@ -534,7 +556,7 @@ func Example__15() {
 	// Test
 }
 
-func Example__16() {
+func ExampleLuaFunc() {
 	const code = `
 	print(fn("tim", 5))
 	`
@@ -555,11 +577,12 @@ func Example__16() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// tim	tim	tim	tim	tim
 }
 
-func Example__17() {
+func ExamplePtrIndirection() {
 	const code = `
 	print(-ptr)
 	`
@@ -574,11 +597,12 @@ func Example__17() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// hello
 }
 
-func Example__18() {
+func ExamplePtrEquality() {
 	const code = `
 	print(ptr1 == nil)
 	print(ptr2 == nil)
@@ -597,13 +621,14 @@ func Example__18() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// true
 	// false
 	// false
 }
 
-func Example__19() {
+func ExamplePtrAssignment() {
 	const code = `
 	print(-str)
 	print(str ^ "world")
@@ -620,22 +645,23 @@ func Example__19() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// hello
 	// world
 	// world
 }
 
-type Example__20_A struct {
-	*Example__20_B
+type AnonymousFieldsA struct {
+	*AnonymousFieldsB
 }
 
-type Example__20_B struct {
+type AnonymousFieldsB struct {
 	Value *string
 	Person
 }
 
-func Example__20() {
+func ExampleAnonymousFields() {
 	const code = `
 	print(a.Value == nil)
 	a.Value = str_ptr()
@@ -648,8 +674,8 @@ func Example__20() {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := Example__20_A{
-		Example__20_B: &Example__20_B{
+	a := AnonymousFieldsA{
+		AnonymousFieldsB: &AnonymousFieldsB{
 			Person: Person{
 				Name: "Tim",
 			},
@@ -662,6 +688,7 @@ func Example__20() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// true
 	// false
@@ -669,7 +696,7 @@ func Example__20() {
 	// Tim
 }
 
-func Example__21() {
+func ExampleEmptyFunc() {
 	const code = `
 	print(fn == nil)
 	`
@@ -684,11 +711,12 @@ func Example__21() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// true
 }
 
-func Example__22() {
+func ExampleFuncArray() {
 	const code = `
 	fn(arr)
 	`
@@ -707,11 +735,12 @@ func Example__22() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// 1 2 3
 }
 
-func Example__23() {
+func ExampleComplex() {
 	const code = `
 	b = a
 	`
@@ -728,6 +757,7 @@ func Example__23() {
 	}
 	b := L.GetGlobal("b").(*lua.LUserData).Value.(complex128)
 	fmt.Println(a == b)
+
 	// Output:
 	// true
 }
@@ -757,7 +787,7 @@ func (m MapAlias) Y() int {
 	return len(m)
 }
 
-func Example__24() {
+func ExampleTypeAlias() {
 	const code = `
 	print(a:Test())
 	local len1 = b:Len()
@@ -782,51 +812,53 @@ func Example__24() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// I'm a "chan string" alias
 	// 2	3
 	// 15	1
 }
 
-type E25B struct {
+type StructPtrFuncB struct {
 }
 
-func (*E25B) Test() {
-	fmt.Println("Pointer test")
+func (*StructPtrFuncB) Test() string {
+	return "Pointer test"
 }
 
-type E25A struct {
-	B E25B
+type StructPtrFuncA struct {
+	B StructPtrFuncB
 }
 
-func Example__25() {
+func ExampleStructPtrFunc() {
 	const code = `
-	a.b:Test()
+	print(a.b:Test())
 	`
 
 	L := lua.NewState()
 	defer L.Close()
 
-	a := E25A{}
+	a := StructPtrFuncA{}
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
-	a.B.Test()
+	fmt.Println(a.B.Test())
+
 	// Output:
 	// Pointer test
 	// Pointer test
 }
 
-type E26A struct {
+type HiddenFieldNamesA struct {
 	Name   string `luar:"name"`
 	Name2  string `luar:"Name"`
 	Str    string
 	Hidden bool `luar:"-"`
 }
 
-func Example__26() {
+func ExampleHiddenFieldNames() {
 	const code = `
 	print(a.name)
 	print(a.Name)
@@ -839,7 +871,7 @@ func Example__26() {
 	L := lua.NewState()
 	defer L.Close()
 
-	a := &E26A{
+	a := &HiddenFieldNamesA{
 		Name:   "tim",
 		Name2:  "bob",
 		Str:    "asd123",
@@ -851,6 +883,7 @@ func Example__26() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// tim
 	// bob
@@ -860,7 +893,7 @@ func Example__26() {
 	// nil
 }
 
-func Example__27() {
+func ExampleStructPtrAssignment() {
 	const code = `
 	print(a.Name)
 	_ = a ^ -b
@@ -883,125 +916,128 @@ func Example__27() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// tim
 	// bob
 }
 
-type E28_Chan chan string
+type PtrNonPtrChanMethodsA chan string
 
-func (*E28_Chan) Test() {
-	fmt.Println("E28_Chan.Test")
+func (*PtrNonPtrChanMethodsA) Test() string {
+	return "Test"
 }
 
-func (E28_Chan) Test2() {
-	fmt.Println("E28_Chan.Test2")
+func (PtrNonPtrChanMethodsA) Test2() string {
+	return "Test2"
 }
 
-func Example__28() {
+func ExamplePtrNonPtrChanMethods() {
 	const code = `
-	b:Test()
-	b:Test2()
+	print(b:Test())
+	print(b:Test2())
 	`
 
 	L := lua.NewState()
 	defer L.Close()
 
-	a := make(E28_Chan)
+	a := make(PtrNonPtrChanMethodsA)
 	b := &a
 
-	b.Test()
-	b.Test2()
+	fmt.Println(b.Test())
+	fmt.Println(b.Test2())
 
 	L.SetGlobal("b", New(L, b))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
-	// E28_Chan.Test
-	// E28_Chan.Test2
-	// E28_Chan.Test
-	// E28_Chan.Test2
+	// Test
+	// Test2
+	// Test
+	// Test2
 }
 
-type E29_String string
+type StructFieldA string
 
-type E29_A struct {
-	E29_String
+type StructFieldB struct {
+	StructFieldA
 }
 
-func Example__29() {
+func ExampleStructField() {
 	const code = `
-	a.E29_String = "world"
+	a.StructFieldA = "world"
 	`
 
 	L := lua.NewState()
 	defer L.Close()
 
-	a := E29_A{}
-	a.E29_String = "hello"
-	fmt.Println(a.E29_String)
+	a := StructFieldB{}
+	a.StructFieldA = "hello"
+	fmt.Println(a.StructFieldA)
 
 	L.SetGlobal("a", New(L, &a))
 
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
-	fmt.Println(a.E29_String)
+	fmt.Println(a.StructFieldA)
+
 	// Output:
 	// hello
 	// world
 }
 
-type E30_A struct {
+type StructBlacklistA struct {
 }
 
-func (*E30_A) Public() {
-	fmt.Println("You can call me")
+func (*StructBlacklistA) Public() string {
+	return "You can call me"
 }
 
-func (E30_A) Private() {
-	fmt.Println("Should not be able to call me")
+func (StructBlacklistA) Private() string {
+	return "Should not be able to call me"
 }
 
-type E30_B struct {
-	*E30_A
+type StructBlacklistB struct {
+	*StructBlacklistA
 }
 
-func Example__30() {
+func ExampleStructBlacklist() {
 	const code = `
-	b:public()
-	b.E30_A:public()
+	print(b:public())
+	print(b.StructBlacklistA:public())
 	pcall(function()
-		b:private()
+		print(b:private())
 	end)
 	pcall(function()
-		b.E30_A:private()
+		print(b.StructBlacklistA:private())
 	end)
 	pcall(function()
-		b:Private()
+		print(b:Private())
 	end)
 	pcall(function()
-		b.E30_A:Private()
+		print(b.StructBlacklistA:Private())
 	end)
 	pcall(function()
-		local a = -b.E30_A
-		a:Private()
+		local a = -b.StructBlacklistA
+		print(a:Private())
 	end)
 	`
 
 	L := lua.NewState()
 	defer L.Close()
 
-	b := &E30_B{
-		E30_A: &E30_A{},
+	b := &StructBlacklistB{
+		StructBlacklistA: &StructBlacklistA{},
 	}
 
-	mt := MT(L, E30_B{})
+	mt := MT(L, StructBlacklistB{})
 	mt.Blacklist("private", "Private")
 
-	mt = MT(L, E30_A{})
+	mt = MT(L, StructBlacklistA{})
 	mt.Whitelist("public", "Public")
 
 	L.SetGlobal("b", New(L, b))
@@ -1009,16 +1045,17 @@ func Example__30() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// You can call me
 	// You can call me
 }
 
-type E_31 struct {
+type SliceAssignmentA struct {
 	S []string
 }
 
-func Example__31() {
+func ExampleSliceAssignment() {
 	const code = `
 	x.S = {"a", "b", "", 3, true, "c"}
 	`
@@ -1026,7 +1063,7 @@ func Example__31() {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_31{}
+	e := &SliceAssignmentA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1035,6 +1072,7 @@ func Example__31() {
 	for _, v := range e.S {
 		fmt.Println(v)
 	}
+
 	// Output:
 	// a
 	// b
@@ -1044,11 +1082,11 @@ func Example__31() {
 	// c
 }
 
-type E_32 struct {
+type SliceTableAssignmentA struct {
 	S map[string]string
 }
 
-func Example__32() {
+func ExampleSliceTableAssignment() {
 	const code = `
 	x.S = {
 		33,
@@ -1062,7 +1100,7 @@ func Example__32() {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_32{}
+	e := &SliceTableAssignmentA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1074,6 +1112,7 @@ func Example__32() {
 	fmt.Println(e.S["b"])
 	fmt.Println(e.S["c"])
 	fmt.Println(e.S["d"])
+
 	// Output:
 	// 3
 	// 123
@@ -1082,13 +1121,13 @@ func Example__32() {
 	// false
 }
 
-type E_33 struct {
+type FieldNameResolutionA struct {
 	Person
 	P  Person
 	P2 Person `luar:"other"`
 }
 
-func Example__33() {
+func ExampleFieldNameResolution() {
 	const code = `
 	x.Person = {
 		Name = "Bill",
@@ -1111,7 +1150,7 @@ func Example__33() {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_33{}
+	e := &FieldNameResolutionA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1126,6 +1165,7 @@ func Example__33() {
 	fmt.Println(e.P.Friend.Age)
 	fmt.Println(e.P2.Name)
 	fmt.Println(e.P2.Age)
+
 	// Output:
 	// Bill
 	// 33
@@ -1137,13 +1177,13 @@ func Example__33() {
 	// 26
 }
 
-type E_34 struct {
+type PCallA struct {
 	A string `luar:"q"`
 	B int    `luar:"other"`
 	C int    `luar:"-"`
 }
 
-func Example__34() {
+func ExamplePCall() {
 	const code = `
 	_ = x ^ {
 		q = "Cat",
@@ -1159,7 +1199,7 @@ func Example__34() {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_34{}
+	e := &PCallA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1169,18 +1209,19 @@ func Example__34() {
 	fmt.Println(e.A)
 	fmt.Println(e.B)
 	fmt.Println(e.C)
+
 	// Output:
 	// Cat
 	// 675
 	// 0
 }
 
-type E_35 struct {
+type LuaFuncDefinitionA struct {
 	Fn  func(a string) (string, int)
 	Fn2 func(a string, b ...int) string
 }
 
-func Example__35() {
+func ExampleLuaFuncDefinition() {
 	const code = `
 	i = 0
 	x.Fn = function(str)
@@ -1199,7 +1240,7 @@ func Example__35() {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_35{}
+	e := &LuaFuncDefinitionA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1217,6 +1258,7 @@ func Example__35() {
 	if L.GetTop() != 0 {
 		panic("expecting GetTop to return 0, got " + strconv.Itoa(L.GetTop()))
 	}
+
 	// Output:
 	// >A< 1
 	// >B< 2
@@ -1225,11 +1267,11 @@ func Example__35() {
 	// hello
 }
 
-type E_36 struct {
+type LuaFuncPtrA struct {
 	F1 *lua.LFunction
 }
 
-func Example__36() {
+func ExampleLuaFuncPtr() {
 	const code = `
 	x.F1 = function(str)
 		print("Hello World")
@@ -1239,7 +1281,7 @@ func Example__36() {
 	L := lua.NewState()
 	defer L.Close()
 
-	e := &E_36{}
+	e := &LuaFuncPtrA{}
 	L.SetGlobal("x", New(L, e))
 
 	if err := L.DoString(code); err != nil {
@@ -1253,7 +1295,7 @@ func Example__36() {
 	// Hello World
 }
 
-func Example__37() {
+func ExampleSliceAndArrayTypes() {
 	const code = `
 	for i, x in s() do
 		print(i, x)
@@ -1301,13 +1343,13 @@ func Example__37() {
 	// 2	y
 }
 
-type E38String string
+type StructArrayAndSliceA string
 
-func (s *E38String) ToUpper() {
-	*s = E38String(strings.ToUpper(string(*s)))
+func (s *StructArrayAndSliceA) ToUpper() {
+	*s = StructArrayAndSliceA(strings.ToUpper(string(*s)))
 }
 
-func Example__38() {
+func ExampleStructArrayAndSlice() {
 	const code = `
 	print(a[1]:AddNumbers(1, 2, 3, 4, 5))
 	print(s[1]:AddNumbers(1, 2, 3, 4))
@@ -1334,7 +1376,7 @@ func Example__38() {
 		{Name: "Tim", Age: 32},
 	}
 
-	str := E38String("Hello World")
+	str := StructArrayAndSliceA("Hello World")
 
 	L.SetGlobal("a", New(L, &a))
 	L.SetGlobal("s", New(L, s))
@@ -1357,7 +1399,7 @@ func Example__38() {
 	// HELLO WORLD
 }
 
-func ExampleLState() {
+func ExampleLStateFunc() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))
 	`
@@ -1379,6 +1421,7 @@ func ExampleLState() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
+
 	// Output:
 	// 15
 }
@@ -1399,6 +1442,741 @@ func ExampleNewType() {
 		s.Artist = "Tycho"
 		print(s.Artist .. " - " .. s.Title)
 	`)
+
 	// Output:
 	// Tycho - Montana
+}
+
+func TestImmutableStructFieldModify(t *testing.T) {
+	// Modifying a field on an immutable struct - should error
+	const code = `
+	p.Name = "Tom"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+		Age:  66,
+	}
+
+	L.SetGlobal("p", New(L, p, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestImmutableStructPtrFunc(t *testing.T) {
+	// Calling a pointer function on an immutable struct - should error
+	const code = `
+	p:IncreaseAge()
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+		Age:  66,
+	}
+
+	L.SetGlobal("p", New(L, &p, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "attempt to call a non-function object") {
+		t.Fatal("Expected call error, got:", err)
+	}
+}
+
+func ExampleImmutableStructFieldAccess() {
+	// Accessing a field and calling a regular function on an immutable
+	// struct - should be fine
+	const code = `
+	print(p:Hello())
+	print(p.Name)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	p := Person{
+		Name: "Tim",
+		Age:  66,
+	}
+
+	L.SetGlobal("p", New(L, p, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// Hello, Tim
+	// Tim
+}
+
+func TestImmutableSliceAssignment(t *testing.T) {
+	// Attempting to modify an immutable slice - should error
+	const code = `
+	s[1] = "hi"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := []string{"first", "second"}
+	L.SetGlobal("s", New(L, s, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable slice") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestImmutableSliceAppend(t *testing.T) {
+	// Attempting to append to an immutable slice - should error
+	const code = `
+	s = s:append("hi")
+	`
+
+	L := lua.NewState()
+
+	s := []string{"first", "second"}
+	L.SetGlobal("s", New(L, s, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable slice") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func ExampleImmutableSliceAccess() {
+	// Attempting to access a member of an immutable slice - should be fine
+	const code = `
+	print(s[1])
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	s := []string{"first", "second"}
+	L.SetGlobal("s", New(L, s, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// first
+}
+
+func TestImmutableMapAssignment(t *testing.T) {
+	// Attempting to modify an immutable map - should error
+	const code = `
+	m["newKey"] = "hi"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	m := map[string]string{"first": "foo", "second": "bar"}
+	L.SetGlobal("m", New(L, m, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable map") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func ExampleImmutableMapAccess() {
+	// Attempting to access a member of an immutable map - should be fine
+	const code = `
+	print(m["first"])
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	m := map[string]string{"first": "foo", "second": "bar"}
+	L.SetGlobal("m", New(L, m, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// foo
+}
+
+func TestImmutableNestedStructField(t *testing.T) {
+	// Attempt to modify a nested field on an immutable struct - should error
+	const code = `
+	f.Mother.Name = "Laura"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	f := Family{
+		Mother: Person{
+			Name: "Luara",
+		},
+		Father: Person{
+			Name: "Tim",
+		},
+	}
+
+	L.SetGlobal("f", New(L, f, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestImmutableNestedStructFieldVar(t *testing.T) {
+	// Assign a nested struct field to a variable - should inherit
+	// parent's immutable setting and cause error
+	const code = `
+	mother = f.Mother
+	mother.Name = "Laura"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	f := Family{
+		Mother: Person{
+			Name: "Luara",
+		},
+		Father: Person{
+			Name: "Tim",
+		},
+	}
+
+	L.SetGlobal("f", New(L, f, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestImmutableNestedStructSliceField(t *testing.T) {
+	// Attempt to modify a nested field in a nested slice, on an immutable
+	// struct - should error
+	const code = `
+	f.Children[1].Name = "Bill"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	f := Family{
+		Mother: Person{
+			Name: "Luara",
+		},
+		Father: Person{
+			Name: "Tim",
+		},
+		Children: []Person{
+			{Name: "Bill"},
+		},
+	}
+
+	L.SetGlobal("f", New(L, f, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestImmutableNestedStructPtrSliceField(t *testing.T) {
+	// Attempt to modify a nested field in a nested slice, on an immutable
+	// struct pointer - should error
+	const code = `
+	f.Children[1].Name = "Bill"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	f := Family{
+		Mother: Person{
+			Name: "Luara",
+		},
+		Father: Person{
+			Name: "Tim",
+		},
+		Children: []Person{
+			{Name: "Bill"},
+		},
+	}
+
+	L.SetGlobal("f", New(L, &f, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func TestImmutablePointerAssignment(t *testing.T) {
+	// Attempt to modify the value of an immutable pointer - should error
+	const code = `
+	_ = str ^ "world"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	str := "hello"
+
+	L.SetGlobal("str", New(L, &str, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation for immutable pointer") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func ExampleImmutablePointerAccess() {
+	// Attempt to access the value of an immutable pointer - should be fine
+	const code = `
+	print(-str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	str := "hello"
+
+	L.SetGlobal("str", New(L, &str, ReflectOptions{Immutable: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// hello
+}
+
+func TestImmutableChanClose(t *testing.T) {
+	// Attempt to close an immutable channel - should error
+	const code = `
+	ch:close()
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	ch := make(chan string)
+
+	L.SetGlobal("ch", New(L, ch, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "cannot close immutable channel") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+type TransparentPtrAccessB struct {
+	Str *string
+}
+
+type TransparentPtrAccessA struct {
+	B *TransparentPtrAccessB
+}
+
+func ExampleTransparentPtrAccess() {
+	// Access an undefined pointer field - should auto populate with zero
+	// value as if a non-pointer object
+	const code = `
+	print(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "foo"
+	b := TransparentPtrAccessB{}
+	b.Str = &val
+
+	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// foo
+}
+
+func ExampleTransparentPtrAssignment() {
+	// Assign one pointer value to another, with the left side
+	// transparent - requires indirection of the right side since
+	// the left behaves like a non-pointer field. They should
+	// also be separate objects at that point - no shared address.
+	// This is distinct from regular pointer assignment, where
+	// modifying a value would change it for both references.
+	const code = `
+	a.B = -b
+	print(a.B.Str)
+	b.Str = "new value"
+	print(b.Str)
+	print(a.B.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "assigned ptr value"
+	a := TransparentPtrAccessA{}
+	b := TransparentPtrAccessB{
+		Str: &val,
+	}
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// assigned ptr value
+	// new value
+	// assigned ptr value
+}
+
+func ExampleTransparentPtrValueAssignment() {
+	// Assign a non-pointer struct value to a pointer field -
+	// should be fine
+	const code = `
+	a.B = b
+	print(a.B.Str)
+	print(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "assigned ptr value"
+	a := TransparentPtrAccessA{}
+	b := TransparentPtrAccessB{
+		Str: &val,
+	}
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+	// Non-pointer
+	L.SetGlobal("b", New(L, b, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// assigned ptr value
+	// assigned ptr value
+}
+
+func TestTransparentValueAccess(t *testing.T) {
+	// Attempt to access a nil pointer field on a transparent pointer
+	// struct that was reflected by value. Since we can't actually set
+	// values back to a struct that was reflected by value (as
+	// opposed to by reference), an error will result.
+	const code = `
+	print(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	b := TransparentPtrAccessB{}
+
+	// Non-pointer
+	L.SetGlobal("b", New(L, b, ReflectOptions{TransparentPointers: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "cannot transparently create pointer field Str") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+func ExampleTransparentNestedStructPtrAccess() {
+	// Access an undefined nested pointer field - should auto populate
+	// with zero values as if a non-pointer object
+	const code = `
+	print(a.B.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := TransparentPtrAccessA{}
+
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	//
+}
+
+func ExampleTransparentNestedStructPtrAssignment() {
+	// Set an undefined nested pointer field - should get assigned like
+	// a regular non-pointer field
+	const code = `
+	a.B.Str = "hello, world!"
+	print(a.B.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := TransparentPtrAccessA{}
+
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// hello, world!
+}
+
+func ExampleTransparentPtrEquality() {
+	// Check equality on a pointer field - should act like a plain field
+	const code = `
+	print(b.Str == "foo")
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	b := TransparentPtrAccessB{}
+	val := "foo"
+	b.Str = &val
+
+	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// true
+}
+
+func TestTransparentPtrPowOp(t *testing.T) {
+	// Access a pointer field in the normal pointer way - should error
+	const code = `
+	_ = b.Str ^ "hello"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	b := TransparentPtrAccessB{}
+	val := "foo"
+	b.Str = &val
+
+	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "cannot perform pow operation between string and string") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+type TransparentStructSliceFieldA struct {
+	List []string
+}
+
+func ExampleTransparentStructSliceField() {
+	// Access an undefined slice field - should be automatically created
+	const code = `
+	print(#a.List)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := TransparentStructSliceFieldA{}
+
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// 0
+}
+
+func ExampleTransparentStructSliceAppend() {
+	// Append to an undefined slice field - should be fine
+	const code = `
+	a.List = a.List:append("hi")
+	print(#a.List)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	a := TransparentStructSliceFieldA{}
+
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// 1
+}
+
+func ExampleTransparentNestedStructVar() {
+	// Assign the value of a pointer field to a variable - variable should
+	// inherit the transparent reflect options
+	const code = `
+	b = a.B
+	print(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "hello, world!"
+	a := TransparentPtrAccessA{
+		&TransparentPtrAccessB{&val},
+	}
+
+	L.SetGlobal("a", New(L, &a, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// hello, world!
+}
+
+func ExampleTransparentSliceElementVar() {
+	// Assign a slice value to a variable - variable should inherit the
+	// transparent reflect options
+	const code = `
+	a = list[1]
+	print(a.B.Str)
+	`
+
+	val := "hello, world!"
+	L := lua.NewState()
+	defer L.Close()
+
+	list := []TransparentPtrAccessA{
+		{&TransparentPtrAccessB{&val}},
+	}
+
+	L.SetGlobal("list", New(L, &list, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// hello, world!
+}
+
+func ExampleImmutableTransparentPtrFieldAccess() {
+	// Access a transparent pointer field on an immutable
+	// struct - should be fine
+	const code = `
+	print(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "foo"
+	b := TransparentPtrAccessB{}
+	b.Str = &val
+
+	L.SetGlobal("b", New(L, &b, ReflectOptions{Immutable: true, TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// foo
+}
+
+func TestImmutableTransparentPtrFieldAssignment(t *testing.T) {
+	// Attempt to modify a transparent pointer field on an
+	// immutable struct - should error
+	const code = `
+	b.Str = "bar"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "foo"
+	b := TransparentPtrAccessB{}
+	b.Str = &val
+
+	L.SetGlobal("b", New(L, &b, ReflectOptions{Immutable: true, TransparentPointers: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
 }
