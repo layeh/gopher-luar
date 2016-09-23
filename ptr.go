@@ -8,7 +8,7 @@ import (
 
 func checkPtr(L *lua.LState, idx int) (ref reflect.Value, opts ReflectOptions, mt *Metatable) {
 	ud := L.CheckUserData(idx)
-	refIface, ok := ud.Value.(*ReflectedInterface)
+	refIface, ok := ud.Value.(*reflectedInterface)
 	if !ok {
 		L.RaiseError("unexpected userdata value")
 	}
@@ -23,24 +23,6 @@ func checkPtr(L *lua.LState, idx int) (ref reflect.Value, opts ReflectOptions, m
 	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
 	return
 }
-
-//func checkPtr(L *lua.LState, idx int) (ref reflect.Value, opts ReflectOptions, mt *Metatable) {
-//	ud := L.CheckUserData(idx)
-//
-//	if refIface, ok := ud.Value.(*ReflectedInterface); ok {
-//		ref = reflect.ValueOf(refIface.Interface)
-//		opts = refIface.Options
-//	} else {
-//		ref = reflect.ValueOf(ud.Value)
-//	}
-//
-//	kind := reflect.Ptr
-//	if ref.Kind() != kind {
-//		L.ArgError(idx, "expecting "+kind.String())
-//	}
-//	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
-//	return
-//}
 
 func ptrIndex(L *lua.LState) int {
 	_, _, mt := checkPtr(L, 1)

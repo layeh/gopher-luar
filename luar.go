@@ -70,20 +70,20 @@ func New(L *lua.LState, value interface{}, opts ...ReflectOptions) lua.LValue {
 		return lua.LNumber(val.Float())
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		ud := L.NewUserData()
-		ud.Value = NewReflectedInterface(val.Interface(), reflectOptions)
+		ud.Value = newReflectedInterface(val.Interface(), reflectOptions)
 		ud.Metatable = getMetatableFromValue(L, val)
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val, false)
 	case reflect.Interface:
 		ud := L.NewUserData()
-		ud.Value = NewReflectedInterface(val.Interface(), reflectOptions)
+		ud.Value = newReflectedInterface(val.Interface(), reflectOptions)
 		return ud
 	case reflect.String:
 		return lua.LString(val.String())
 	default:
 		ud := L.NewUserData()
-		ud.Value = NewReflectedInterface(val.Interface(), reflectOptions)
+		ud.Value = newReflectedInterface(val.Interface(), reflectOptions)
 		return ud
 	}
 }
@@ -108,21 +108,20 @@ type ReflectOptions struct {
 // Default options if no ReflectOptions struct is passed into luar.New().
 func defaultReflectOptions() ReflectOptions {
 	return ReflectOptions{
-		Immutable: false,
+		Immutable:           false,
 		TransparentPointers: false,
 	}
 }
 
 // ReflectedInterface stores the reflected value for certain types requiring LUserData
 // storage - arrays, channels, maps, pointers, slices, structs. It holds both the value,and additional metadata.
-type ReflectedInterface struct {
+type reflectedInterface struct {
 	Interface interface{}
 	Options   ReflectOptions
 }
 
-
-func NewReflectedInterface(iface interface{}, opts ReflectOptions) *ReflectedInterface {
-	return &ReflectedInterface{Interface: iface, Options: opts}
+func newReflectedInterface(iface interface{}, opts ReflectOptions) *reflectedInterface {
+	return &reflectedInterface{Interface: iface, Options: opts}
 }
 
 // NewType returns a new type creator for the given value's type.
@@ -289,7 +288,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 	case *lua.LUserData:
 		var val reflect.Value
-		if refIface, ok := converted.Value.(*ReflectedInterface); ok {
+		if refIface, ok := converted.Value.(*reflectedInterface); ok {
 			val = reflect.ValueOf(refIface.Interface)
 		} else {
 			val = reflect.ValueOf(converted.Value)

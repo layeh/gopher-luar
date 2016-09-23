@@ -174,7 +174,7 @@ func ExampleStructConstructorAndMap() {
 		panic(err)
 	}
 
-	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(*ReflectedInterface).Interface.(map[string]*Person)
+	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(*reflectedInterface).Interface.(map[string]*Person)
 	fmt.Println(len(everyone))
 
 	// Output:
@@ -755,7 +755,7 @@ func ExampleComplex() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
-	b := L.GetGlobal("b").(*lua.LUserData).Value.(*ReflectedInterface).Interface.(complex128)
+	b := L.GetGlobal("b").(*lua.LUserData).Value.(*reflectedInterface).Interface.(complex128)
 	fmt.Println(a == b)
 
 	// Output:

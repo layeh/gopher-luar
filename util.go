@@ -11,7 +11,7 @@ import (
 
 func check(L *lua.LState, idx int, kind reflect.Kind) (ref reflect.Value, opts ReflectOptions, mt *Metatable, isPtr bool) {
 	ud := L.CheckUserData(idx)
-	refIface, ok := ud.Value.(*ReflectedInterface)
+	refIface, ok := ud.Value.(*reflectedInterface)
 	if ok {
 		ref = reflect.ValueOf(refIface.Interface)
 		opts = refIface.Options
@@ -33,7 +33,7 @@ func check(L *lua.LState, idx int, kind reflect.Kind) (ref reflect.Value, opts R
 func tostring(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := ud.Value
-	if refIface, ok := value.(*ReflectedInterface); ok {
+	if refIface, ok := value.(*reflectedInterface); ok {
 		value = refIface.Interface
 	}
 	if stringer, ok := value.(fmt.Stringer); ok {
