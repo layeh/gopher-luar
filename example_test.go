@@ -2180,3 +2180,39 @@ func TestImmutableTransparentPtrFieldAssignment(t *testing.T) {
 		t.Fatal("Expected invalid operation error, got:", err)
 	}
 }
+
+func ExampleMultipleReflectedStructsDifferentOptions() {
+	// Set up two structs with different ReflectOptions -
+	// should retain their own behaviors
+	const code = `
+	-- A's pointers are not transparent
+	print(-a.Str)
+	-- B has transparent pointers, and is mutable
+	print(b.Str)
+	b.Str = "world"
+	print(b.Str)
+	-- Assigning to B with transparent pointers shouldn't affect
+	-- other pointers that originally pointed to the same string
+	print(-a.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "hello"
+	a := TransparentPtrAccessB{Str: &val}
+	b := TransparentPtrAccessB{Str: &val}
+
+	L.SetGlobal("a", New(L, &a, ReflectOptions{Immutable: true}))
+	L.SetGlobal("b", New(L, &b, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// hello
+	// hello
+	// world
+	// hello
+}
