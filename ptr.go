@@ -6,9 +6,16 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func checkPtr(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable) {
+func checkPtr(L *lua.LState, idx int) (ref reflect.Value, opts ReflectOptions, mt *Metatable) {
 	ud := L.CheckUserData(idx)
-	ref = reflect.ValueOf(ud.Value)
+	refIface, ok := ud.Value.(*reflectedInterface)
+	if !ok {
+		L.RaiseError("unexpected userdata value")
+	}
+
+	ref = reflect.ValueOf(refIface.Interface)
+	opts = refIface.Options
+
 	kind := reflect.Ptr
 	if ref.Kind() != kind {
 		L.ArgError(idx, "expecting "+kind.String())
@@ -18,7 +25,7 @@ func checkPtr(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable) {
 }
 
 func ptrIndex(L *lua.LState) int {
-	_, mt := checkPtr(L, 1)
+	_, _, mt := checkPtr(L, 1)
 	key := L.CheckString(2)
 
 	if fn := mt.ptrMethod(key); fn != nil {
@@ -35,7 +42,12 @@ func ptrIndex(L *lua.LState) int {
 }
 
 func ptrPow(L *lua.LState) int {
-	ref, _ := checkPtr(L, 1)
+	ref, opts, _ := checkPtr(L, 1)
+
+	if opts.Immutable {
+		L.RaiseError("invalid operation for immutable pointer")
+	}
+
 	val := L.CheckAny(2)
 
 	if ref.IsNil() {
@@ -51,7 +63,7 @@ func ptrPow(L *lua.LState) int {
 }
 
 func ptrUnm(L *lua.LState) int {
-	ref, _ := checkPtr(L, 1)
+	ref, _, _ := checkPtr(L, 1)
 	elem := ref.Elem()
 	if !elem.CanInterface() {
 		L.RaiseError("cannot interface pointer type " + elem.String())

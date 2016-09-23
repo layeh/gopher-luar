@@ -7,7 +7,8 @@ import (
 )
 
 func sliceIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Slice)
+	ref, opts, mt, isPtr := check(L, 1, reflect.Slice)
+	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
 	switch converted := key.(type) {
@@ -20,7 +21,7 @@ func sliceIndex(L *lua.LState) int {
 		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
 			val = val.Addr()
 		}
-		L.Push(New(L, val.Interface()))
+		L.Push(New(L, val.Interface(), opts))
 	case lua.LString:
 		if !isPtr {
 			if fn := mt.method(string(converted)); fn != nil {
@@ -40,12 +41,16 @@ func sliceIndex(L *lua.LState) int {
 }
 
 func sliceNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Slice)
+	ref, opts, _, isPtr := check(L, 1, reflect.Slice)
 	index := L.CheckInt(2)
 	value := L.CheckAny(3)
 
 	if isPtr {
 		L.RaiseError("invalid operation on slice pointer")
+	}
+
+	if opts.Immutable {
+		L.RaiseError("invalid operation on immutable slice")
 	}
 
 	if index < 1 || index > ref.Len() {
@@ -56,7 +61,7 @@ func sliceNewIndex(L *lua.LState) int {
 }
 
 func sliceLen(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Slice)
+	ref, _, _, isPtr := check(L, 1, reflect.Slice)
 
 	if isPtr {
 		L.RaiseError("invalid operation on slice pointer")
@@ -67,7 +72,7 @@ func sliceLen(L *lua.LState) int {
 }
 
 func sliceCall(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Slice)
+	ref, _, _, isPtr := check(L, 1, reflect.Slice)
 	if isPtr {
 		L.RaiseError("invalid operation on slice pointer")
 	}
@@ -91,13 +96,21 @@ func sliceCall(L *lua.LState) int {
 // slice methods
 
 func sliceCapacity(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Slice)
+	ref, _, _, _ := check(L, 1, reflect.Slice)
 	L.Push(lua.LNumber(ref.Cap()))
 	return 1
 }
 
 func sliceAppend(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Slice)
+	ref, opts, _, isPtr := check(L, 1, reflect.Slice)
+
+	if isPtr {
+		L.RaiseError("invalid operation on slice pointer")
+	}
+
+	if opts.Immutable {
+		L.RaiseError("invalid operation on immutable slice")
+	}
 
 	hint := ref.Type().Elem()
 	values := make([]reflect.Value, L.GetTop()-1)

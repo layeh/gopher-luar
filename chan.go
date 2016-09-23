@@ -7,7 +7,7 @@ import (
 )
 
 func chanIndex(L *lua.LState) int {
-	_, mt, isPtr := check(L, 1, reflect.Chan)
+	_, _, mt, isPtr := check(L, 1, reflect.Chan)
 	key := L.CheckString(2)
 
 	if !isPtr {
@@ -26,7 +26,7 @@ func chanIndex(L *lua.LState) int {
 }
 
 func chanLen(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Chan)
+	ref, _, _, isPtr := check(L, 1, reflect.Chan)
 	if isPtr {
 		L.RaiseError("invalid operation on chan pointer")
 	}
@@ -37,7 +37,7 @@ func chanLen(L *lua.LState) int {
 // chan methods
 
 func chanSend(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Chan)
+	ref, _, _, _ := check(L, 1, reflect.Chan)
 	value := L.CheckAny(2)
 	convertedValue := lValueToReflect(L, value, ref.Type().Elem(), nil)
 	if convertedValue.Type() != ref.Type().Elem() {
@@ -48,7 +48,7 @@ func chanSend(L *lua.LState) int {
 }
 
 func chanReceive(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Chan)
+	ref, _, _, _ := check(L, 1, reflect.Chan)
 
 	value, ok := ref.Recv()
 	if !ok {
@@ -62,7 +62,12 @@ func chanReceive(L *lua.LState) int {
 }
 
 func chanClose(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Chan)
+	ref, opts, _, _ := check(L, 1, reflect.Chan)
+
+	if opts.Immutable {
+		L.RaiseError("cannot close immutable channel")
+	}
+
 	ref.Close()
 	return 0
 }

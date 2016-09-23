@@ -7,7 +7,7 @@ import (
 )
 
 func mapIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Map)
+	ref, opts, mt, isPtr := check(L, 1, reflect.Map)
 	key := L.CheckAny(2)
 
 	if isPtr {
@@ -42,15 +42,21 @@ func mapIndex(L *lua.LState) int {
 
 		return 0
 	}
-	L.Push(New(L, item.Interface()))
+	L.Push(New(L, item.Interface(), opts))
 	return 1
 }
 
 func mapNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Map)
+	ref, opts, _, isPtr := check(L, 1, reflect.Map)
+
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}
+
+	if opts.Immutable {
+		L.RaiseError("invalid operation on immutable map")
+	}
+
 	key := L.CheckAny(2)
 	value := L.CheckAny(3)
 
@@ -70,7 +76,7 @@ func mapNewIndex(L *lua.LState) int {
 }
 
 func mapLen(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Map)
+	ref, _, _, isPtr := check(L, 1, reflect.Map)
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}
@@ -79,7 +85,7 @@ func mapLen(L *lua.LState) int {
 }
 
 func mapCall(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Map)
+	ref, _, _, isPtr := check(L, 1, reflect.Map)
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}

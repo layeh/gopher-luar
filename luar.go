@@ -38,7 +38,12 @@ import (
 //  String          LString          No
 //  Struct          *LUserData       Yes
 //  UnsafePointer   *LUserData       No
-func New(L *lua.LState, value interface{}) lua.LValue {
+func New(L *lua.LState, value interface{}, opts ...ReflectOptions) lua.LValue {
+	reflectOptions := defaultReflectOptions()
+	if len(opts) > 0 {
+		reflectOptions = opts[0]
+	}
+
 	if value == nil {
 		return lua.LNil
 	}
@@ -65,22 +70,58 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lua.LNumber(val.Float())
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = newReflectedInterface(val.Interface(), reflectOptions)
 		ud.Metatable = getMetatableFromValue(L, val)
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val, false)
 	case reflect.Interface:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = newReflectedInterface(val.Interface(), reflectOptions)
 		return ud
 	case reflect.String:
 		return lua.LString(val.String())
 	default:
 		ud := L.NewUserData()
-		ud.Value = val.Interface()
+		ud.Value = newReflectedInterface(val.Interface(), reflectOptions)
 		return ud
 	}
+}
+
+// ReflectOptions is a configuration that can be used to alter the behavior of a
+// reflected gopher-luar object.
+type ReflectOptions struct {
+	// Controls whether or not the value of the reflected object can be modified.
+	// Only works for a subset of types that utilize a custom metatable - arrays,
+	// channels, maps, pointers, slices and structs. Child elements/fields inherit
+	// the immutable property, even when assigned to new variables. Immutable
+	// channels may send/receive, but cannot be closed from Lua.
+	Immutable bool
+	// For structs, will auto-populate and auto-indirect pointer fields. This
+	// makes structs with pointer fields behave like their non-pointer counterparts.
+	// Fields are populated with a zero-value object upon first access, and can
+	// have values assigned directly without use of the pow (^) operator. Note
+	// that fields can only be set if the struct is reflected by reference.
+	TransparentPointers bool
+}
+
+// Default options if no ReflectOptions struct is passed into luar.New().
+func defaultReflectOptions() ReflectOptions {
+	return ReflectOptions{
+		Immutable:           false,
+		TransparentPointers: false,
+	}
+}
+
+// ReflectedInterface stores the reflected value for certain types requiring LUserData
+// storage - arrays, channels, maps, pointers, slices, structs. It holds both the value,and additional metadata.
+type reflectedInterface struct {
+	Interface interface{}
+	Options   ReflectOptions
+}
+
+func newReflectedInterface(iface interface{}, opts ReflectOptions) *reflectedInterface {
+	return &reflectedInterface{Interface: iface, Options: opts}
 }
 
 // NewType returns a new type creator for the given value's type.
@@ -246,7 +287,12 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			return reflect.ValueOf(converted).Convert(hint)
 		}
 	case *lua.LUserData:
-		val := reflect.ValueOf(converted.Value)
+		var val reflect.Value
+		if refIface, ok := converted.Value.(*reflectedInterface); ok {
+			val = reflect.ValueOf(refIface.Interface)
+		} else {
+			val = reflect.ValueOf(converted.Value)
+		}
 		if tryConvertPtr != nil && val.Kind() != reflect.Ptr && hint.Kind() == reflect.Ptr && val.Type() == hint.Elem() {
 			newVal := reflect.New(hint.Elem())
 			newVal.Elem().Set(val)
