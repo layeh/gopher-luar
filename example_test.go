@@ -1366,7 +1366,7 @@ func ExampleStructArrayAndSlice() {
 	print(-str)
 	`
 
-	L := lua.NewState(lua.Options{IncludeGoStackTrace: true})
+	L := lua.NewState()
 	defer L.Close()
 
 	a := [...]Person{
