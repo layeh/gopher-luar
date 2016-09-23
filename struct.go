@@ -7,7 +7,7 @@ import (
 )
 
 func structIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Struct)
+	ref, opts, mt, isPtr := check(L, 1, reflect.Struct)
 	key := L.CheckString(2)
 
 	if !isPtr {
@@ -18,6 +18,10 @@ func structIndex(L *lua.LState) int {
 	}
 
 	if fn := mt.ptrMethod(key); fn != nil {
+		if opts.Immutable {
+			L.RaiseError("cannot call pointer methods on immutable objects")
+		}
+
 		L.Push(fn)
 		return 1
 	}
@@ -34,7 +38,7 @@ func structIndex(L *lua.LState) int {
 
 	switch field.Kind() {
 	case reflect.Ptr:
-		if mt.transparentPointers() {
+		if opts.TransparentPointers {
 			// Initialize pointers on first access
 			if !field.IsValid() || field.IsNil() {
 				if !field.CanSet() {
@@ -49,7 +53,7 @@ func structIndex(L *lua.LState) int {
 			}
 		}
 	case reflect.Slice:
-		if mt.transparentPointers() {
+		if opts.TransparentPointers {
 			// Initialize slices on first access
 			if !field.IsValid() || field.IsNil() {
 				if !field.CanSet() {
@@ -64,14 +68,14 @@ func structIndex(L *lua.LState) int {
 		field = field.Addr()
 	}
 
-	L.Push(New(L, field.Interface(), mt.reflectOptions()))
+	L.Push(New(L, field.Interface(), opts))
 	return 1
 }
 
 func structNewIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Struct)
+	ref, opts, mt, isPtr := check(L, 1, reflect.Struct)
 
-	if mt.immutable() {
+	if opts.Immutable {
 		L.RaiseError("invalid operation on immutable struct")
 	}
 
@@ -88,7 +92,7 @@ func structNewIndex(L *lua.LState) int {
 	}
 	field := ref.FieldByIndex(index)
 
-	if mt.transparentPointers() {
+	if opts.TransparentPointers {
 		// With transparent pointers, we are going to get passed the new value
 		// by... value, not by reference. Thus, if the current field is a
 		// pointer type, we need some extra work to reflect a new object for

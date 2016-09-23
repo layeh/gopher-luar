@@ -20,7 +20,7 @@ func MT(L *lua.LState, value interface{}) *Metatable {
 	switch val.Type().Kind() {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		return &Metatable{
-			LTable: getMetatableFromValue(L, val, ReflectOptions{}),
+			LTable: getMetatableFromValue(L, val),
 			l:      L,
 		}
 	default:
@@ -114,28 +114,4 @@ func (m *Metatable) fieldIndex(name string) []int {
 		return index.(*lua.LUserData).Value.([]int)
 	}
 	return nil
-}
-
-// Retrieval of reflection options.
-func (m *Metatable) immutable() bool {
-	val := m.RawGetString("immutable")
-	if val == lua.LTrue {
-		return true
-	}
-	return false
-}
-
-func (m *Metatable) transparentPointers() bool {
-	val := m.RawGetString("transparent_pointers")
-	if val == lua.LTrue {
-		return true
-	}
-	return false
-}
-
-func (m *Metatable) reflectOptions() ReflectOptions {
-	return ReflectOptions{
-		Immutable:           m.immutable(),
-		TransparentPointers: m.transparentPointers(),
-	}
 }

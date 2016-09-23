@@ -9,9 +9,16 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func check(L *lua.LState, idx int, kind reflect.Kind) (ref reflect.Value, mt *Metatable, isPtr bool) {
+func check(L *lua.LState, idx int, kind reflect.Kind) (ref reflect.Value, opts ReflectOptions, mt *Metatable, isPtr bool) {
 	ud := L.CheckUserData(idx)
-	ref = reflect.ValueOf(ud.Value)
+	refIface, ok := ud.Value.(*ReflectedInterface)
+	if ok {
+		ref = reflect.ValueOf(refIface.Interface)
+		opts = refIface.Options
+	} else {
+		ref = reflect.ValueOf(ud.Value)
+	}
+
 	if ref.Kind() != kind {
 		if ref.Kind() != reflect.Ptr || ref.Elem().Kind() != kind {
 			s := kind.String()
@@ -26,6 +33,9 @@ func check(L *lua.LState, idx int, kind reflect.Kind) (ref reflect.Value, mt *Me
 func tostring(L *lua.LState) int {
 	ud := L.CheckUserData(1)
 	value := ud.Value
+	if refIface, ok := value.(*ReflectedInterface); ok {
+		value = refIface.Interface
+	}
 	if stringer, ok := value.(fmt.Stringer); ok {
 		L.Push(lua.LString(stringer.String()))
 	} else {

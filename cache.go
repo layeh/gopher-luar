@@ -125,7 +125,7 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 	}
 }
 
-func getMetatable(L *lua.LState, vtype reflect.Type, opts ReflectOptions) *lua.LTable {
+func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	cache := getMTCache(L)
 
 	if vtype.Kind() == reflect.Ptr {
@@ -182,11 +182,7 @@ func getMetatable(L *lua.LState, vtype reflect.Type, opts ReflectOptions) *lua.L
 		mt.RawSetString("__index", L.NewFunction(ptrIndex))
 	}
 
-	// Don't want to allow pointer methods for immutable objects, since they could
-	// mutate state internally
-	if !opts.Immutable {
-		addMethods(L, reflect.PtrTo(vtype), ptrMethods, true)
-	}
+	addMethods(L, reflect.PtrTo(vtype), ptrMethods, true)
 	mt.RawSetString("ptr_methods", ptrMethods)
 
 	addMethods(L, vtype, methods, false)
@@ -194,21 +190,13 @@ func getMetatable(L *lua.LState, vtype reflect.Type, opts ReflectOptions) *lua.L
 
 	mt.RawSetString("original", L.NewTable())
 
-	// Reflection options
-	if opts.Immutable {
-		mt.RawSetString("immutable", lua.LTrue)
-	}
-	if opts.TransparentPointers {
-		mt.RawSetString("transparent_pointers", lua.LTrue)
-	}
-
 	cache.regular[vtype] = mt
 	return mt
 }
 
-func getMetatableFromValue(L *lua.LState, value reflect.Value, opts ReflectOptions) *lua.LTable {
+func getMetatableFromValue(L *lua.LState, value reflect.Value) *lua.LTable {
 	vtype := value.Type()
-	return getMetatable(L, vtype, opts)
+	return getMetatable(L, vtype)
 }
 
 func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {

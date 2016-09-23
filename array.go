@@ -7,7 +7,7 @@ import (
 )
 
 func arrayIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Array)
+	ref, opts, mt, isPtr := check(L, 1, reflect.Array)
 	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
@@ -21,7 +21,7 @@ func arrayIndex(L *lua.LState) int {
 		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
 			val = val.Addr()
 		}
-		L.Push(New(L, val.Interface(), mt.reflectOptions()))
+		L.Push(New(L, val.Interface(), opts))
 	case lua.LString:
 		if !isPtr {
 			if fn := mt.method(string(converted)); fn != nil {
@@ -41,13 +41,13 @@ func arrayIndex(L *lua.LState) int {
 }
 
 func arrayNewIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Array)
+	ref, opts, _, isPtr := check(L, 1, reflect.Array)
 
 	if !isPtr {
 		L.RaiseError("invalid operation on array")
 	}
 
-	if mt.immutable() {
+	if opts.Immutable {
 		L.RaiseError("invalid operation on immutable array")
 	}
 
@@ -63,14 +63,14 @@ func arrayNewIndex(L *lua.LState) int {
 }
 
 func arrayLen(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Array)
+	ref, _, _, _ := check(L, 1, reflect.Array)
 	ref = reflect.Indirect(ref)
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func arrayCall(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Array)
+	ref, _, _, _ := check(L, 1, reflect.Array)
 	ref = reflect.Indirect(ref)
 
 	i := 0

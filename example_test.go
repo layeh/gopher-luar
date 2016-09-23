@@ -174,7 +174,7 @@ func ExampleStructConstructorAndMap() {
 		panic(err)
 	}
 
-	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(map[string]*Person)
+	everyone := L.GetGlobal("everyone").(*lua.LUserData).Value.(*ReflectedInterface).Interface.(map[string]*Person)
 	fmt.Println(len(everyone))
 
 	// Output:
@@ -755,7 +755,7 @@ func ExampleComplex() {
 	if err := L.DoString(code); err != nil {
 		panic(err)
 	}
-	b := L.GetGlobal("b").(*lua.LUserData).Value.(complex128)
+	b := L.GetGlobal("b").(*lua.LUserData).Value.(*ReflectedInterface).Interface.(complex128)
 	fmt.Println(a == b)
 
 	// Output:
@@ -1366,7 +1366,7 @@ func ExampleStructArrayAndSlice() {
 	print(-str)
 	`
 
-	L := lua.NewState()
+	L := lua.NewState(lua.Options{IncludeGoStackTrace: true})
 	defer L.Close()
 
 	a := [...]Person{
@@ -1492,7 +1492,7 @@ func TestImmutableStructPtrFunc(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error, none thrown")
 	}
-	if !strings.Contains(err.Error(), "attempt to call a non-function object") {
+	if !strings.Contains(err.Error(), "cannot call pointer methods on immutable objects") {
 		t.Fatal("Expected call error, got:", err)
 	}
 }
