@@ -1357,6 +1357,84 @@ func Example__38() {
 	// HELLO WORLD
 }
 
+func Example__39() {
+	const code = `
+	print("s1 == s1", s1 == s1)
+	pcall(function()
+		print("s1 == s2", s1 == s2)
+	end)
+	print("sp1 == sp2", sp1 == sp2)
+
+	print()
+
+	print("m1 == m1", m1 == m1)
+	pcall(function()
+		print("m1 == m2", m1 == m2)
+	end)
+	print("mp1 == mp2", mp1 == mp2)
+
+	print()
+
+	print("c1 == c2", c1 == c2)
+	pcall(function()
+		print("c1 == cp1", c1 == cp1)
+	end)
+	print("c1 == c3", c1 == c3)
+
+	print()
+
+	print("sp1 == sp2", sp1 == sp2)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	{
+		s := make([]int, 10)
+		L.SetGlobal("s1", New(L, s))
+		L.SetGlobal("sp1", New(L, &s))
+		L.SetGlobal("s2", New(L, s))
+		L.SetGlobal("sp2", New(L, &s))
+	}
+	{
+		m := make(map[string]int, 10)
+		L.SetGlobal("m1", New(L, m))
+		L.SetGlobal("mp1", New(L, &m))
+		L.SetGlobal("m2", New(L, m))
+		L.SetGlobal("mp2", New(L, &m))
+	}
+	{
+		c := make(chan string)
+		L.SetGlobal("c1", New(L, c))
+		L.SetGlobal("cp1", New(L, &c))
+		L.SetGlobal("c2", New(L, c))
+
+		c3 := make(chan string)
+		L.SetGlobal("c3", New(L, c3))
+	}
+	{
+		s := ""
+		L.SetGlobal("sp1", New(L, &s))
+		L.SetGlobal("sp2", New(L, &s))
+	}
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// s1 == s1	true
+	// sp1 == sp2	true
+	//
+	// m1 == m1	true
+	// mp1 == mp2	true
+	//
+	// c1 == c2	true
+	// c1 == c3	false
+	//
+	// sp1 == sp2	true
+}
+
 func ExampleLState() {
 	const code = `
 	print(sum(1, 2, 3, 4, 5))

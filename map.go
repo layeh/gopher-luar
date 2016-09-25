@@ -97,3 +97,16 @@ func mapCall(L *lua.LState) int {
 	L.Push(L.NewFunction(fn))
 	return 1
 }
+
+func mapEq(L *lua.LState) int {
+	ref1, _, isPtr1 := check(L, 1, reflect.Map)
+	ref2, _, isPtr2 := check(L, 2, reflect.Map)
+
+	if isPtr1 && isPtr2 {
+		L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
+		return 1
+	}
+
+	L.RaiseError("invalid operation == on map")
+	return 0 // never reaches
+}

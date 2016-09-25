@@ -137,7 +137,6 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 
 	mt := L.NewTable()
 	mt.RawSetString("__tostring", L.NewFunction(tostring))
-	mt.RawSetString("__eq", L.NewFunction(eq))
 	mt.RawSetString("__metatable", L.NewTable())
 	mt.RawSetString("__pow", L.NewFunction(ptrPow))
 	mt.RawSetString("__unm", L.NewFunction(ptrUnm))
@@ -151,6 +150,7 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
 		mt.RawSetString("__len", L.NewFunction(arrayLen))
 		mt.RawSetString("__call", L.NewFunction(arrayCall))
+		mt.RawSetString("__eq", L.NewFunction(eq))
 	case reflect.Chan:
 		methods.RawSetString("send", L.NewFunction(chanSend))
 		methods.RawSetString("receive", L.NewFunction(chanReceive))
@@ -158,18 +158,13 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 
 		mt.RawSetString("__index", L.NewFunction(chanIndex))
 		mt.RawSetString("__len", L.NewFunction(chanLen))
+		mt.RawSetString("__eq", L.NewFunction(chanEq))
 	case reflect.Map:
 		mt.RawSetString("__index", L.NewFunction(mapIndex))
 		mt.RawSetString("__newindex", L.NewFunction(mapNewIndex))
 		mt.RawSetString("__len", L.NewFunction(mapLen))
 		mt.RawSetString("__call", L.NewFunction(mapCall))
-	case reflect.Struct:
-		fields := L.NewTable()
-		addFields(L, vtype, fields)
-		mt.RawSetString("fields", fields)
-
-		mt.RawSetString("__index", L.NewFunction(structIndex))
-		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
+		mt.RawSetString("__eq", L.NewFunction(mapEq))
 	case reflect.Slice:
 		methods.RawSetString("capacity", L.NewFunction(sliceCapacity))
 		methods.RawSetString("append", L.NewFunction(sliceAppend))
@@ -178,8 +173,18 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__newindex", L.NewFunction(sliceNewIndex))
 		mt.RawSetString("__len", L.NewFunction(sliceLen))
 		mt.RawSetString("__call", L.NewFunction(sliceCall))
+		mt.RawSetString("__eq", L.NewFunction(sliceEq))
+	case reflect.Struct:
+		fields := L.NewTable()
+		addFields(L, vtype, fields)
+		mt.RawSetString("fields", fields)
+
+		mt.RawSetString("__index", L.NewFunction(structIndex))
+		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
+		mt.RawSetString("__eq", L.NewFunction(eq))
 	default:
 		mt.RawSetString("__index", L.NewFunction(ptrIndex))
+		mt.RawSetString("__eq", L.NewFunction(ptrEq))
 	}
 
 	addMethods(L, reflect.PtrTo(vtype), ptrMethods, true)

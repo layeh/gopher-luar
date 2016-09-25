@@ -88,6 +88,19 @@ func sliceCall(L *lua.LState) int {
 	return 1
 }
 
+func sliceEq(L *lua.LState) int {
+	ref1, _, isPtr1 := check(L, 1, reflect.Slice)
+	ref2, _, isPtr2 := check(L, 2, reflect.Slice)
+
+	if isPtr1 && isPtr2 {
+		L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
+		return 1
+	}
+
+	L.RaiseError("invalid operation == on slice")
+	return 0 // never reaches
+}
+
 // slice methods
 
 func sliceCapacity(L *lua.LState) int {

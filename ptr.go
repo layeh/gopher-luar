@@ -59,3 +59,11 @@ func ptrUnm(L *lua.LState) int {
 	L.Push(New(L, elem.Interface()))
 	return 1
 }
+
+func ptrEq(L *lua.LState) int {
+	ref1, _ := checkPtr(L, 1)
+	ref2, _ := checkPtr(L, 1)
+
+	L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
+	return 1
+}

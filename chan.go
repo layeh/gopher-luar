@@ -34,6 +34,23 @@ func chanLen(L *lua.LState) int {
 	return 1
 }
 
+func chanEq(L *lua.LState) int {
+	ref1, _, isPtr1 := check(L, 1, reflect.Chan)
+	ref2, _, isPtr2 := check(L, 2, reflect.Chan)
+
+	if isPtr1 && isPtr2 {
+		L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
+		return 1
+	}
+
+	if isPtr1 || isPtr2 {
+		L.RaiseError("invalid operation == on mixed chan value and pointer")
+	}
+
+	L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
+	return 1
+}
+
 // chan methods
 
 func chanSend(L *lua.LState) int {
