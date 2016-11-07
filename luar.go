@@ -180,10 +180,10 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		switch {
 		case hint.Kind() == reflect.Slice:
 			elemType := hint.Elem()
-			len := converted.Len()
-			s := reflect.MakeSlice(hint, len, len)
+			length := converted.Len()
+			s := reflect.MakeSlice(hint, length, length)
 
-			for i := 0; i < len; i++ {
+			for i := 0; i < length; i++ {
 				value := converted.RawGetInt(i + 1)
 				elemValue := lValueToReflect(L, value, elemType, nil)
 				s.Index(i).Set(elemValue)
