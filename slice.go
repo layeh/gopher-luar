@@ -72,7 +72,7 @@ func sliceLen(L *lua.LState) int {
 }
 
 func sliceCall(L *lua.LState) int {
-	ref, _, _, isPtr := check(L, 1, reflect.Slice)
+	ref, opts, _, isPtr := check(L, 1, reflect.Slice)
 	if isPtr {
 		L.RaiseError("invalid operation on slice pointer")
 	}
@@ -84,7 +84,7 @@ func sliceCall(L *lua.LState) int {
 		}
 		item := ref.Index(i).Interface()
 		L.Push(lua.LNumber(i + 1))
-		L.Push(New(L, item))
+		L.Push(New(L, item, opts))
 		i++
 		return 2
 	}
@@ -123,6 +123,6 @@ func sliceAppend(L *lua.LState) int {
 	}
 
 	newSlice := reflect.Append(ref, values...)
-	L.Push(New(L, newSlice.Interface()))
+	L.Push(New(L, newSlice.Interface(), opts))
 	return 1
 }

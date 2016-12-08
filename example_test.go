@@ -2216,3 +2216,34 @@ func ExampleMultipleReflectedStructsDifferentOptions() {
 	// world
 	// hello
 }
+
+func ExampleTransparentPtrSliceCall() {
+	// Iterate over a slice via the call method. Access an undefined pointer
+	// field on the returned object. Returned object should inherit the transparent
+	// pointer behavior, and the field should be accessible without indirection.
+	const code = `
+	for i, b in slice() do
+		print(i)
+		print(b.Str)
+	end
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "foo"
+	b := TransparentPtrAccessB{}
+	b.Str = &val
+
+	slice := []*TransparentPtrAccessB{&b}
+
+	L.SetGlobal("slice", New(L, slice, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// 1
+	// foo
+}

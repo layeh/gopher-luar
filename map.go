@@ -85,7 +85,7 @@ func mapLen(L *lua.LState) int {
 }
 
 func mapCall(L *lua.LState) int {
-	ref, _, _, isPtr := check(L, 1, reflect.Map)
+	ref, opts, _, isPtr := check(L, 1, reflect.Map)
 	if isPtr {
 		L.RaiseError("invalid operation on map pointer")
 	}
@@ -95,8 +95,8 @@ func mapCall(L *lua.LState) int {
 		if i >= len(keys) {
 			return 0
 		}
-		L.Push(New(L, keys[i].Interface()))
-		L.Push(New(L, ref.MapIndex(keys[i]).Interface()))
+		L.Push(New(L, keys[i].Interface(), opts))
+		L.Push(New(L, ref.MapIndex(keys[i]).Interface(), opts))
 		i++
 		return 2
 	}

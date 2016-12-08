@@ -70,7 +70,7 @@ func arrayLen(L *lua.LState) int {
 }
 
 func arrayCall(L *lua.LState) int {
-	ref, _, _, _ := check(L, 1, reflect.Array)
+	ref, opts, _, _ := check(L, 1, reflect.Array)
 	ref = reflect.Indirect(ref)
 
 	i := 0
@@ -80,7 +80,7 @@ func arrayCall(L *lua.LState) int {
 		}
 		item := ref.Index(i).Interface()
 		L.Push(lua.LNumber(i + 1))
-		L.Push(New(L, item))
+		L.Push(New(L, item, opts))
 		i++
 		return 2
 	}

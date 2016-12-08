@@ -63,11 +63,11 @@ func ptrPow(L *lua.LState) int {
 }
 
 func ptrUnm(L *lua.LState) int {
-	ref, _, _ := checkPtr(L, 1)
+	ref, opts, _ := checkPtr(L, 1)
 	elem := ref.Elem()
 	if !elem.CanInterface() {
 		L.RaiseError("cannot interface pointer type " + elem.String())
 	}
-	L.Push(New(L, elem.Interface()))
+	L.Push(New(L, elem.Interface(), opts))
 	return 1
 }
