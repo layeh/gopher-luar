@@ -1,4 +1,4 @@
-package luar
+package luar // import "layeh.com/gopher-luar"
 
 import (
 	"fmt"

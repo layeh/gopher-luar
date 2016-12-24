@@ -256,4 +256,4 @@
 // when functions like New are called, and potentially when luar-created values
 // are used. It is your responsibility to ensure that concurrent access of the
 // state's registry does not happen.
-package luar
+package luar // import "layeh.com/gopher-luar"
