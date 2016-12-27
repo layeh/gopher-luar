@@ -27,8 +27,10 @@ func init() {
 	refTypeInt = reflect.TypeOf(int(0))
 }
 
-func getFunc(L *lua.LState) (ref reflect.Value, refType reflect.Type) {
-	ref = L.Get(lua.UpvalueIndex(1)).(*lua.LUserData).Value.(reflect.Value)
+func getFunc(L *lua.LState) (ref reflect.Value, refType reflect.Type, opts ReflectOptions) {
+	refIface := L.Get(lua.UpvalueIndex(1)).(*lua.LUserData).Value.(*reflectedInterface)
+	ref = refIface.Interface.(reflect.Value)
+	opts = refIface.Options
 	refType = ref.Type()
 	return
 }
@@ -48,7 +50,8 @@ func funcIsBypass(t reflect.Type) bool {
 }
 
 func funcBypass(L *lua.LState) int {
-	ref, refType := getFunc(L)
+	// Cannot pass ReflectOptions for bypass functions
+	ref, refType, _ := getFunc(L)
 
 	convertedPtr := false
 	var receiver reflect.Value
@@ -79,7 +82,7 @@ func funcBypass(L *lua.LState) int {
 }
 
 func funcRegular(L *lua.LState) int {
-	ref, refType := getFunc(L)
+	ref, refType, opts := getFunc(L)
 
 	top := L.GetTop()
 	expected := refType.NumIn()
@@ -127,14 +130,14 @@ func funcRegular(L *lua.LState) int {
 		return len(values)
 	}
 	for _, val := range ret {
-		L.Push(New(L, val.Interface()))
+		L.Push(New(L, val.Interface(), opts))
 	}
 	return len(ret)
 }
 
-func funcWrapper(L *lua.LState, fn reflect.Value, isPtrReceiverMethod bool) *lua.LFunction {
+func funcWrapper(L *lua.LState, fn reflect.Value, isPtrReceiverMethod bool, opts ReflectOptions) *lua.LFunction {
 	up := L.NewUserData()
-	up.Value = fn
+	up.Value = &reflectedInterface{fn, opts}
 
 	if funcIsBypass(fn.Type()) {
 		return L.NewClosure(funcBypass, up, lua.LBool(isPtrReceiverMethod))

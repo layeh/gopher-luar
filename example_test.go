@@ -1817,6 +1817,37 @@ func TestImmutableChanClose(t *testing.T) {
 	}
 }
 
+func TestImmutableFuncResult(t *testing.T) {
+	// When using reflect options on a function, those options should be applied
+	// to output values from the function. In this case, the output should have
+	// immutable behavior.
+
+	const code = `
+	person = getPerson()
+
+	-- person should have immutable behavior
+	person.Name = "Bob"
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	getPerson := func() *Person {
+		return &Person{Name: "Tim"}
+	}
+
+	L.SetGlobal("getPerson", New(L, getPerson, ReflectOptions{Immutable: true}))
+
+	err := L.DoString(code)
+	if err == nil {
+		t.Fatal("Expected error, none thrown")
+	}
+	if !strings.Contains(err.Error(), "invalid operation on immutable struct") {
+		t.Fatal("Expected invalid operation error, got:", err)
+	}
+}
+
+
 type TransparentPtrAccessB struct {
 	Str *string
 }
@@ -2246,4 +2277,34 @@ func ExampleTransparentPtrSliceCall() {
 	// Output:
 	// 1
 	// foo
+}
+
+func ExampleTransparentPtrFuncResult() {
+	// When using reflect options on a function, those options should be applied
+	// to output values from the function. In this case, the output should have
+	// transparent pointer behavior.
+
+	const code = `
+	b = newB()
+
+	-- b should have transparent ptr behavior
+	print(b.Str)
+	`
+
+	L := lua.NewState()
+	defer L.Close()
+
+	val := "hello"
+	newB := func() *TransparentPtrAccessB {
+		return &TransparentPtrAccessB{Str: &val}
+	}
+
+	L.SetGlobal("newB", New(L, newB, ReflectOptions{TransparentPointers: true}))
+
+	if err := L.DoString(code); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// hello
 }

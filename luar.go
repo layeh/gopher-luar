@@ -74,7 +74,7 @@ func New(L *lua.LState, value interface{}, opts ...ReflectOptions) lua.LValue {
 		ud.Metatable = getMetatableFromValue(L, val)
 		return ud
 	case reflect.Func:
-		return funcWrapper(L, val, false)
+		return funcWrapper(L, val, false, reflectOptions)
 	case reflect.Interface:
 		ud := L.NewUserData()
 		ud.Value = newReflectedInterface(val.Interface(), reflectOptions)
