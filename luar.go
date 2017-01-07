@@ -31,7 +31,6 @@ import (
 //  Array           *LUserData       Yes
 //  Chan            *LUserData       Yes
 //  Func            *lua.LFunction   No
-//  Interface       *LUserData       No
 //  Map             *LUserData       Yes
 //  Ptr             *LUserData       Yes
 //  Slice           *LUserData       Yes
@@ -70,10 +69,6 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return ud
 	case reflect.Func:
 		return funcWrapper(L, val, false)
-	case reflect.Interface:
-		ud := L.NewUserData()
-		ud.Value = val.Interface()
-		return ud
 	case reflect.String:
 		return lua.LString(val.String())
 	default:
