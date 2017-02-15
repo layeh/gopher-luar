@@ -48,8 +48,12 @@ func addMethods(L *lua.LState, vtype reflect.Type, tbl *lua.LTable, ptrReceiver 
 			continue
 		}
 		fn := funcWrapper(L, method.Func, ptrReceiver)
-		tbl.RawSetString(method.Name, fn)
-		tbl.RawSetString(getUnexportedName(method.Name), fn)
+		if options.MethodNames == ExportedNameStyle || options.MethodNames == ExportedUnexportNameStyle {
+			tbl.RawSetString(method.Name, fn)
+		}
+		if options.MethodNames == UnexportedNameStyle || options.MethodNames == ExportedUnexportNameStyle {
+			tbl.RawSetString(getUnexportedName(method.Name), fn)
+		}
 	}
 }
 
@@ -84,9 +88,12 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 					tag,
 				}
 			} else {
-				names = []string{
-					field.Name,
-					getUnexportedName(field.Name),
+				if options.FieldNames == ExportedNameStyle || options.FieldNames == ExportedUnexportNameStyle {
+					names = append(names, field.Name)
+				}
+
+				if options.FieldNames == UnexportedNameStyle || options.FieldNames == ExportedUnexportNameStyle {
+					names = append(names, getUnexportedName(field.Name))
 				}
 			}
 			for _, key := range names {
