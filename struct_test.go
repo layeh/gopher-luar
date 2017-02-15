@@ -282,6 +282,6 @@ func Test_struct_pointerreplacehidden(t *testing.T) {
 			C = 333
 		}
 		`,
-		"invalid field C",
+		"unable to set pointer value",
 	)
 }

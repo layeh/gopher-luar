@@ -51,7 +51,11 @@ func sliceNewIndex(L *lua.LState) int {
 	if index < 1 || index > ref.Len() {
 		L.ArgError(2, "index out of range")
 	}
-	ref.Index(index - 1).Set(lValueToReflect(L, value, ref.Type().Elem(), nil))
+	val := lValueToReflect(L, value, ref.Type().Elem(), nil)
+	if !val.IsValid() {
+		L.ArgError(3, "invalid value")
+	}
+	ref.Index(index - 1).Set(val)
 	return 0
 }
 
@@ -116,8 +120,8 @@ func sliceAppend(L *lua.LState) int {
 	values := make([]reflect.Value, L.GetTop()-1)
 	for i := 2; i <= L.GetTop(); i++ {
 		value := lValueToReflect(L, L.Get(i), hint, nil)
-		if value.Type() != hint {
-			L.ArgError(i, "invalid type")
+		if !value.IsValid() {
+			L.ArgError(i, "invalid value")
 		}
 		values[i-2] = value
 	}

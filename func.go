@@ -64,7 +64,7 @@ func funcBypass(L *lua.LState) int {
 		} else {
 			receiver = lValueToReflect(L, ud, receiverHint, nil)
 		}
-		if receiver.Type() != receiverHint {
+		if !receiver.IsValid() {
 			L.RaiseError("incorrect receiver type")
 		}
 		args = append(args, receiver)

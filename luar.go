@@ -80,7 +80,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 
 // NewType returns a new type creator for the given value's type.
 //
-// When the lua.LValue is called, a new value will be created that is the
+// When the returned lua.LValue is called, a new value will be created that is the
 // same type as value's type.
 func NewType(L *lua.LState, value interface{}) lua.LValue {
 	val := reflect.TypeOf(value)
@@ -91,7 +91,13 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 	return ud
 }
 
-func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) reflect.Value {
+func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) (r reflect.Value) {
+	defer func() {
+		if recover() != nil {
+			r = reflect.Value{}
+		}
+	}()
+
 	if hint.Implements(refTypeLuaLValue) {
 		return reflect.ValueOf(v)
 	}
@@ -181,6 +187,9 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			for i := 0; i < length; i++ {
 				value := converted.RawGetInt(i + 1)
 				elemValue := lValueToReflect(L, value, elemType, nil)
+				if !elemValue.IsValid() {
+					L.RaiseError("unable to convert value")
+				}
 				s.Index(i).Set(elemValue)
 			}
 
@@ -197,7 +206,13 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				}
 
 				lKey := lValueToReflect(L, key, keyType, nil)
+				if !lKey.IsValid() {
+					L.RaiseError("unable to convert value")
+				}
 				lValue := lValueToReflect(L, value, elemType, nil)
+				if !lValue.IsValid() {
+					L.RaiseError("unable to convert value")
+				}
 				s.SetMapIndex(lKey, lValue)
 			})
 
@@ -228,6 +243,9 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				field := hint.FieldByIndex(index)
 
 				lValue := lValueToReflect(L, value, field.Type, nil)
+				if !lValue.IsValid() {
+					L.RaiseError("unable to convert value")
+				}
 				t.FieldByIndex(field.Index).Set(lValue)
 			})
 
@@ -255,6 +273,5 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 		return val
 	}
-	L.RaiseError("fatal lValueToReflect error")
-	return reflect.Value{} // never returns
+	panic("never reaches")
 }

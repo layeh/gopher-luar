@@ -21,29 +21,31 @@ func mapIndex(L *lua.LState) int {
 	}
 
 	convertedKey := lValueToReflect(L, key, ref.Type().Key(), nil)
-	item := ref.MapIndex(convertedKey)
-	if !item.IsValid() {
-
-		if !isPtr {
-			if lstring, ok := key.(lua.LString); ok {
-				if fn := mt.method(string(lstring)); fn != nil {
-					L.Push(fn)
-					return 1
-				}
-			}
+	if convertedKey.IsValid() {
+		item := ref.MapIndex(convertedKey)
+		if item.IsValid() {
+			L.Push(New(L, item.Interface()))
+			return 1
 		}
+	}
 
+	if !isPtr {
 		if lstring, ok := key.(lua.LString); ok {
-			if fn := mt.ptrMethod(string(lstring)); fn != nil {
+			if fn := mt.method(string(lstring)); fn != nil {
 				L.Push(fn)
 				return 1
 			}
 		}
-
-		return 0
 	}
-	L.Push(New(L, item.Interface()))
-	return 1
+
+	if lstring, ok := key.(lua.LString); ok {
+		if fn := mt.ptrMethod(string(lstring)); fn != nil {
+			L.Push(fn)
+			return 1
+		}
+	}
+
+	return 0
 }
 
 func mapNewIndex(L *lua.LState) int {
@@ -55,14 +57,14 @@ func mapNewIndex(L *lua.LState) int {
 	value := L.CheckAny(3)
 
 	convertedKey := lValueToReflect(L, key, ref.Type().Key(), nil)
-	if convertedKey.Type() != ref.Type().Key() {
-		L.ArgError(2, "invalid map key type")
+	if !convertedKey.IsValid() {
+		L.ArgError(2, "invalid map key")
 	}
 	var convertedValue reflect.Value
 	if value != lua.LNil {
 		convertedValue = lValueToReflect(L, value, ref.Type().Elem(), nil)
-		if convertedValue.Type() != ref.Type().Elem() {
-			L.ArgError(3, "invalid map value type")
+		if !convertedValue.IsValid() {
+			L.ArgError(3, "invalid map value")
 		}
 	}
 	ref.SetMapIndex(convertedKey, convertedValue)

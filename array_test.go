@@ -36,6 +36,8 @@ func Test_array(t *testing.T) {
 
 	testReturn(t, L, `return #arr, arr[1]`, "1", "Test")
 	testReturn(t, L, `return arr:Get()`, "Test")
+
+	testError(t, L, `e.V[1] = nil`, "invalid value")
 }
 
 func Test_array_iterator(t *testing.T) {

@@ -57,8 +57,8 @@ func chanSend(L *lua.LState) int {
 	ref, _, _ := check(L, 1, reflect.Chan)
 	value := L.CheckAny(2)
 	convertedValue := lValueToReflect(L, value, ref.Type().Elem(), nil)
-	if convertedValue.Type() != ref.Type().Elem() {
-		L.ArgError(2, "incorrect type")
+	if !convertedValue.IsValid() {
+		L.ArgError(2, "invalid value")
 	}
 	ref.Send(convertedValue)
 	return 0
