@@ -7,53 +7,24 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-const (
-	cacheKey = "github.com/layeh/gopher-luar"
-	tagName  = "luar"
-)
-
-type mtCache struct {
-	regular, types map[reflect.Type]*lua.LTable
-}
-
-func newMTCache() *mtCache {
-	return &mtCache{
-		regular: make(map[reflect.Type]*lua.LTable),
-		types:   make(map[reflect.Type]*lua.LTable),
-	}
-}
-
-func getMTCache(L *lua.LState) *mtCache {
-	registry, ok := L.Get(lua.RegistryIndex).(*lua.LTable)
-	if !ok {
-		L.RaiseError("gopher-luar: corrupt lua registry")
-	}
-	lCache, ok := registry.RawGetString(cacheKey).(*lua.LUserData)
-	if !ok {
-		lCache = L.NewUserData()
-		lCache.Value = newMTCache()
-		registry.RawSetString(cacheKey, lCache)
-	}
-	cache, ok := lCache.Value.(*mtCache)
-	if !ok {
-		L.RaiseError("gopher-luar: corrupt luar metatable cache")
-	}
-	return cache
-}
-
-func addMethods(L *lua.LState, vtype reflect.Type, tbl *lua.LTable, ptrReceiver bool) {
+func addMethods(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable, ptrReceiver bool) {
 	for i := 0; i < vtype.NumMethod(); i++ {
 		method := vtype.Method(i)
 		if method.PkgPath != "" {
 			continue
 		}
+		namesFn := c.MethodNames
+		if namesFn == nil {
+			namesFn = defaultMethodNames
+		}
 		fn := funcWrapper(L, method.Func, ptrReceiver)
-		tbl.RawSetString(method.Name, fn)
-		tbl.RawSetString(getUnexportedName(method.Name), fn)
+		for _, name := range namesFn(vtype, method) {
+			tbl.RawSetString(name, fn)
+		}
 	}
 }
 
-func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
+func addFields(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable) {
 	type element struct {
 		Type  reflect.Type
 		Index []int
@@ -63,6 +34,11 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 	queue.PushFront(element{
 		Type: vtype,
 	})
+
+	namesFn := c.FieldNames
+	if namesFn == nil {
+		namesFn = defaultFieldNames
+	}
 
 	for queue.Len() > 0 {
 		e := queue.Back()
@@ -74,21 +50,7 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 			if field.PkgPath != "" && !field.Anonymous {
 				continue
 			}
-			var names []string
-			tag := field.Tag.Get(tagName)
-			if tag == "-" {
-				continue
-			}
-			if tag != "" {
-				names = []string{
-					tag,
-				}
-			} else {
-				names = []string{
-					field.Name,
-					getUnexportedName(field.Name),
-				}
-			}
+			names := namesFn(vtype, field)
 			for _, key := range names {
 				if tbl.RawGetString(key) != lua.LNil {
 					continue fields
@@ -126,12 +88,12 @@ func addFields(L *lua.LState, vtype reflect.Type, tbl *lua.LTable) {
 }
 
 func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
-	cache := getMTCache(L)
+	config := GetConfig(L)
 
 	if vtype.Kind() == reflect.Ptr {
 		vtype = vtype.Elem()
 	}
-	if v := cache.regular[vtype]; v != nil {
+	if v := config.regular[vtype]; v != nil {
 		return v
 	}
 
@@ -176,7 +138,7 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__eq", L.NewFunction(sliceEq))
 	case reflect.Struct:
 		fields := L.NewTable()
-		addFields(L, vtype, fields)
+		addFields(L, config, vtype, fields)
 		mt.RawSetString("fields", fields)
 
 		mt.RawSetString("__index", L.NewFunction(structIndex))
@@ -187,15 +149,15 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__eq", L.NewFunction(ptrEq))
 	}
 
-	addMethods(L, reflect.PtrTo(vtype), ptrMethods, true)
+	addMethods(L, config, reflect.PtrTo(vtype), ptrMethods, true)
 	mt.RawSetString("ptr_methods", ptrMethods)
 
-	addMethods(L, vtype, methods, false)
+	addMethods(L, config, vtype, methods, false)
 	mt.RawSetString("methods", methods)
 
 	mt.RawSetString("original", L.NewTable())
 
-	cache.regular[vtype] = mt
+	config.regular[vtype] = mt
 	return mt
 }
 
@@ -205,9 +167,9 @@ func getMetatableFromValue(L *lua.LState, value reflect.Value) *lua.LTable {
 }
 
 func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
-	cache := getMTCache(L)
+	config := GetConfig(L)
 
-	if v := cache.types[t]; v != nil {
+	if v := config.types[t]; v != nil {
 		return v
 	}
 
@@ -215,6 +177,6 @@ func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
 	mt.RawSetString("__call", L.NewFunction(typeCall))
 	mt.RawSetString("__eq", L.NewFunction(typeEq))
 
-	cache.types[t] = mt
+	config.types[t] = mt
 	return mt
 }

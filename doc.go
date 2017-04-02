@@ -139,7 +139,7 @@
 //  ---
 //  tim:SayHello() -- same as tim:sayHello()
 //
-// The name of a struct field is determined by its tag:
+// By default, the name of a struct field is determined by its tag:
 //  "":   the field is accessed by its name and its name with a lowercase
 //        first letter
 //  "-":  the field is not accessible
