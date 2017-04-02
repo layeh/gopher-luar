@@ -97,23 +97,26 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		return v
 	}
 
-	mt := L.NewTable()
-	mt.RawSetString("__tostring", L.NewFunction(tostring))
-	mt.RawSetString("__metatable", L.NewTable())
-	mt.RawSetString("__pow", L.NewFunction(ptrPow))
-	mt.RawSetString("__unm", L.NewFunction(ptrUnm))
-
-	ptrMethods := L.NewTable()
-	methods := L.NewTable()
+	var (
+		mt         *lua.LTable
+		methods    *lua.LTable
+		ptrMethods *lua.LTable = L.CreateTable(0, 0)
+	)
 
 	switch vtype.Kind() {
 	case reflect.Array:
+		mt = L.CreateTable(0, 11)
+		methods = L.CreateTable(0, 0)
+
 		mt.RawSetString("__index", L.NewFunction(arrayIndex))
 		mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
 		mt.RawSetString("__len", L.NewFunction(arrayLen))
 		mt.RawSetString("__call", L.NewFunction(arrayCall))
 		mt.RawSetString("__eq", L.NewFunction(eq))
 	case reflect.Chan:
+		mt = L.CreateTable(0, 9)
+		methods = L.CreateTable(0, 3)
+
 		methods.RawSetString("send", L.NewFunction(chanSend))
 		methods.RawSetString("receive", L.NewFunction(chanReceive))
 		methods.RawSetString("close", L.NewFunction(chanClose))
@@ -122,12 +125,18 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__len", L.NewFunction(chanLen))
 		mt.RawSetString("__eq", L.NewFunction(chanEq))
 	case reflect.Map:
+		mt = L.CreateTable(0, 11)
+		methods = L.CreateTable(0, 0)
+
 		mt.RawSetString("__index", L.NewFunction(mapIndex))
 		mt.RawSetString("__newindex", L.NewFunction(mapNewIndex))
 		mt.RawSetString("__len", L.NewFunction(mapLen))
 		mt.RawSetString("__call", L.NewFunction(mapCall))
 		mt.RawSetString("__eq", L.NewFunction(mapEq))
 	case reflect.Slice:
+		mt = L.CreateTable(0, 11)
+		methods = L.CreateTable(0, 2)
+
 		methods.RawSetString("capacity", L.NewFunction(sliceCapacity))
 		methods.RawSetString("append", L.NewFunction(sliceAppend))
 
@@ -137,6 +146,9 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__call", L.NewFunction(sliceCall))
 		mt.RawSetString("__eq", L.NewFunction(sliceEq))
 	case reflect.Struct:
+		mt = L.CreateTable(0, 10)
+		methods = L.CreateTable(0, 0)
+
 		fields := L.NewTable()
 		addFields(L, config, vtype, fields)
 		mt.RawSetString("fields", fields)
@@ -145,9 +157,17 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
 		mt.RawSetString("__eq", L.NewFunction(eq))
 	default:
+		mt = L.CreateTable(0, 8)
+		methods = L.CreateTable(0, 0)
+
 		mt.RawSetString("__index", L.NewFunction(ptrIndex))
 		mt.RawSetString("__eq", L.NewFunction(ptrEq))
 	}
+
+	mt.RawSetString("__tostring", L.NewFunction(tostring))
+	mt.RawSetString("__metatable", L.CreateTable(0, 0))
+	mt.RawSetString("__pow", L.NewFunction(ptrPow))
+	mt.RawSetString("__unm", L.NewFunction(ptrUnm))
 
 	addMethods(L, config, reflect.PtrTo(vtype), ptrMethods, true)
 	mt.RawSetString("ptr_methods", ptrMethods)
