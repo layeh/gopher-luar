@@ -155,8 +155,6 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	addMethods(L, config, vtype, methods, false)
 	mt.RawSetString("methods", methods)
 
-	mt.RawSetString("original", L.NewTable())
-
 	config.regular[vtype] = mt
 	return mt
 }
