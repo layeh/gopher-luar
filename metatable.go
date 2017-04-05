@@ -9,8 +9,6 @@ import (
 // Metatable holds the Lua metatable for a Go type.
 type Metatable struct {
 	*lua.LTable
-
-	l *lua.LState
 }
 
 // MT returns the metatable for value's type. nil is returned if value's type
@@ -21,7 +19,6 @@ func MT(L *lua.LState, value interface{}) *Metatable {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		return &Metatable{
 			LTable: getMetatableFromValue(L, val),
-			l:      L,
 		}
 	default:
 		return nil
