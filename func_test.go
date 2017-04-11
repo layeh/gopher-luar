@@ -217,3 +217,19 @@ func Test_func_luafunccall(t *testing.T) {
 		t.Fatalf("expecting GetTop to return 0, got %d", L.GetTop())
 	}
 }
+
+func Test_func_invalidargtype(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	family := &StructTestFamily{}
+
+	fn := func(p *StructTestPerson) string {
+		return "Hello, " + p.Name
+	}
+
+	L.SetGlobal("family", New(L, family))
+	L.SetGlobal("getHello", New(L, fn))
+
+	testError(t, L, `return getHello(family)`, "invalid type received for arg 1 (expected *luar.StructTestPerson)")
+}
