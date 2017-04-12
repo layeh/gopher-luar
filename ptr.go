@@ -65,7 +65,7 @@ func ptrUnm(L *lua.LState) int {
 
 func ptrEq(L *lua.LState) int {
 	ref1, _ := checkPtr(L, 1)
-	ref2, _ := checkPtr(L, 1)
+	ref2, _ := checkPtr(L, 2)
 
 	L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
 	return 1
