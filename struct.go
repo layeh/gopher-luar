@@ -62,3 +62,16 @@ func structNewIndex(L *lua.LState) int {
 	field.Set(val)
 	return 0
 }
+
+func structEq(L *lua.LState) int {
+	ref1, _, isPtr1 := check(L, 1, reflect.Struct)
+	ref2, _, isPtr2 := check(L, 2, reflect.Struct)
+
+	if (isPtr1 && isPtr2) || (!isPtr1 && !isPtr2) {
+		L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
+		return 1
+	}
+
+	L.RaiseError("invalid operation == on mixed struct value and pointer")
+	return 0 // never reaches
+}

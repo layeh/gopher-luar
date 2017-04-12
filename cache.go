@@ -155,7 +155,7 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 
 		mt.RawSetString("__index", L.NewFunction(structIndex))
 		mt.RawSetString("__newindex", L.NewFunction(structNewIndex))
-		mt.RawSetString("__eq", L.NewFunction(eq))
+		mt.RawSetString("__eq", L.NewFunction(structEq))
 	default:
 		mt = L.CreateTable(0, 8)
 		methods = L.CreateTable(0, 0)

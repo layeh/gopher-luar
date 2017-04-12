@@ -285,3 +285,24 @@ func Test_struct_pointerreplacehidden(t *testing.T) {
 		"unable to set pointer value",
 	)
 }
+
+func Test_struct_ptreq(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	p1 := StructTestPerson{
+		Name: "Tim",
+	}
+
+	p2 := StructTestPerson{
+		Name: "Tim",
+	}
+
+	L.SetGlobal("p1", New(L, &p1))
+	L.SetGlobal("p2", New(L, &p2))
+
+	if &p1 == &p2 {
+		t.Fatal("expected structs to be unequal")
+	}
+	testReturn(t, L, `return p1 == p2`, "false")
+}
