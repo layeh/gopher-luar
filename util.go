@@ -34,13 +34,6 @@ func tostring(L *lua.LState) int {
 	return 1
 }
 
-func eq(L *lua.LState) int {
-	ud1 := L.CheckUserData(1).Value
-	ud2 := L.CheckUserData(2).Value
-	L.Push(lua.LBool(reflect.DeepEqual(ud1, ud2)))
-	return 1
-}
-
 func getUnexportedName(name string) string {
 	first, n := utf8.DecodeRuneInString(name)
 	if n == 0 {

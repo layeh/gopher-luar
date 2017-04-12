@@ -88,3 +88,16 @@ func arrayCall(L *lua.LState) int {
 	L.Push(L.NewFunction(fn))
 	return 1
 }
+
+func arrayEq(L *lua.LState) int {
+	ref1, _, isPtr1 := check(L, 1, reflect.Array)
+	ref2, _, isPtr2 := check(L, 2, reflect.Array)
+
+	if (isPtr1 && isPtr2) || (!isPtr1 && !isPtr2) {
+		L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
+		return 1
+	}
+
+	L.RaiseError("invalid operation == on mixed array value and pointer")
+	return 0 // never reaches
+}

@@ -112,7 +112,7 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 		mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
 		mt.RawSetString("__len", L.NewFunction(arrayLen))
 		mt.RawSetString("__call", L.NewFunction(arrayCall))
-		mt.RawSetString("__eq", L.NewFunction(eq))
+		mt.RawSetString("__eq", L.NewFunction(arrayEq))
 	case reflect.Chan:
 		mt = L.CreateTable(0, 9)
 		methods = L.CreateTable(0, 3)
