@@ -217,3 +217,19 @@ func Test_func_luafunccall(t *testing.T) {
 		t.Fatalf("expecting GetTop to return 0, got %d", L.GetTop())
 	}
 }
+
+func testFnHelloPerson(p *StructTestPerson) string {
+	return "Hello, " + p.Name
+}
+
+func Test_func_invalidargtype(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	family := &StructTestFamily{}
+
+	L.SetGlobal("family", New(L, family))
+	L.SetGlobal("getHello", New(L, testFnHelloPerson))
+
+	testError(t, L, `return getHello(family)`, "bad argument #1 to 'layeh.com/gopher-luar.testFnHelloPerson' (expected *luar.StructTestPerson)")
+}

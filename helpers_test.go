@@ -37,6 +37,12 @@ func (p *StructTestPerson) IncreaseAge() {
 	p.Age++
 }
 
+type StructTestFamily struct {
+	Mother   StructTestPerson
+	Father   StructTestPerson
+	Children []StructTestPerson
+}
+
 func testReturn(t *testing.T, L *lua.LState, code string, values ...string) {
 	top := L.GetTop()
 	if err := L.DoString(code); err != nil {
