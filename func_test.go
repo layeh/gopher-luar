@@ -218,18 +218,18 @@ func Test_func_luafunccall(t *testing.T) {
 	}
 }
 
+func testFnHelloPerson(p *StructTestPerson) string {
+	return "Hello, " + p.Name
+}
+
 func Test_func_invalidargtype(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
 	family := &StructTestFamily{}
 
-	fn := func(p *StructTestPerson) string {
-		return "Hello, " + p.Name
-	}
-
 	L.SetGlobal("family", New(L, family))
-	L.SetGlobal("getHello", New(L, fn))
+	L.SetGlobal("getHello", New(L, testFnHelloPerson))
 
-	testError(t, L, `return getHello(family)`, "invalid type received for arg 1 (expected *luar.StructTestPerson)")
+	testError(t, L, `return getHello(family)`, "bad argument #1 to 'layeh.com/gopher-luar.testFnHelloPerson' (expected *luar.StructTestPerson)")
 }

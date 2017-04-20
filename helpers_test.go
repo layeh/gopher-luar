@@ -38,8 +38,8 @@ func (p *StructTestPerson) IncreaseAge() {
 }
 
 type StructTestFamily struct {
-	Mother StructTestPerson
-	Father StructTestPerson
+	Mother   StructTestPerson
+	Father   StructTestPerson
 	Children []StructTestPerson
 }
 

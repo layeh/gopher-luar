@@ -2,6 +2,7 @@ package luar // import "layeh.com/gopher-luar"
 
 import (
 	"reflect"
+	"runtime"
 
 	"github.com/yuin/gopher-lua"
 )
@@ -111,7 +112,8 @@ func funcRegular(L *lua.LState) int {
 		} else {
 			arg = lValueToReflect(L, L.Get(i+1), hint, nil)
 			if !arg.IsValid() {
-				L.RaiseError("invalid type received for arg %d (expected %s)", i+1, hint)
+				L.RaiseError("bad argument #%d to '%s' (expected %s)", i+1,
+					runtime.FuncForPC(ref.Pointer()).Name(), hint)
 			}
 		}
 		args[i] = arg
