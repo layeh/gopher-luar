@@ -57,7 +57,7 @@ func structNewIndex(L *lua.LState) int {
 	}
 	val := lValueToReflect(L, value, field.Type(), nil)
 	if !val.IsValid() {
-		L.ArgError(2, "invalid value")
+		raiseInvalidArg(L, 2, value, field.Type())
 	}
 	field.Set(val)
 	return 0

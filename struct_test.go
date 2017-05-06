@@ -282,7 +282,7 @@ func Test_struct_pointerreplacehidden(t *testing.T) {
 			C = 333
 		}
 		`,
-		"unable to set pointer value",
+		"luar.TestPointerReplaceHidden expected, got table",
 	)
 }
 

@@ -56,9 +56,10 @@ func mapNewIndex(L *lua.LState) int {
 	key := L.CheckAny(2)
 	value := L.CheckAny(3)
 
-	convertedKey := lValueToReflect(L, key, ref.Type().Key(), nil)
+	keyHint := ref.Type().Key()
+	convertedKey := lValueToReflect(L, key, keyHint, nil)
 	if !convertedKey.IsValid() {
-		L.ArgError(2, "invalid map key")
+		raiseInvalidArg(L, 2, key, keyHint)
 	}
 	var convertedValue reflect.Value
 	if value != lua.LNil {

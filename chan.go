@@ -38,17 +38,13 @@ func chanEq(L *lua.LState) int {
 	ref1, _, isPtr1 := check(L, 1, reflect.Chan)
 	ref2, _, isPtr2 := check(L, 2, reflect.Chan)
 
-	if isPtr1 && isPtr2 {
+	if (isPtr1 && isPtr2) || (!isPtr1 && !isPtr2) {
 		L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
 		return 1
 	}
 
-	if isPtr1 || isPtr2 {
-		L.RaiseError("invalid operation == on mixed chan value and pointer")
-	}
-
-	L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
-	return 1
+	L.RaiseError("invalid operation == on mixed chan value and pointer")
+	return 0 // never reaches
 }
 
 // chan methods
@@ -56,10 +52,13 @@ func chanEq(L *lua.LState) int {
 func chanSend(L *lua.LState) int {
 	ref, _, _ := check(L, 1, reflect.Chan)
 	value := L.CheckAny(2)
-	convertedValue := lValueToReflect(L, value, ref.Type().Elem(), nil)
+
+	hint := ref.Type().Elem()
+	convertedValue := lValueToReflect(L, value, hint, nil)
 	if !convertedValue.IsValid() {
-		L.ArgError(2, "invalid value")
+		raiseInvalidArg(L, 2, value, hint)
 	}
+
 	ref.Send(convertedValue)
 	return 0
 }

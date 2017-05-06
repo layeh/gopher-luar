@@ -217,3 +217,15 @@ func Test_func_luafunccall(t *testing.T) {
 		t.Fatalf("expecting GetTop to return 0, got %d", L.GetTop())
 	}
 }
+
+func Test_func_argerror(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	fn := func(v uint8) {
+	}
+
+	L.SetGlobal("fn", New(L, fn))
+
+	testError(t, L, `fn("hello world")`, "bad argument #1 to fn (uint8 expected, got string)")
+}

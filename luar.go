@@ -171,7 +171,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
 			return reflect.Zero(hint)
 		default:
-			L.RaiseError("cannot convert nil to %s", hint.String())
+			panic("")
 		}
 	case *lua.LState:
 		return reflect.ValueOf(converted).Convert(hint)
@@ -188,7 +188,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				value := converted.RawGetInt(i + 1)
 				elemValue := lValueToReflect(L, value, elemType, nil)
 				if !elemValue.IsValid() {
-					L.RaiseError("unable to convert value")
+					panic("")
 				}
 				s.Index(i).Set(elemValue)
 			}
@@ -207,11 +207,11 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 
 				lKey := lValueToReflect(L, key, keyType, nil)
 				if !lKey.IsValid() {
-					L.RaiseError("unable to convert value")
+					panic("")
 				}
 				lValue := lValueToReflect(L, value, elemType, nil)
 				if !lValue.IsValid() {
-					L.RaiseError("unable to convert value")
+					panic("")
 				}
 				s.SetMapIndex(lKey, lValue)
 			})
@@ -238,13 +238,13 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				fieldName := key.String()
 				index := mt.fieldIndex(fieldName)
 				if index == nil {
-					L.RaiseError("invalid field %s", fieldName)
+					panic("")
 				}
 				field := hint.FieldByIndex(index)
 
 				lValue := lValueToReflect(L, value, field.Type, nil)
 				if !lValue.IsValid() {
-					L.RaiseError("unable to convert value")
+					panic("")
 				}
 				t.FieldByIndex(field.Index).Set(lValue)
 			})

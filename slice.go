@@ -53,7 +53,7 @@ func sliceNewIndex(L *lua.LState) int {
 	}
 	val := lValueToReflect(L, value, ref.Type().Elem(), nil)
 	if !val.IsValid() {
-		L.ArgError(3, "invalid value")
+		raiseInvalidArg(L, 3, value, ref.Type().Elem())
 	}
 	ref.Index(index - 1).Set(val)
 	return 0
@@ -119,9 +119,10 @@ func sliceAppend(L *lua.LState) int {
 	hint := ref.Type().Elem()
 	values := make([]reflect.Value, L.GetTop()-1)
 	for i := 2; i <= L.GetTop(); i++ {
-		value := lValueToReflect(L, L.Get(i), hint, nil)
+		val := L.Get(i)
+		value := lValueToReflect(L, val, hint, nil)
 		if !value.IsValid() {
-			L.ArgError(i, "invalid value")
+			raiseInvalidArg(L, i, val, hint)
 		}
 		values[i-2] = value
 	}

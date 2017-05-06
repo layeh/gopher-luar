@@ -47,7 +47,7 @@ func ptrPow(L *lua.LState) int {
 	}
 	value := lValueToReflect(L, val, elem.Type(), nil)
 	if !value.IsValid() {
-		L.RaiseError("unable to set pointer value")
+		raiseInvalidArg(L, 2, val, elem.Type())
 	}
 	elem.Set(value)
 	return 1

@@ -65,7 +65,7 @@ func funcBypass(L *lua.LState) int {
 			receiver = lValueToReflect(L, ud, receiverHint, nil)
 		}
 		if !receiver.IsValid() {
-			L.RaiseError("incorrect receiver type")
+			raiseInvalidArg(L, 1, ud, receiverHint)
 		}
 		args = append(args, receiver)
 		L.Remove(1)
@@ -106,10 +106,18 @@ func funcRegular(L *lua.LState) int {
 		var arg reflect.Value
 		if i == 0 && isPtrReceiverMethod(L) {
 			ud = L.Get(1)
-			arg = lValueToReflect(L, ud, hint, &convertedPtr)
+			v := ud
+			arg = lValueToReflect(L, v, hint, &convertedPtr)
+			if !arg.IsValid() {
+				raiseInvalidArg(L, 1, v, hint)
+			}
 			receiver = arg
 		} else {
-			arg = lValueToReflect(L, L.Get(i+1), hint, nil)
+			v := L.Get(i + 1)
+			arg = lValueToReflect(L, v, hint, nil)
+			if !arg.IsValid() {
+				raiseInvalidArg(L, i+1, v, hint)
+			}
 		}
 		args[i] = arg
 	}
