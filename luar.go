@@ -30,7 +30,7 @@ import (
 //  Complex128      *LUserData       No
 //  Array           *LUserData       Yes
 //  Chan            *LUserData       Yes
-//  Func            *lua.LFunction   No
+//  Func            *LFunction       No
 //  Map             *LUserData       Yes
 //  Ptr             *LUserData       Yes
 //  Slice           *LUserData       Yes
