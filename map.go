@@ -29,17 +29,8 @@ func mapIndex(L *lua.LState) int {
 		}
 	}
 
-	if !isPtr {
-		if lstring, ok := key.(lua.LString); ok {
-			if fn := mt.method(string(lstring)); fn != nil {
-				L.Push(fn)
-				return 1
-			}
-		}
-	}
-
 	if lstring, ok := key.(lua.LString); ok {
-		if fn := mt.ptrMethod(string(lstring)); fn != nil {
+		if fn := mt.method(string(lstring)); fn != nil {
 			L.Push(fn)
 			return 1
 		}
