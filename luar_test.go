@@ -1,6 +1,7 @@
 package luar
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/yuin/gopher-lua"
@@ -184,5 +185,50 @@ func Test_mapconversion(t *testing.T) {
 
 	if _, ok := e.S["b"]; ok {
 		t.Fatal(`e.S["b"] should not be set`)
+	}
+}
+
+type Test_interface_struct struct{}
+
+func Test_interface(t *testing.T) {
+	tbl := []struct {
+		Code     string
+		Expected interface{}
+	}{
+		{
+			`nil`,
+			interface{}(nil),
+		},
+		{
+			`"Hello"`,
+			string("Hello"),
+		},
+		{
+			`true`,
+			bool(true),
+		},
+		{
+			`1`,
+			float64(1),
+		},
+	}
+
+	for _, cur := range tbl {
+		func() {
+			L := lua.NewState()
+			defer L.Close()
+
+			var out interface{} = Test_interface_struct{}
+			L.SetGlobal("out", New(L, &out))
+
+			if err := L.DoString(`_ = out ^ ` + cur.Code); err != nil {
+				t.Fatal(err)
+			}
+
+			if !reflect.DeepEqual(out, cur.Expected) {
+				t.Fatalf("expected conversion of %#v = %#v (%T), got %#v (%T)\n", cur.Code, cur.Expected, cur.Expected, out, out)
+			}
+		}()
+
 	}
 }

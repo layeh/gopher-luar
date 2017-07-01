@@ -120,7 +120,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		if hint.Kind() == reflect.String {
 			val = reflect.ValueOf(converted.String())
 		} else {
-			val = reflect.ValueOf(converted)
+			val = reflect.ValueOf(float64(converted))
 		}
 		return val.Convert(hint)
 	case *lua.LFunction:
