@@ -219,9 +219,15 @@ func Test_interface(t *testing.T) {
 				return nil
 			}),
 		},
+		{
+			Code: `{hello = "world", [123] = 321}`,
+			Expected: map[interface{}]interface{}{
+				string("hello"): string("world"),
+				float64(123):    float64(321),
+			},
+		},
 		// TODO: LChannel
 		// TODO: *LState
-		// TODO: *LTable
 		// TODO: *Userdata
 	}
 

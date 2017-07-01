@@ -172,7 +172,6 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 		return val.Convert(hint), nil
 	case *lua.LFunction:
-
 		switch {
 		case hint == refTypeEmptyIface:
 			inOut := []reflect.Type{
@@ -262,6 +261,10 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 		return val.Convert(hint), nil
 	case *lua.LTable:
+		if hint == refTypeEmptyIface {
+			hint = reflect.MapOf(refTypeEmptyIface, refTypeEmptyIface)
+		}
+
 		switch {
 		case hint.Kind() == reflect.Slice:
 			elemType := hint.Elem()
