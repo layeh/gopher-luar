@@ -172,7 +172,14 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 		return val.Convert(hint), nil
 	case *lua.LFunction:
-		if hint.Kind() != reflect.Func {
+
+		switch {
+		case hint == refTypeEmptyIface:
+			inOut := []reflect.Type{
+				reflect.SliceOf(refTypeEmptyIface),
+			}
+			hint = reflect.FuncOf(inOut, inOut, true)
+		case hint.Kind() != reflect.Func:
 			return reflect.Value{}, conversionError{
 				Lua:  v,
 				Hint: hint,

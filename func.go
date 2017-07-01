@@ -18,6 +18,7 @@ var (
 	refTypeLuaLValueSlice reflect.Type
 	refTypeLuaLValue      reflect.Type
 	refTypeInt            reflect.Type
+	refTypeEmptyIface     reflect.Type
 )
 
 func init() {
@@ -25,6 +26,7 @@ func init() {
 	refTypeLuaLValueSlice = reflect.TypeOf([]lua.LValue{})
 	refTypeLuaLValue = reflect.TypeOf((*lua.LValue)(nil)).Elem()
 	refTypeInt = reflect.TypeOf(int(0))
+	refTypeEmptyIface = reflect.TypeOf((*interface{})(nil)).Elem()
 }
 
 func getFunc(L *lua.LState) (ref reflect.Value, refType reflect.Type) {

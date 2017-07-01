@@ -193,27 +193,33 @@ type Test_interface_struct struct{}
 
 func Test_interface(t *testing.T) {
 	tbl := []struct {
-		Code     string
-		Expected interface{}
+		Code         string
+		Expected     interface{}
+		ExpectedType reflect.Type
 	}{
 		{
-			`nil`,
-			interface{}(nil),
+			Code:     `nil`,
+			Expected: interface{}(nil),
 		},
 		{
-			`"Hello"`,
-			string("Hello"),
+			Code:     `"Hello"`,
+			Expected: string("Hello"),
 		},
 		{
-			`true`,
-			bool(true),
+			Code:     `true`,
+			Expected: bool(true),
 		},
 		{
-			`1`,
-			float64(1),
+			Code:     `1`,
+			Expected: float64(1),
+		},
+		{
+			Code: `function(a, b) end`,
+			ExpectedType: reflect.TypeOf(func(...interface{}) []interface{} {
+				return nil
+			}),
 		},
 		// TODO: LChannel
-		// TODO: LFunction
 		// TODO: *LState
 		// TODO: *LTable
 		// TODO: *Userdata
@@ -231,7 +237,11 @@ func Test_interface(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if !reflect.DeepEqual(out, cur.Expected) {
+			if cur.ExpectedType != nil {
+				if reflect.TypeOf(out) != cur.ExpectedType {
+					t.Fatalf("expected conversion of %#v = type %s, got type %s\n", cur.Code, cur.ExpectedType, reflect.TypeOf(out))
+				}
+			} else if !reflect.DeepEqual(out, cur.Expected) {
 				t.Fatalf("expected conversion of %#v = %#v (%T), got %#v (%T)\n", cur.Code, cur.Expected, cur.Expected, out, out)
 			}
 		}()
