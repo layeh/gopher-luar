@@ -283,10 +283,6 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				if key == lua.LNil {
 					break
 				}
-				if _, ok := key.(lua.LString); !ok {
-					// TODO: is this correct?
-					continue
-				}
 
 				lKey, err := lValueToReflect(L, key, keyType, nil)
 				if err != nil {

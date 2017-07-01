@@ -162,6 +162,7 @@ func Test_mapconversion(t *testing.T) {
 
 	valid := true
 	expecting := map[string]string{
+		"1": "33",
 		"a": "123",
 		"c": "hello",
 		"d": "false",
