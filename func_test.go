@@ -227,5 +227,5 @@ func Test_func_argerror(t *testing.T) {
 
 	L.SetGlobal("fn", New(L, fn))
 
-	testError(t, L, `fn("hello world")`, "bad argument #1 to fn (could not convert string to uint8)")
+	testError(t, L, `fn("hello world")`, "bad argument #1 to fn (cannot use hello world (type lua.LString) as type uint8)")
 }

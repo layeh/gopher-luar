@@ -1,6 +1,7 @@
 package luar // import "layeh.com/gopher-luar"
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
@@ -97,14 +98,23 @@ type conversionError struct {
 }
 
 func (c conversionError) Error() string {
-	luaType := c.Lua.Type().String()
+	if _, isNil := c.Lua.(*lua.LNilType); isNil {
+		return fmt.Sprintf("cannot use nil as type %s", c.Hint)
+	}
+
+	var val interface{}
+
 	if userData, ok := c.Lua.(*lua.LUserData); ok {
 		if reflectValue, ok := userData.Value.(reflect.Value); ok {
-			luaType += " (" + reflectValue.Type().String() + ")"
+			val = reflectValue.Interface()
+		} else {
+			val = userData.Value
 		}
+	} else {
+		val = c.Lua
 	}
-	// TODO: cannot use "$value" (type $type) as type $hint
-	return "could not convert " + luaType + " to " + c.Hint.String()
+
+	return fmt.Sprintf("cannot use %v (type %T) as type %s", val, val, c.Hint)
 }
 
 type structFieldError struct {

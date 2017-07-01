@@ -37,7 +37,7 @@ func Test_array(t *testing.T) {
 	testReturn(t, L, `return #arr, arr[1]`, "1", "Test")
 	testReturn(t, L, `return arr:Get()`, "Test")
 
-	testError(t, L, `e.V[1] = nil`, "could not convert nil to string")
+	testError(t, L, `e.V[1] = nil`, "cannot use nil as type string")
 }
 
 func Test_array_iterator(t *testing.T) {
