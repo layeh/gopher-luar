@@ -211,6 +211,11 @@ func Test_interface(t *testing.T) {
 			`1`,
 			float64(1),
 		},
+		// TODO: LChannel
+		// TODO: LFunction
+		// TODO: *LState
+		// TODO: *LTable
+		// TODO: *Userdata
 	}
 
 	for _, cur := range tbl {

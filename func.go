@@ -59,13 +59,14 @@ func funcBypass(L *lua.LState) int {
 	if refType.NumIn() == 2 {
 		receiverHint := refType.In(0)
 		ud = L.Get(1)
+		var err error
 		if isPtrReceiverMethod(L) {
-			receiver = lValueToReflect(L, ud, receiverHint, &convertedPtr)
+			receiver, err = lValueToReflect(L, ud, receiverHint, &convertedPtr)
 		} else {
-			receiver = lValueToReflect(L, ud, receiverHint, nil)
+			receiver, err = lValueToReflect(L, ud, receiverHint, nil)
 		}
-		if !receiver.IsValid() {
-			raiseInvalidArg(L, 1, ud, receiverHint)
+		if err != nil {
+			L.ArgError(1, err.Error())
 		}
 		args = append(args, receiver)
 		L.Remove(1)
@@ -104,19 +105,20 @@ func funcRegular(L *lua.LState) int {
 			hint = refType.In(i)
 		}
 		var arg reflect.Value
+		var err error
 		if i == 0 && isPtrReceiverMethod(L) {
 			ud = L.Get(1)
 			v := ud
-			arg = lValueToReflect(L, v, hint, &convertedPtr)
-			if !arg.IsValid() {
-				raiseInvalidArg(L, 1, v, hint)
+			arg, err = lValueToReflect(L, v, hint, &convertedPtr)
+			if err != nil {
+				L.ArgError(1, err.Error())
 			}
 			receiver = arg
 		} else {
 			v := L.Get(i + 1)
-			arg = lValueToReflect(L, v, hint, nil)
-			if !arg.IsValid() {
-				raiseInvalidArg(L, i+1, v, hint)
+			arg, err = lValueToReflect(L, v, hint, nil)
+			if err != nil {
+				L.ArgError(i+1, err.Error())
 			}
 		}
 		args[i] = arg

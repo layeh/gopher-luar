@@ -55,9 +55,9 @@ func arrayNewIndex(L *lua.LState) int {
 		L.ArgError(2, "index out of range")
 	}
 	hint := ref.Type().Elem()
-	val := lValueToReflect(L, value, hint, nil)
-	if !val.IsValid() {
-		raiseInvalidArg(L, 3, value, hint)
+	val, err := lValueToReflect(L, value, hint, nil)
+	if err != nil {
+		L.ArgError(3, err.Error())
 	}
 	ref.Index(index - 1).Set(val)
 	return 0

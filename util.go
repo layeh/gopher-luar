@@ -41,14 +41,3 @@ func getUnexportedName(name string) string {
 	}
 	return string(unicode.ToLower(first)) + name[n:]
 }
-
-func raiseInvalidArg(L *lua.LState, arg int, input lua.LValue, hint reflect.Type) {
-	receivedTypeName := input.Type().String()
-	if udArg, ok := input.(*lua.LUserData); ok {
-		refArg, ok := udArg.Value.(reflect.Value)
-		if ok {
-			receivedTypeName = refArg.Type().String()
-		}
-	}
-	L.ArgError(arg, hint.String()+" expected, got "+receivedTypeName)
-}

@@ -282,7 +282,7 @@ func Test_struct_pointerreplacehidden(t *testing.T) {
 			C = 333
 		}
 		`,
-		"luar.TestPointerReplaceHidden expected, got table",
+		`type luar.TestPointerReplaceHidden has not field C`,
 	)
 }
 

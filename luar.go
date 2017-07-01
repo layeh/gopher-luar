@@ -91,15 +91,34 @@ func NewType(L *lua.LState, value interface{}) lua.LValue {
 	return ud
 }
 
-func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) (r reflect.Value) {
-	defer func() {
-		if recover() != nil {
-			r = reflect.Value{}
-		}
-	}()
+type conversionError struct {
+	Lua  lua.LValue
+	Hint reflect.Type
+}
 
+func (c conversionError) Error() string {
+	luaType := c.Lua.Type().String()
+	if userData, ok := c.Lua.(*lua.LUserData); ok {
+		if reflectValue, ok := userData.Value.(reflect.Value); ok {
+			luaType += " (" + reflectValue.Type().String() + ")"
+		}
+	}
+	// TODO: cannot use "$value" (type $type) as type $hint
+	return "could not convert " + luaType + " to " + c.Hint.String()
+}
+
+type structFieldError struct {
+	Field string
+	Type  reflect.Type
+}
+
+func (s structFieldError) Error() string {
+	return `type ` + s.Type.String() + ` has not field ` + s.Field
+}
+
+func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) (reflect.Value, error) {
 	if hint.Implements(refTypeLuaLValue) {
-		return reflect.ValueOf(v)
+		return reflect.ValueOf(v), nil
 	}
 
 	isPtr := false
@@ -112,9 +131,22 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		} else {
 			val = reflect.ValueOf(bool(converted))
 		}
-		return val.Convert(hint)
+		if !val.Type().ConvertibleTo(hint) {
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
+		}
+		return val.Convert(hint), nil
 	case lua.LChannel:
-		return reflect.ValueOf(converted).Convert(hint)
+		val := reflect.ValueOf(converted)
+		if !val.Type().ConvertibleTo(hint) {
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
+		}
+		return val.Convert(hint), nil
 	case lua.LNumber:
 		var val reflect.Value
 		if hint.Kind() == reflect.String {
@@ -122,8 +154,21 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		} else {
 			val = reflect.ValueOf(float64(converted))
 		}
-		return val.Convert(hint)
+		if !val.Type().ConvertibleTo(hint) {
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
+		}
+		return val.Convert(hint), nil
 	case *lua.LFunction:
+		if hint.Kind() != reflect.Func {
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
+		}
+
 		fn := func(args []reflect.Value) []reflect.Value {
 			L.Push(converted)
 
@@ -160,23 +205,45 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 
 			for i := 0; i < hint.NumOut(); i++ {
 				outHint := hint.Out(i)
-				ret[i] = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint, nil)
+				var err error
+				ret[i], err = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint, nil)
+				if err != nil {
+					// outside of the Lua VM
+					panic(err)
+				}
 			}
 
 			return ret
 		}
-		return reflect.MakeFunc(hint, fn)
+		return reflect.MakeFunc(hint, fn), nil
 	case *lua.LNilType:
 		switch hint.Kind() {
 		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
-			return reflect.Zero(hint)
+			return reflect.Zero(hint), nil
 		default:
-			panic("")
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
 		}
 	case *lua.LState:
-		return reflect.ValueOf(converted).Convert(hint)
+		val := reflect.ValueOf(converted)
+		if !val.Type().ConvertibleTo(hint) {
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
+		}
+		return val.Convert(hint), nil
 	case lua.LString:
-		return reflect.ValueOf(string(converted)).Convert(hint)
+		val := reflect.ValueOf(string(converted))
+		if !val.Type().ConvertibleTo(hint) {
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
+		}
+		return val.Convert(hint), nil
 	case *lua.LTable:
 		switch {
 		case hint.Kind() == reflect.Slice:
@@ -186,37 +253,43 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 
 			for i := 0; i < length; i++ {
 				value := converted.RawGetInt(i + 1)
-				elemValue := lValueToReflect(L, value, elemType, nil)
-				if !elemValue.IsValid() {
-					panic("")
+				elemValue, err := lValueToReflect(L, value, elemType, nil)
+				if err != nil {
+					return reflect.Value{}, err
 				}
 				s.Index(i).Set(elemValue)
 			}
 
-			return s
+			return s, nil
 
 		case hint.Kind() == reflect.Map:
 			keyType := hint.Key()
 			elemType := hint.Elem()
 			s := reflect.MakeMap(hint)
 
-			converted.ForEach(func(key, value lua.LValue) {
+			for key := lua.LNil; ; {
+				var value lua.LValue
+				key, value = converted.Next(key)
+				if key == lua.LNil {
+					break
+				}
 				if _, ok := key.(lua.LString); !ok {
-					return
+					// TODO: is this correct?
+					continue
 				}
 
-				lKey := lValueToReflect(L, key, keyType, nil)
-				if !lKey.IsValid() {
-					panic("")
+				lKey, err := lValueToReflect(L, key, keyType, nil)
+				if err != nil {
+					return reflect.Value{}, err
 				}
-				lValue := lValueToReflect(L, value, elemType, nil)
-				if !lValue.IsValid() {
-					panic("")
+				lValue, err := lValueToReflect(L, value, elemType, nil)
+				if err != nil {
+					return reflect.Value{}, err
 				}
 				s.SetMapIndex(lKey, lValue)
-			})
+			}
 
-			return s
+			return s, nil
 
 		case hint.Kind() == reflect.Ptr && hint.Elem().Kind() == reflect.Struct:
 			hint = hint.Elem()
@@ -230,33 +303,44 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				LTable: getMetatable(L, hint),
 			}
 
-			converted.ForEach(func(key, value lua.LValue) {
+			for key := lua.LNil; ; {
+				var value lua.LValue
+				key, value = converted.Next(key)
+				if key == lua.LNil {
+					break
+				}
 				if _, ok := key.(lua.LString); !ok {
-					return
+					continue
 				}
 
 				fieldName := key.String()
 				index := mt.fieldIndex(fieldName)
 				if index == nil {
-					panic("")
+					return reflect.Value{}, structFieldError{
+						Type:  hint,
+						Field: fieldName,
+					}
 				}
 				field := hint.FieldByIndex(index)
 
-				lValue := lValueToReflect(L, value, field.Type, nil)
-				if !lValue.IsValid() {
-					panic("")
+				lValue, err := lValueToReflect(L, value, field.Type, nil)
+				if err != nil {
+					return reflect.Value{}, nil
 				}
 				t.FieldByIndex(field.Index).Set(lValue)
-			})
-
-			if isPtr {
-				return s
 			}
 
-			return t
+			if isPtr {
+				return s, nil
+			}
+
+			return t, nil
 
 		default:
-			return reflect.ValueOf(converted).Convert(hint)
+			return reflect.Value{}, conversionError{
+				Lua:  v,
+				Hint: hint,
+			}
 		}
 	case *lua.LUserData:
 		val := reflect.ValueOf(converted.Value)
@@ -271,7 +355,8 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				*tryConvertPtr = false
 			}
 		}
-		return val
+		return val, nil
+	default:
+		panic("never reaches")
 	}
-	panic("never reaches")
 }

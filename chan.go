@@ -54,9 +54,9 @@ func chanSend(L *lua.LState) int {
 	value := L.CheckAny(2)
 
 	hint := ref.Type().Elem()
-	convertedValue := lValueToReflect(L, value, hint, nil)
-	if !convertedValue.IsValid() {
-		raiseInvalidArg(L, 2, value, hint)
+	convertedValue, err := lValueToReflect(L, value, hint, nil)
+	if err != nil {
+		L.ArgError(2, err.Error())
 	}
 
 	ref.Send(convertedValue)

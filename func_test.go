@@ -227,5 +227,5 @@ func Test_func_argerror(t *testing.T) {
 
 	L.SetGlobal("fn", New(L, fn))
 
-	testError(t, L, `fn("hello world")`, "bad argument #1 to fn (uint8 expected, got string)")
+	testError(t, L, `fn("hello world")`, "bad argument #1 to fn (could not convert string to uint8)")
 }

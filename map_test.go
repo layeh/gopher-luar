@@ -92,5 +92,5 @@ func Test_map_methods(t *testing.T) {
 	testReturn(t, L, `return users[1]`, "Tim")
 	testReturn(t, L, `return users[3]`, "nil")
 	testReturn(t, L, `return users:Find("Tim")`, "1")
-	//testReturn(t, L, `return users:Find("Steve")`, "0")
+	testReturn(t, L, `return users:Find("Steve")`, "0")
 }

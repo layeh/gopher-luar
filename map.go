@@ -20,8 +20,8 @@ func mapIndex(L *lua.LState) int {
 		return 0
 	}
 
-	convertedKey := lValueToReflect(L, key, ref.Type().Key(), nil)
-	if convertedKey.IsValid() {
+	convertedKey, err := lValueToReflect(L, key, ref.Type().Key(), nil)
+	if err == nil {
 		item := ref.MapIndex(convertedKey)
 		if item.IsValid() {
 			L.Push(New(L, item.Interface()))
@@ -48,15 +48,15 @@ func mapNewIndex(L *lua.LState) int {
 	value := L.CheckAny(3)
 
 	keyHint := ref.Type().Key()
-	convertedKey := lValueToReflect(L, key, keyHint, nil)
-	if !convertedKey.IsValid() {
-		raiseInvalidArg(L, 2, key, keyHint)
+	convertedKey, err := lValueToReflect(L, key, keyHint, nil)
+	if err != nil {
+		L.ArgError(2, err.Error())
 	}
 	var convertedValue reflect.Value
 	if value != lua.LNil {
-		convertedValue = lValueToReflect(L, value, ref.Type().Elem(), nil)
-		if !convertedValue.IsValid() {
-			L.ArgError(3, "invalid map value")
+		convertedValue, err = lValueToReflect(L, value, ref.Type().Elem(), nil)
+		if err != nil {
+			L.ArgError(3, err.Error())
 		}
 	}
 	ref.SetMapIndex(convertedKey, convertedValue)
