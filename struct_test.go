@@ -282,7 +282,7 @@ func Test_struct_pointerreplacehidden(t *testing.T) {
 			C = 333
 		}
 		`,
-		`type luar.TestPointerReplaceHidden has not field C`,
+		`type luar.TestPointerReplaceHidden has no field C`,
 	)
 }
 

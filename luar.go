@@ -123,7 +123,7 @@ type structFieldError struct {
 }
 
 func (s structFieldError) Error() string {
-	return `type ` + s.Type.String() + ` has not field ` + s.Field
+	return `type ` + s.Type.String() + ` has no field ` + s.Field
 }
 
 func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) (reflect.Value, error) {
