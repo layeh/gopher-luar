@@ -186,7 +186,8 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 
 		fn := func(args []reflect.Value) []reflect.Value {
-			L.Push(converted)
+			thread, _ := L.NewThread()
+			thread.Push(converted)
 
 			varadicCount := 0
 
@@ -197,10 +198,10 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 					for j := 0; j < varadicCount; j++ {
 						arg := arg.Index(j)
 						if !arg.CanInterface() {
-							L.Pop(i + j + 1)
-							L.RaiseError("unable to Interface argument %d", i+j)
+							thread.Pop(i + j + 1)
+							panic(fmt.Errorf("unable to Interface argument %d", i+j))
 						}
-						L.Push(New(L, arg.Interface()))
+						thread.Push(New(thread, arg.Interface()))
 					}
 					// recount for varadic slice that appeared
 					varadicCount--
@@ -208,23 +209,22 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				}
 
 				if !arg.CanInterface() {
-					L.Pop(i + 1)
-					L.RaiseError("unable to Interface argument %d", i)
+					thread.Pop(i + 1)
+					panic(fmt.Errorf("unable to Interface argument %d", i))
 				}
-				L.Push(New(L, arg.Interface()))
+				thread.Push(New(thread, arg.Interface()))
 			}
 
-			L.Call(len(args)+varadicCount, hint.NumOut())
-			defer L.Pop(hint.NumOut())
+			thread.Call(len(args)+varadicCount, hint.NumOut())
+			defer thread.Pop(hint.NumOut())
 
 			ret := make([]reflect.Value, hint.NumOut())
 
 			for i := 0; i < hint.NumOut(); i++ {
 				outHint := hint.Out(i)
 				var err error
-				ret[i], err = lValueToReflect(L, L.Get(-hint.NumOut()+i), outHint, nil)
+				ret[i], err = lValueToReflect(thread, thread.Get(-hint.NumOut()+i), outHint, nil)
 				if err != nil {
-					// outside of the Lua VM
 					panic(err)
 				}
 			}
