@@ -189,11 +189,26 @@ func Test_mapconversion(t *testing.T) {
 	}
 }
 
+func Test_udconversion(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	ud := L.NewUserData()
+	ud.Value = "hello world"
+	L.SetGlobal("ud", ud)
+
+	var out int
+	L.SetGlobal("out", New(L, &out))
+
+	testError(t, L, `_ = out ^ ud`, "cannot use hello world (type string) as type int")
+}
+
 type Test_interface_struct struct{}
 
 func Test_interface(t *testing.T) {
 	tbl := []struct {
 		Code         string
+		Var          func(L *lua.LState) lua.LValue
 		Expected     interface{}
 		ExpectedType reflect.Type
 	}{
@@ -226,9 +241,17 @@ func Test_interface(t *testing.T) {
 				float64(123):    float64(321),
 			},
 		},
+		{
+			Code: `var`,
+			Var: func(L *lua.LState) lua.LValue {
+				ud := L.NewUserData()
+				ud.Value = "Hello World"
+				return ud
+			},
+			Expected: string("Hello World"),
+		},
 		// TODO: LChannel
 		// TODO: *LState
-		// TODO: *Userdata
 	}
 
 	for _, cur := range tbl {
@@ -238,6 +261,10 @@ func Test_interface(t *testing.T) {
 
 			var out interface{} = Test_interface_struct{}
 			L.SetGlobal("out", New(L, &out))
+
+			if cur.Var != nil {
+				L.SetGlobal("var", cur.Var(L))
+			}
 
 			if err := L.DoString(`_ = out ^ ` + cur.Code); err != nil {
 				t.Fatal(err)

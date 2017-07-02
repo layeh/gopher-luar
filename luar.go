@@ -366,6 +366,12 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			val = newVal
 			*tryConvertPtr = true
 		} else {
+			if !val.Type().ConvertibleTo(hint) {
+				return reflect.Value{}, conversionError{
+					Lua:  converted,
+					Hint: hint,
+				}
+			}
 			val = val.Convert(hint)
 			if tryConvertPtr != nil {
 				*tryConvertPtr = false
