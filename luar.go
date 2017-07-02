@@ -182,7 +182,10 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 
 		fn := func(args []reflect.Value) []reflect.Value {
-			thread, _ := L.NewThread()
+			thread, cancelFunc := L.NewThread()
+			if cancelFunc != nil {
+				defer cancelFunc()
+			}
 			thread.Push(converted)
 
 			varadicCount := 0
