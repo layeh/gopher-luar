@@ -105,11 +105,7 @@ func (c conversionError) Error() string {
 	var val interface{}
 
 	if userData, ok := c.Lua.(*lua.LUserData); ok {
-		if reflectValue, ok := userData.Value.(reflect.Value); ok {
-			val = reflectValue.Interface()
-		} else {
-			val = userData.Value
-		}
+		val = userData.Value
 	} else {
 		val = c.Lua
 	}
