@@ -229,3 +229,23 @@ func Test_func_argerror(t *testing.T) {
 
 	testError(t, L, `fn("hello world")`, "bad argument #1 to fn (cannot use hello world (type lua.LString) as type uint8)")
 }
+
+func Test_func_conversionstack(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	var fn interface{}
+	L.SetGlobal("fn", New(L, &fn))
+	if err := L.DoString(`_ = fn ^ function() return "hello", "world", 123 end`); err != nil {
+		t.Fatal(err)
+	}
+
+	callable, ok := fn.(func(...interface{}) []interface{})
+	if !ok {
+		t.Fatal("invalid function signature")
+	}
+	values := callable()
+	if len(values) != 3 {
+		t.Fatalf("expected return length %d, got %d", 3, len(values))
+	}
+}
