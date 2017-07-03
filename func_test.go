@@ -1,6 +1,7 @@
 package luar
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/yuin/gopher-lua"
@@ -236,7 +237,7 @@ func Test_func_conversionstack(t *testing.T) {
 
 	var fn interface{}
 	L.SetGlobal("fn", New(L, &fn))
-	if err := L.DoString(`_ = fn ^ function() return "hello", "world", 123 end`); err != nil {
+	if err := L.DoString(`_ = fn ^ function() return "hello", true, 123 end`); err != nil {
 		t.Fatal(err)
 	}
 
@@ -245,7 +246,14 @@ func Test_func_conversionstack(t *testing.T) {
 		t.Fatal("invalid function signature")
 	}
 	values := callable()
-	if len(values) != 3 {
-		t.Fatalf("expected return length %d, got %d", 3, len(values))
+
+	expected := []interface{}{
+		string("hello"),
+		bool(true),
+		float64(123),
+	}
+
+	if !reflect.DeepEqual(expected, values) {
+		t.Fatalf("expected return %#v, got %#v", expected, values)
 	}
 }
