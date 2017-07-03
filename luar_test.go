@@ -281,3 +281,15 @@ func Test_interface(t *testing.T) {
 
 	}
 }
+
+func Test_recursivetable(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	var x interface{}
+	L.SetGlobal("x", New(L, &x))
+
+	if err := L.DoString(`local tbl = {}; tbl.inner = tbl; _ = x ^ tbl`); err != nil {
+		t.Fatal(err)
+	}
+}

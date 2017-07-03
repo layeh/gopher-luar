@@ -123,6 +123,11 @@ func (s structFieldError) Error() string {
 }
 
 func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertPtr *bool) (reflect.Value, error) {
+	visited := make(map[*lua.LTable]reflect.Value)
+	return lValueToReflectInner(L, v, hint, visited, tryConvertPtr)
+}
+
+func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visited map[*lua.LTable]reflect.Value, tryConvertPtr *bool) (reflect.Value, error) {
 	if hint.Implements(refTypeLuaLValue) {
 		return reflect.ValueOf(v), nil
 	}
@@ -223,7 +228,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			for i := 0; i < hint.NumOut(); i++ {
 				outHint := hint.Out(i)
 				var err error
-				ret[i], err = lValueToReflect(thread, thread.Get(-hint.NumOut()+i), outHint, nil)
+				ret[i], err = lValueToReflectInner(thread, thread.Get(-hint.NumOut()+i), outHint, visited, nil)
 				if err != nil {
 					panic(err)
 				}
@@ -261,6 +266,10 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 		}
 		return val.Convert(hint), nil
 	case *lua.LTable:
+		if existing := visited[converted]; existing.IsValid() {
+			return existing, nil
+		}
+
 		if hint == refTypeEmptyIface {
 			hint = reflect.MapOf(refTypeEmptyIface, refTypeEmptyIface)
 		}
@@ -270,10 +279,11 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			elemType := hint.Elem()
 			length := converted.Len()
 			s := reflect.MakeSlice(hint, length, length)
+			visited[converted] = s
 
 			for i := 0; i < length; i++ {
 				value := converted.RawGetInt(i + 1)
-				elemValue, err := lValueToReflect(L, value, elemType, nil)
+				elemValue, err := lValueToReflectInner(L, value, elemType, visited, nil)
 				if err != nil {
 					return reflect.Value{}, err
 				}
@@ -286,6 +296,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			keyType := hint.Key()
 			elemType := hint.Elem()
 			s := reflect.MakeMap(hint)
+			visited[converted] = s
 
 			for key := lua.LNil; ; {
 				var value lua.LValue
@@ -294,11 +305,11 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 					break
 				}
 
-				lKey, err := lValueToReflect(L, key, keyType, nil)
+				lKey, err := lValueToReflectInner(L, key, keyType, visited, nil)
 				if err != nil {
 					return reflect.Value{}, err
 				}
-				lValue, err := lValueToReflect(L, value, elemType, nil)
+				lValue, err := lValueToReflectInner(L, value, elemType, visited, nil)
 				if err != nil {
 					return reflect.Value{}, err
 				}
@@ -313,6 +324,8 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 			fallthrough
 		case hint.Kind() == reflect.Struct:
 			s := reflect.New(hint)
+			visited[converted] = s
+
 			t := s.Elem()
 
 			mt := &Metatable{
@@ -339,7 +352,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 				}
 				field := hint.FieldByIndex(index)
 
-				lValue, err := lValueToReflect(L, value, field.Type, nil)
+				lValue, err := lValueToReflectInner(L, value, field.Type, visited, nil)
 				if err != nil {
 					return reflect.Value{}, nil
 				}
