@@ -183,6 +183,7 @@ func lValueToReflect(L *lua.LState, v lua.LValue, hint reflect.Type, tryConvertP
 
 		fn := func(args []reflect.Value) []reflect.Value {
 			thread, cancelFunc := L.NewThread()
+			defer thread.Close()
 			if cancelFunc != nil {
 				defer cancelFunc()
 			}
