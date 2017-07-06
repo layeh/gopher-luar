@@ -2,6 +2,7 @@ package luar
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/yuin/gopher-lua"
@@ -288,5 +289,24 @@ func Test_recursivetable(t *testing.T) {
 
 	if err := L.DoString(`local tbl = {}; tbl.inner = tbl; _ = x ^ tbl`); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func Test_tostringfallback(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	type Struct struct {
+	}
+	var out string
+
+	L.SetGlobal("struct", New(L, &Struct{}))
+	L.SetGlobal("out", New(L, &out))
+	if err := L.DoString(`_ = out ^ tostring(struct)`); err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.HasPrefix(out, "userdata: ") {
+		t.Fatalf("invalid tostring %#v\n", out)
 	}
 }

@@ -29,7 +29,7 @@ func tostring(L *lua.LState) int {
 	if stringer, ok := value.(fmt.Stringer); ok {
 		L.Push(lua.LString(stringer.String()))
 	} else {
-		L.Push(lua.LString(fmt.Sprintf("userdata (luar): %p", ud)))
+		L.Push(lua.LString(ud.String()))
 	}
 	return 1
 }
