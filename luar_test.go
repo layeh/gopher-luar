@@ -127,11 +127,11 @@ func Test_sliceconversion(t *testing.T) {
 	e := &TestSliceConversion{}
 	L.SetGlobal("e", New(L, e))
 
-	testReturn(t, L, `e.S = {"a", "b", "", 3, true, "c"}`)
+	testReturn(t, L, `e.S = {"a", "b", "", "c"}`)
 
 	valid := true
-	expecting := []string{"a", "b", "", "3", "true", "c"}
-	if len(e.S) != 6 {
+	expecting := []string{"a", "b", "", "c"}
+	if len(e.S) != len(expecting) {
 		valid = false
 	} else {
 		for i, item := range e.S {
@@ -158,14 +158,11 @@ func Test_mapconversion(t *testing.T) {
 	e := &TestMapConversion{}
 	L.SetGlobal("e", New(L, e))
 
-	testReturn(t, L, `e.S = {33, a = 123, b = nil, c = "hello", d = false}`)
+	testReturn(t, L, `e.S = {b = nil, c = "hello"}`)
 
 	valid := true
 	expecting := map[string]string{
-		"1": "33",
-		"a": "123",
 		"c": "hello",
-		"d": "false",
 	}
 
 	if len(e.S) != len(expecting) {

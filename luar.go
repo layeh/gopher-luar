@@ -136,12 +136,7 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 
 	switch converted := v.(type) {
 	case lua.LBool:
-		var val reflect.Value
-		if hint.Kind() == reflect.String {
-			val = reflect.ValueOf(converted.String())
-		} else {
-			val = reflect.ValueOf(bool(converted))
-		}
+		val := reflect.ValueOf(bool(converted))
 		if !val.Type().ConvertibleTo(hint) {
 			return reflect.Value{}, conversionError{
 				Lua:  v,
@@ -159,12 +154,7 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 		}
 		return val.Convert(hint), nil
 	case lua.LNumber:
-		var val reflect.Value
-		if hint.Kind() == reflect.String {
-			val = reflect.ValueOf(converted.String())
-		} else {
-			val = reflect.ValueOf(float64(converted))
-		}
+		val := reflect.ValueOf(float64(converted))
 		if !val.Type().ConvertibleTo(hint) {
 			return reflect.Value{}, conversionError{
 				Lua:  v,
