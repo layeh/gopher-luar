@@ -105,29 +105,17 @@ func sliceEq(L *lua.LState) int {
 	return 0 // never reaches
 }
 
-// slice methods
-
-func sliceCapacity(L *lua.LState) int {
+func sliceAdd(L *lua.LState) int {
 	ref, _, _ := check(L, 1, reflect.Slice)
-	L.Push(lua.LNumber(ref.Cap()))
-	return 1
-}
-
-func sliceAppend(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Slice)
+	item := L.CheckAny(2)
 
 	hint := ref.Type().Elem()
-	values := make([]reflect.Value, L.GetTop()-1)
-	for i := 2; i <= L.GetTop(); i++ {
-		val := L.Get(i)
-		value, err := lValueToReflect(L, val, hint, nil)
-		if err != nil {
-			L.ArgError(i, err.Error())
-		}
-		values[i-2] = value
+	value, err := lValueToReflect(L, item, hint, nil)
+	if err != nil {
+		L.ArgError(2, err.Error())
 	}
 
-	newSlice := reflect.Append(ref, values...)
-	L.Push(New(L, newSlice.Interface()))
+	ref = reflect.Append(ref, value)
+	L.Push(New(L, ref.Interface()))
 	return 1
 }

@@ -90,10 +90,7 @@
 // Slices
 //
 // Like maps, slices be indexed, be modified, and have their length
-// queried. Additionally, the following methods are defined for slices:
-//  append(items...):   Appends the items to the slice. Returns a slice with
-//                      the items appended.
-//  capacity():         Returns the slice capacity.
+// queried. Items can be appended to a slice using the add (+) operator.
 //
 // For consistency with other Lua code, slices use one-based indexing.
 //
@@ -101,7 +98,7 @@
 //  letters := []string{"a", "e", "i"}
 //  L.SetGlobal("letters", New(L, letters))
 //  ---
-//  letters = letters:append("o", "u")
+//  letters = letters + "o" + "u"
 //
 // Like maps, calling a slice (e.g. slice()) returns an iterator over its
 // values.
