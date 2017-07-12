@@ -53,24 +53,6 @@ func Test_func_structarg(t *testing.T) {
 	testReturn(t, L, `return getHello(person)`, "Hello, Tim")
 }
 
-func Test_func_unpacking(t *testing.T) {
-	L := lua.NewState()
-	defer L.Close()
-
-	fn := func(name string, count int) []lua.LValue {
-		s := make([]lua.LValue, count+1)
-		s[0] = lua.LNumber(count)
-		for i := 1; i < count+1; i++ {
-			s[i] = lua.LString(name)
-		}
-		return s
-	}
-
-	L.SetGlobal("fn", New(L, fn))
-
-	testReturn(t, L, `return fn("tim", 5)`, "5", "tim", "tim", "tim", "tim", "tim")
-}
-
 func Test_func_nilreference(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()

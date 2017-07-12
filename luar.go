@@ -220,16 +220,6 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 
 				return []reflect.Value{ret}
 
-			case hint.NumOut() == 1 && hint.Out(0) == refTypeLuaLValueSlice:
-				ret := reflect.MakeSlice(refTypeLuaLValueSlice, top, top)
-
-				for i := 1; i <= top; i++ {
-					item := thread.Get(i)
-					ret.Index(i - 1).Set(reflect.ValueOf(item))
-				}
-
-				return []reflect.Value{ret}
-
 			case top == hint.NumOut():
 				ret := make([]reflect.Value, top)
 

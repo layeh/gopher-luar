@@ -14,16 +14,14 @@ type LState struct {
 }
 
 var (
-	refTypeLStatePtr      reflect.Type
-	refTypeLuaLValueSlice reflect.Type
-	refTypeLuaLValue      reflect.Type
-	refTypeInt            reflect.Type
-	refTypeEmptyIface     reflect.Type
+	refTypeLStatePtr  reflect.Type
+	refTypeLuaLValue  reflect.Type
+	refTypeInt        reflect.Type
+	refTypeEmptyIface reflect.Type
 )
 
 func init() {
 	refTypeLStatePtr = reflect.TypeOf(&LState{})
-	refTypeLuaLValueSlice = reflect.TypeOf([]lua.LValue{})
 	refTypeLuaLValue = reflect.TypeOf((*lua.LValue)(nil)).Elem()
 	refTypeInt = reflect.TypeOf(int(0))
 	refTypeEmptyIface = reflect.TypeOf((*interface{})(nil)).Elem()
@@ -131,13 +129,6 @@ func funcRegular(L *lua.LState) int {
 		ud.(*lua.LUserData).Value = receiver.Elem().Interface()
 	}
 
-	if len(ret) == 1 && ret[0].Type() == refTypeLuaLValueSlice {
-		values := ret[0].Interface().([]lua.LValue)
-		for _, value := range values {
-			L.Push(value)
-		}
-		return len(values)
-	}
 	for _, val := range ret {
 		L.Push(New(L, val.Interface()))
 	}
