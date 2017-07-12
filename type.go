@@ -8,11 +8,7 @@ import (
 
 func checkType(L *lua.LState, idx int) reflect.Type {
 	ud := L.CheckUserData(idx)
-	ref, ok := ud.Value.(reflect.Type)
-	if !ok {
-		L.ArgError(idx, "expecting type")
-	}
-	return ref
+	return ud.Value.(reflect.Type)
 }
 
 func typeCall(L *lua.LState) int {

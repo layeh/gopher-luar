@@ -23,9 +23,9 @@ func Test_chan(t *testing.T) {
 
 	L.SetGlobal("ch", New(L, ch))
 
-	testReturn(t, L, `return ch:receive()`, "Tim", "true")
-	testReturn(t, L, `ch:send("John")`)
-	testReturn(t, L, `return ch:receive()`, "nil", "false")
+	testReturn(t, L, `return ch()`, "Tim", "true")
+	testReturn(t, L, `ch("John")`)
+	testReturn(t, L, `return ch()`, "nil", "false")
 }
 
 type TestChanString chan string

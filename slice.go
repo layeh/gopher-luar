@@ -7,7 +7,7 @@ import (
 )
 
 func sliceIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Slice)
+	ref, mt := check(L, 1)
 	key := L.CheckAny(2)
 
 	switch converted := key.(type) {
@@ -22,13 +22,7 @@ func sliceIndex(L *lua.LState) int {
 		}
 		L.Push(New(L, val.Interface()))
 	case lua.LString:
-		if !isPtr {
-			if fn := mt.method(string(converted)); fn != nil {
-				L.Push(fn)
-				return 1
-			}
-		}
-		if fn := mt.ptrMethod(string(converted)); fn != nil {
+		if fn := mt.method(string(converted)); fn != nil {
 			L.Push(fn)
 			return 1
 		}
@@ -40,13 +34,9 @@ func sliceIndex(L *lua.LState) int {
 }
 
 func sliceNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Slice)
+	ref, _ := check(L, 1)
 	index := L.CheckInt(2)
 	value := L.CheckAny(3)
-
-	if isPtr {
-		L.RaiseError("invalid operation on slice pointer")
-	}
 
 	if index < 1 || index > ref.Len() {
 		L.ArgError(2, "index out of range")
@@ -60,21 +50,14 @@ func sliceNewIndex(L *lua.LState) int {
 }
 
 func sliceLen(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Slice)
-
-	if isPtr {
-		L.RaiseError("invalid operation on slice pointer")
-	}
+	ref, _ := check(L, 1)
 
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func sliceCall(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Slice)
-	if isPtr {
-		L.RaiseError("invalid operation on slice pointer")
-	}
+	ref, _ := check(L, 1)
 
 	i := 0
 	fn := func(L *lua.LState) int {
@@ -92,21 +75,8 @@ func sliceCall(L *lua.LState) int {
 	return 1
 }
 
-func sliceEq(L *lua.LState) int {
-	ref1, _, isPtr1 := check(L, 1, reflect.Slice)
-	ref2, _, isPtr2 := check(L, 2, reflect.Slice)
-
-	if isPtr1 && isPtr2 {
-		L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
-		return 1
-	}
-
-	L.RaiseError("invalid operation == on slice")
-	return 0 // never reaches
-}
-
 func sliceAdd(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Slice)
+	ref, _ := check(L, 1)
 	item := L.CheckAny(2)
 
 	hint := ref.Type().Elem()

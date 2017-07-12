@@ -33,14 +33,6 @@ func (m *Metatable) method(name string) lua.LValue {
 	return nil
 }
 
-func (m *Metatable) ptrMethod(name string) lua.LValue {
-	methods := m.RawGetString("ptr_methods").(*lua.LTable)
-	if fn := methods.RawGetString(name); fn != lua.LNil {
-		return fn
-	}
-	return nil
-}
-
 func (m *Metatable) fieldIndex(name string) []int {
 	fields := m.RawGetString("fields").(*lua.LTable)
 	if index := fields.RawGetString(name); index != lua.LNil {

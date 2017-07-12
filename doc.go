@@ -17,11 +17,12 @@
 //
 // Channels
 //
-// Channels have the following methods defined:
-//  receive():    Receives data from the channel. Returns nil plus false if the
-//                channel is closed.
-//  send(data):   Sends data to the channel.
-//  close():      Closes the channel.
+// Channels can send and receive values by calling the channel value: passing
+// no argument receives on the channel, while passing one argument sends that
+// argument to the channel. If the channel is closed when attempting to receive
+// a value, nil and false is returned.
+//
+// Channels can be closed using the unary minus (-) operator.
 //
 // Taking the length (#) of a channel returns how many unread items are in its
 // buffer.
@@ -30,9 +31,9 @@
 //  ch := make(chan string)
 //  L.SetGlobal("ch", New(L, ch))
 //  ---
-//  ch:receive()      -- equivalent to v, ok := ch
-//  ch:send("hello")  -- equivalent to ch <- "hello"
-//  ch:close()        -- equivalent to close(ch)
+//  ch()         -- v, ok := ch
+//  ch("hello")  -- ch <- "hello"
+//  _ = -ch      -- close(ch)
 //
 // Functions
 //

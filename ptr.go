@@ -18,14 +18,17 @@ func checkPtr(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable) {
 }
 
 func ptrIndex(L *lua.LState) int {
-	_, mt := checkPtr(L, 1)
+	ref, mt := checkPtr(L, 1)
 	key := L.CheckString(2)
 
-	if fn := mt.ptrMethod(key); fn != nil {
+	if fn := mt.method(key); fn != nil {
 		L.Push(fn)
 		return 1
 	}
 
+	// fallback to non-pointer method
+	ref = ref.Elem()
+	mt = MT(L, ref.Interface())
 	if fn := mt.method(key); fn != nil {
 		L.Push(fn)
 		return 1

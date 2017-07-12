@@ -7,18 +7,8 @@ import (
 )
 
 func mapIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Map)
+	ref, mt := check(L, 1)
 	key := L.CheckAny(2)
-
-	if isPtr {
-		if lstring, ok := key.(lua.LString); ok {
-			if fn := mt.ptrMethod(string(lstring)); fn != nil {
-				L.Push(fn)
-				return 1
-			}
-		}
-		return 0
-	}
 
 	convertedKey, err := lValueToReflect(L, key, ref.Type().Key(), nil)
 	if err == nil {
@@ -40,10 +30,7 @@ func mapIndex(L *lua.LState) int {
 }
 
 func mapNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Map)
-	if isPtr {
-		L.RaiseError("invalid operation on map pointer")
-	}
+	ref, _ := check(L, 1)
 	key := L.CheckAny(2)
 	value := L.CheckAny(3)
 
@@ -64,19 +51,15 @@ func mapNewIndex(L *lua.LState) int {
 }
 
 func mapLen(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Map)
-	if isPtr {
-		L.RaiseError("invalid operation on map pointer")
-	}
+	ref, _ := check(L, 1)
+
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func mapCall(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Map)
-	if isPtr {
-		L.RaiseError("invalid operation on map pointer")
-	}
+	ref, _ := check(L, 1)
+
 	keys := ref.MapKeys()
 	i := 0
 	fn := func(L *lua.LState) int {
@@ -90,17 +73,4 @@ func mapCall(L *lua.LState) int {
 	}
 	L.Push(L.NewFunction(fn))
 	return 1
-}
-
-func mapEq(L *lua.LState) int {
-	ref1, _, isPtr1 := check(L, 1, reflect.Map)
-	ref2, _, isPtr2 := check(L, 2, reflect.Map)
-
-	if isPtr1 && isPtr2 {
-		L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
-		return 1
-	}
-
-	L.RaiseError("invalid operation == on map")
-	return 0 // never reaches
 }

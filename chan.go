@@ -1,23 +1,14 @@
 package luar // import "layeh.com/gopher-luar"
 
 import (
-	"reflect"
-
 	"github.com/yuin/gopher-lua"
 )
 
 func chanIndex(L *lua.LState) int {
-	_, mt, isPtr := check(L, 1, reflect.Chan)
+	_, mt := check(L, 1)
 	key := L.CheckString(2)
 
-	if !isPtr {
-		if fn := mt.method(key); fn != nil {
-			L.Push(fn)
-			return 1
-		}
-	}
-
-	if fn := mt.ptrMethod(key); fn != nil {
+	if fn := mt.method(key); fn != nil {
 		L.Push(fn)
 		return 1
 	}
@@ -26,59 +17,57 @@ func chanIndex(L *lua.LState) int {
 }
 
 func chanLen(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Chan)
-	if isPtr {
-		L.RaiseError("invalid operation on chan pointer")
-	}
+	ref, _ := check(L, 1)
+
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func chanEq(L *lua.LState) int {
-	ref1, _, isPtr1 := check(L, 1, reflect.Chan)
-	ref2, _, isPtr2 := check(L, 2, reflect.Chan)
+	ref1, _ := check(L, 1)
+	ref2, _ := check(L, 2)
 
-	if (isPtr1 && isPtr2) || (!isPtr1 && !isPtr2) {
-		L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
-		return 1
-	}
-
-	L.RaiseError("invalid operation == on mixed chan value and pointer")
-	return 0 // never reaches
+	L.Push(lua.LBool(ref1.Pointer() == ref2.Pointer()))
+	return 1
 }
 
-// chan methods
+func chanCall(L *lua.LState) int {
+	ref, _ := check(L, 1)
 
-func chanSend(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Chan)
-	value := L.CheckAny(2)
-
-	hint := ref.Type().Elem()
-	convertedValue, err := lValueToReflect(L, value, hint, nil)
-	if err != nil {
-		L.ArgError(2, err.Error())
-	}
-
-	ref.Send(convertedValue)
-	return 0
-}
-
-func chanReceive(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Chan)
-
-	value, ok := ref.Recv()
-	if !ok {
-		L.Push(lua.LNil)
-		L.Push(lua.LBool(false))
+	switch L.GetTop() {
+	// Receive
+	case 1:
+		value, ok := ref.Recv()
+		if ok {
+			L.Push(New(L, value.Interface()))
+			L.Push(lua.LTrue)
+		} else {
+			L.Push(lua.LNil)
+			L.Push(lua.LFalse)
+		}
 		return 2
+
+	// Send
+	case 2:
+		value := L.CheckAny(2)
+
+		hint := ref.Type().Elem()
+		convertedValue, err := lValueToReflect(L, value, hint, nil)
+		if err != nil {
+			L.ArgError(2, err.Error())
+		}
+
+		ref.Send(convertedValue)
+		return 0
+
+	default:
+		L.RaiseError("expecting 1 or 2 arguments, got %d", L.GetTop())
+		panic("never reaches")
 	}
-	L.Push(New(L, value.Interface()))
-	L.Push(lua.LBool(true))
-	return 2
 }
 
-func chanClose(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Chan)
+func chanUnm(L *lua.LState) int {
+	ref, _ := check(L, 1)
 	ref.Close()
 	return 0
 }

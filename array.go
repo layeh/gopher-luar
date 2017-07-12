@@ -7,7 +7,7 @@ import (
 )
 
 func arrayIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Array)
+	ref, mt := check(L, 1)
 	ref = reflect.Indirect(ref)
 	key := L.CheckAny(2)
 
@@ -23,13 +23,7 @@ func arrayIndex(L *lua.LState) int {
 		}
 		L.Push(New(L, val.Interface()))
 	case lua.LString:
-		if !isPtr {
-			if fn := mt.method(string(converted)); fn != nil {
-				L.Push(fn)
-				return 1
-			}
-		}
-		if fn := mt.ptrMethod(string(converted)); fn != nil {
+		if fn := mt.method(string(converted)); fn != nil {
 			L.Push(fn)
 			return 1
 		}
@@ -40,13 +34,43 @@ func arrayIndex(L *lua.LState) int {
 	return 1
 }
 
-func arrayNewIndex(L *lua.LState) int {
-	ref, _, isPtr := check(L, 1, reflect.Array)
+func arrayPtrIndex(L *lua.LState) int {
+	ref, mt := check(L, 1)
+	ref = ref.Elem()
+	key := L.CheckAny(2)
 
-	if !isPtr {
-		L.RaiseError("invalid operation on array")
+	switch converted := key.(type) {
+	case lua.LNumber:
+		index := int(converted)
+		if index < 1 || index > ref.Len() {
+			L.ArgError(2, "index out of range")
+		}
+		val := ref.Index(index - 1)
+		if (val.Kind() == reflect.Struct || val.Kind() == reflect.Array) && val.CanAddr() {
+			val = val.Addr()
+		}
+		L.Push(New(L, val.Interface()))
+	case lua.LString:
+		if fn := mt.method(string(converted)); fn != nil {
+			L.Push(fn)
+			return 1
+		}
+
+		mt = MT(L, ref.Interface())
+		if fn := mt.method(string(converted)); fn != nil {
+			L.Push(fn)
+			return 1
+		}
+
+		return 0
+	default:
+		L.ArgError(2, "must be a number or string")
 	}
+	return 1
+}
 
+func arrayPtrNewIndex(L *lua.LState) int {
+	ref, _ := check(L, 1)
 	ref = ref.Elem()
 
 	index := L.CheckInt(2)
@@ -64,14 +88,15 @@ func arrayNewIndex(L *lua.LState) int {
 }
 
 func arrayLen(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Array)
+	ref, _ := check(L, 1)
 	ref = reflect.Indirect(ref)
+
 	L.Push(lua.LNumber(ref.Len()))
 	return 1
 }
 
 func arrayCall(L *lua.LState) int {
-	ref, _, _ := check(L, 1, reflect.Array)
+	ref, _ := check(L, 1)
 	ref = reflect.Indirect(ref)
 
 	i := 0
@@ -91,14 +116,9 @@ func arrayCall(L *lua.LState) int {
 }
 
 func arrayEq(L *lua.LState) int {
-	ref1, _, isPtr1 := check(L, 1, reflect.Array)
-	ref2, _, isPtr2 := check(L, 2, reflect.Array)
+	ref1, _ := check(L, 1)
+	ref2, _ := check(L, 2)
 
-	if (isPtr1 && isPtr2) || (!isPtr1 && !isPtr2) {
-		L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
-		return 1
-	}
-
-	L.RaiseError("invalid operation == on mixed array value and pointer")
-	return 0 // never reaches
+	L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
+	return 1
 }

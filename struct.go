@@ -7,17 +7,10 @@ import (
 )
 
 func structIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Struct)
+	ref, mt := check(L, 1)
 	key := L.CheckString(2)
 
-	if !isPtr {
-		if fn := mt.method(key); fn != nil {
-			L.Push(fn)
-			return 1
-		}
-	}
-
-	if fn := mt.ptrMethod(key); fn != nil {
+	if fn := mt.method(key); fn != nil {
 		L.Push(fn)
 		return 1
 	}
@@ -39,13 +32,45 @@ func structIndex(L *lua.LState) int {
 	return 1
 }
 
-func structNewIndex(L *lua.LState) int {
-	ref, mt, isPtr := check(L, 1, reflect.Struct)
-	if isPtr {
-		ref = ref.Elem()
+func structPtrIndex(L *lua.LState) int {
+	ref, mt := check(L, 1)
+	key := L.CheckString(2)
+
+	if fn := mt.method(key); fn != nil {
+		L.Push(fn)
+		return 1
 	}
+
+	ref = ref.Elem()
+	mt = MT(L, ref.Interface())
+	if fn := mt.method(key); fn != nil {
+		L.Push(fn)
+		return 1
+	}
+
+	index := mt.fieldIndex(key)
+	if index == nil {
+		return 0
+	}
+	field := ref.FieldByIndex(index)
+	if !field.CanInterface() {
+		L.RaiseError("cannot interface field " + key)
+	}
+
+	if (field.Kind() == reflect.Struct || field.Kind() == reflect.Array) && field.CanAddr() {
+		field = field.Addr()
+	}
+	L.Push(New(L, field.Interface()))
+	return 1
+}
+
+func structPtrNewIndex(L *lua.LState) int {
+	ref, mt := check(L, 1)
 	key := L.CheckString(2)
 	value := L.CheckAny(3)
+
+	ref = ref.Elem()
+	mt = MT(L, ref.Interface())
 
 	index := mt.fieldIndex(key)
 	if index == nil {
@@ -64,14 +89,9 @@ func structNewIndex(L *lua.LState) int {
 }
 
 func structEq(L *lua.LState) int {
-	ref1, _, isPtr1 := check(L, 1, reflect.Struct)
-	ref2, _, isPtr2 := check(L, 2, reflect.Struct)
+	ref1, _ := check(L, 1)
+	ref2, _ := check(L, 2)
 
-	if (isPtr1 && isPtr2) || (!isPtr1 && !isPtr2) {
-		L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
-		return 1
-	}
-
-	L.RaiseError("invalid operation == on mixed struct value and pointer")
-	return 0 // never reaches
+	L.Push(lua.LBool(ref1.Interface() == ref2.Interface()))
+	return 1
 }

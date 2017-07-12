@@ -103,15 +103,12 @@ func Test_comparisons(t *testing.T) {
 	}
 
 	testReturn(t, L, `return s1 == s1`, "true")
-	testError(t, L, `return s1 == s2`, "invalid operation == on slice")
 	testReturn(t, L, `return sp1 == sp2`, "true")
 
 	testReturn(t, L, `return m1 == m1`, "true")
-	testError(t, L, `return m1 == m2`, "invalid operation == on map")
 	testReturn(t, L, `return mp1 == mp2`, "true")
 
 	testReturn(t, L, `return c1 == c1`, "true")
-	testError(t, L, `return c1 == cp1`, "invalid operation == on mixed chan value and pointer")
 	testReturn(t, L, `return c1 == c3`, "false")
 
 	testReturn(t, L, `return sp1 == sp2`, "true")

@@ -1,11 +1,12 @@
 package luar
 
 import (
+	"runtime/debug"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/yuin/gopher-lua"
-	"strings"
 )
 
 type StructTestPerson struct {
@@ -40,7 +41,7 @@ func (p *StructTestPerson) IncreaseAge() {
 func testReturn(t *testing.T, L *lua.LState, code string, values ...string) {
 	top := L.GetTop()
 	if err := L.DoString(code); err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s\n\n%s", err, debug.Stack())
 	}
 
 	valid := true
@@ -64,7 +65,7 @@ func testReturn(t *testing.T, L *lua.LState, code string, values ...string) {
 			got[i] = L.Get(top + i + 1).String()
 		}
 
-		t.Fatalf("bad return values: expecting %#v, got %#v", values, got)
+		t.Fatalf("bad return values: expecting %#v, got %#v\n\n%s", values, got, debug.Stack())
 	}
 
 	L.SetTop(top)
@@ -73,10 +74,10 @@ func testReturn(t *testing.T, L *lua.LState, code string, values ...string) {
 func testError(t *testing.T, L *lua.LState, code, error string) {
 	err := L.DoString(code)
 	if err == nil {
-		t.Fatal("expecting error, got nil")
+		t.Fatalf("expecting error, got nil\n\n%s", debug.Stack())
 	}
 
 	if s := err.Error(); strings.Index(s, error) == -1 {
-		t.Fatalf("error substring '%s' not found in '%s'", error, s)
+		t.Fatalf("error substring '%s' not found in '%s'\n\n%s", error, s, debug.Stack())
 	}
 }
