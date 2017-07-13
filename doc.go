@@ -8,35 +8,32 @@
 //
 // Lua to Go conversions
 //
-// The Lua types are automatically converted to match the output Go type, as
-// described below:
+// Lua types are automatically converted to match the output Go type (e.g.
+// setting a struct field from Lua).
 //
-//  Lua type    Go kind/type
-//  -----------------------------------------------------
-//  LBool       bool
-//              string ("true" or "false")
-//  LChannel    chan lua.LValue
-//  LNumber     numeric value
-//              string (strconv.Itoa)
-//  LFunction   func
-//  LNilType    chan, func, interface, map, ptr, slice, unsafe pointer
-//  LState      *lua.LState
-//  LString     string
-//  LTable      slice
-//              map
-//              struct
-//              *struct
-//  LUserData   underlying lua.LUserData.Value type
+// lua.LNil can be converted to any channel, func, interface, map, pointer,
+// slice, unsafepointer, or uintptr value.
 //
-// Example creating a Go slice from Lua:
-//  type Group struct {
-//      Names []string
-//  }
+// lua.LBool values are converted to bool.
 //
-//  g := new(Group)
-//  L.SetGlobal("g", luar.New(L, g))
-//  ---
-//  g.Names = {"Tim", "Frank", "George"}
+// lua.LNumber values are converted to float64.
+//
+// lua.LString values are converted to string.
+//
+// lua.LChannel values are converted to lua.LChannel.
+//
+// *lua.LTable values can be converted to a slice, map, struct, or struc
+// pointer.
+//
+// The Value field of *lua.LUserData values are converted rather than the
+// *lua.LUserData value itself.
+//
+// *lua.LState values are converted to *lua.LState.
+//
+// *lua.LFunction values are converted to Go functions. If the function is
+// being assigned with no type information (i.e. to a interface{}), the function
+// will have the signature func(...interface{}) []interface{}. The arguments
+// and return values will be converted using the standard luar conversion rules.
 //
 // Thread safety
 //

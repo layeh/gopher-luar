@@ -301,7 +301,7 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 		return reflect.MakeFunc(hint, fn), nil
 	case *lua.LNilType:
 		switch hint.Kind() {
-		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
+		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer, reflect.Uintptr:
 			return reflect.Zero(hint), nil
 		default:
 			return reflect.Value{}, conversionError{
