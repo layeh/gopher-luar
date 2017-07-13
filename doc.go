@@ -1,10 +1,9 @@
 // Package luar provides custom type reflection to gopher-lua
 // (https://github.com/yuin/gopher-lua).
 //
-// Notice
+// Go to Lua conversions
 //
-// This package is currently in development, and its behavior may change. This
-// message will be removed once the package is considered stable.
+// See documentation of New function.
 //
 // Lua to Go conversions
 //
