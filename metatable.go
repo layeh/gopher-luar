@@ -1,4 +1,4 @@
-package luar // import "layeh.com/gopher-luar"
+package luar
 
 import (
 	"reflect"
@@ -6,7 +6,7 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-// Metatable holds the Lua metatable for a Go type.
+// Metatable is the Lua metatable for a Go type.
 type Metatable struct {
 	*lua.LTable
 }

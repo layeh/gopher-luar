@@ -1,4 +1,4 @@
-package luar // import "layeh.com/gopher-luar"
+package luar
 
 import (
 	"fmt"
@@ -7,37 +7,85 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-// New creates and returns a new lua.LValue for the given value.
+// New creates and returns a new lua.LValue for the given value. Values are
+// converted in the following manner:
 //
-// The following table shows how Go types are converted to Lua types:
-//  Kind            gopher-lua Type  Custom Metatable
-//  --------------------------------------------------
-//  nil             LNil             No
-//  Bool            LBool            No
-//  Int             LNumber          No
-//  Int8            LNumber          No
-//  Int16           LNumber          No
-//  Int32           LNumber          No
-//  Int64           LNumber          No
-//  Uint            LNumber          No
-//  Uint8           LNumber          No
-//  Uint16          LNumber          No
-//  Uint32          LNumber          No
-//  Uint64          LNumber          No
-//  Uintptr         *LUserData       No
-//  Float32         LNumber          No
-//  Float64         LNumber          No
-//  Complex64       *LUserData       No
-//  Complex128      *LUserData       No
-//  Array           *LUserData       Yes
-//  Chan            *LUserData       Yes
-//  Func            *LFunction       No
-//  Map             *LUserData       Yes
-//  Ptr             *LUserData       Yes
-//  Slice           *LUserData       Yes
-//  String          LString          No
-//  Struct          *LUserData       Yes
-//  UnsafePointer   *LUserData       No
+// A nil value (untyped, or a nil channel, function, map, pointer, or slice) is
+// converted to lua.LNil.
+//
+// A lua.LValue value is returned without conversion.
+//
+// Boolean values are converted to lua.LBool.
+//
+// String values are converted to lua.LString.
+//
+// Real numeric values (ints, uints, and floats) are converted to lua.LNumber.
+//
+// Functions are converted to *lua.LFunction. When called from Lua, Lua values
+// are converted to Go using the rules described in the package documentation,
+// and Go return values converted to Lua values using the rules described by
+// New.
+//
+// If a function has the signature:
+//  func(*LState) int // *LState defined in this package, not in lua
+// The argument and return value conversions described above are skipped, and
+// the function is called with the arguments passed on the Lua stack. Return
+// values are pushed to the stack and the number of return values is returned
+// from the function.
+//
+// Arrays, channels, maps, pointers, slices, and structs are all converted to
+// *lua.LUserData with its Value field set to value. The userdata's metatable
+// is set to a table generated for value's type. The type's method set is
+// callable from the Lua type. If the type implements the fmt.Stringer
+// interface, that method will be used when the value is passed to the Lua
+// tostring function.
+//
+// With arrays, the # operator returns the array's length. Array elements can
+// be accessed with the index operator (array[index]). Calling an array
+// (array()) returns an iterator over the array that can be used in a for loop.
+// Two arrays of the same type can be compared for equality. Additionally, a
+// pointer to an array allows the array elements to be modified
+// (array[index] = value).
+//
+// With channels, the # operator returns the number of elements buffered in the
+// channel. Two channels of the same type can be compared for equality (i.e. if
+// they were created with the same make call). Calling a channel value with
+// no arguments reads one element from the channel, returning the value and a
+// boolean indicating if the channel is closed. Calling a channel value with
+// one argument sends the argument to the channel. The channel's unary minus
+// operator closes the channel (_ = -channel).
+//
+// With maps, the # operator returns the number of elements in the map. Map
+// elements can be accessed using the index operator (map[key]) and also set
+// (map[key] = value). Calling a map value returns an iterator over the map that
+// can be used in a for loop. If a map's key type is string, map values take
+// priority over methods.
+//
+// With slices, the # operator returns the length of the slice. Slice elements
+// can be accessed using the index operator (slice[index]) and also set
+// (slice[index] = value). Calling a slice returns an iterator over its elements
+// that can be used in a for loop. Elements can be appended to a slice using the
+// add operator (new_slice = slice + element).
+//
+// With structs, fields can be accessed using the index operator
+// (struct[field]). As a special case, accessing field that is an array or
+// struct field will return a pointer to that value. Structs of the same type
+// can be tested for equality. Additionally, a pointer to a struct can have its
+// fields set (struct[field] = value).
+//
+// Struct field accessibility can be changed by setting the field's luar tag.
+// If the tag is empty (default), the field is accessed by its name and its
+// name with a lowercase first letter (e.g. "Field1" would be accessible using
+// "Field1" or "field1"). If the tag is "-", the field will not be accessible.
+// Any other tag value makes the field accessible through that name.
+//
+// Pointer values can be compared for equality. The pointed to value can be
+// changed using the pow operator (value = pointer ^ value). A pointer can be
+// dereferenced using the unary minus operator (value = -pointer).
+//
+// All other values (complex numbers, unsafepointer, uintptr) are converted to
+// *lua.LUserData with its Value field set to value and no custom metatable.
+//
 func New(L *lua.LState, value interface{}) lua.LValue {
 	if value == nil {
 		return lua.LNil
@@ -48,7 +96,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 
 	val := reflect.ValueOf(value)
 	switch val.Kind() {
-	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.Slice:
 		if val.IsNil() {
 			return lua.LNil
 		}
@@ -79,10 +127,21 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	}
 }
 
-// NewType returns a new type creator for the given value's type.
+// NewType returns a new type generator for the given value's type.
 //
-// When the returned lua.LValue is called, a new value will be created that is the
-// same type as value's type.
+// When the returned lua.LValue is called, a new value will be created that is
+// dependent on value's type:
+//
+// If value is a channel, the first argument optionally specifies the channel's
+// buffer size (defaults to 1). The new channel is returned.
+//
+// If value is a map, a new map is returned.
+//
+// If value is a slice, the first argument optionally specifies the slices's
+// length (defaults to 0), and the second argument optionally specifies the
+// slice's capacity (defaults to the first argument). The new slice is returned.
+//
+// All other types return a new pointer to the zero value of value's type.
 func NewType(L *lua.LState, value interface{}) lua.LValue {
 	val := reflect.TypeOf(value)
 	ud := L.NewUserData()

@@ -1,4 +1,4 @@
-package luar // import "layeh.com/gopher-luar"
+package luar
 
 import (
 	"container/list"

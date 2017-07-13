@@ -36,7 +36,7 @@ func newConfig() *Config {
 	}
 }
 
-// GetConfig returns the configuration options for the given *lua.LState.
+// GetConfig returns the luar configuration options for the given *lua.LState.
 func GetConfig(L *lua.LState) *Config {
 	const registryKey = "github.com/layeh/gopher-luar"
 
