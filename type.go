@@ -17,7 +17,6 @@ func typeCall(L *lua.LState) int {
 	var value reflect.Value
 	switch ref.Kind() {
 	case reflect.Chan:
-		ref = reflect.ChanOf(reflect.BothDir, ref.Elem())
 		buffer := L.OptInt(2, 0)
 
 		if buffer < 0 {
