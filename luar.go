@@ -80,7 +80,7 @@ import (
 // Any other tag value makes the field accessible through that name.
 //
 // Pointer values can be compared for equality. The pointed to value can be
-// changed using the pow operator (value = pointer ^ value). A pointer can be
+// changed using the pow operator (pointer = pointer ^ value). A pointer can be
 // dereferenced using the unary minus operator (value = -pointer).
 //
 // All other values (complex numbers, unsafepointer, uintptr) are converted to

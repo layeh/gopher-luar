@@ -53,6 +53,7 @@ func ptrPow(L *lua.LState) int {
 		L.ArgError(2, err.Error())
 	}
 	elem.Set(value)
+	L.SetTop(1)
 	return 1
 }
 

@@ -42,7 +42,7 @@ func Test_ptr_assignment(t *testing.T) {
 	L.SetGlobal("str", New(L, &str))
 
 	testReturn(t, L, `return tostring(-str)`, "hello")
-	testReturn(t, L, `return tostring(str ^ "world")`, "world")
+	testReturn(t, L, `str = str ^ "world"; return (string.match(tostring(str), "userdata:"))`, "userdata:")
 	testReturn(t, L, `return tostring(-str)`, "world")
 }
 
