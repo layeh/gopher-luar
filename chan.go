@@ -1,6 +1,8 @@
 package luar
 
 import (
+	"reflect"
+
 	"github.com/yuin/gopher-lua"
 )
 
@@ -37,6 +39,9 @@ func chanCall(L *lua.LState) int {
 	switch L.GetTop() {
 	// Receive
 	case 1:
+		if ref.Type().ChanDir()&reflect.RecvDir == 0 {
+			L.ArgError(1, "receive from send-only type "+ref.Type().String())
+		}
 		value, ok := ref.Recv()
 		if ok {
 			L.Push(New(L, value.Interface()))
@@ -49,6 +54,9 @@ func chanCall(L *lua.LState) int {
 
 	// Send
 	case 2:
+		if ref.Type().ChanDir()&reflect.SendDir == 0 {
+			L.ArgError(1, "send to receive-only type "+ref.Type().String())
+		}
 		value := L.CheckAny(2)
 
 		hint := ref.Type().Elem()
