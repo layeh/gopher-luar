@@ -194,7 +194,7 @@ func getMetatableFromValue(L *lua.LState, value reflect.Value) *lua.LTable {
 func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
 	config := GetConfig(L)
 
-	if v := config.types[t]; v != nil {
+	if v := config.types; v != nil {
 		return v
 	}
 
@@ -202,6 +202,6 @@ func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
 	mt.RawSetString("__call", L.NewFunction(typeCall))
 	mt.RawSetString("__eq", L.NewFunction(typeEq))
 
-	config.types[t] = mt
+	config.types = mt
 	return mt
 }
