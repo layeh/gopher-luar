@@ -198,6 +198,15 @@ func Test_udconversion(t *testing.T) {
 	testError(t, L, `_ = out ^ ud`, "cannot use hello world (type string) as type int")
 }
 
+func Test_arrayconversion(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	var arr [3]int
+	L.SetGlobal("arr", New(L, &arr))
+	testReturn(t, L, `arr = arr ^ {10, 20, 11}; return arr[1], arr[2], arr[3]`, "10", "20", "11")
+}
+
 type Test_interface_struct struct{}
 
 func Test_interface(t *testing.T) {

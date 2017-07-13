@@ -337,6 +337,29 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 		}
 
 		switch {
+		case hint.Kind() == reflect.Array:
+			elemType := hint.Elem()
+			length := converted.Len()
+			if length != hint.Len() {
+				return reflect.Value{}, conversionError{
+					Lua:  v,
+					Hint: hint,
+				}
+			}
+			s := reflect.New(hint).Elem()
+			visited[converted] = s
+
+			for i := 0; i < length; i++ {
+				value := converted.RawGetInt(i + 1)
+				elemValue, err := lValueToReflectInner(L, value, elemType, visited, nil)
+				if err != nil {
+					return reflect.Value{}, err
+				}
+				s.Index(i).Set(elemValue)
+			}
+
+			return s, nil
+
 		case hint.Kind() == reflect.Slice:
 			elemType := hint.Elem()
 			length := converted.Len()
