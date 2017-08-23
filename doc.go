@@ -21,9 +21,9 @@
 //
 // lua.LChannel values are converted to lua.LChannel.
 //
-// *lua.LTable values can be converted to an array, slice, map, struct, or struc
-// pointer. If the table is being assigned with no type information (i.e. to an
-// interface{}), the converted value will have the type
+// *lua.LTable values can be converted to an array, slice, map, struct, or
+// struct pointer. If the table is being assigned with no type information (i.e.
+// to an interface{}), the converted value will have the type
 // map[interface{}]interface{}.
 //
 // The Value field of *lua.LUserData values are converted rather than the
