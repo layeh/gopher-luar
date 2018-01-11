@@ -56,12 +56,9 @@ func addFields(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable) {
 					continue fields
 				}
 			}
-			index := make([]int, len(elem.Index)+1)
-			copy(index, elem.Index)
-			index[len(elem.Index)] = i
 
 			ud := L.NewUserData()
-			ud.Value = index
+			ud.Value = append(elem.Index[:len(elem.Index):len(elem.Index)], i)
 			for _, key := range names {
 				tbl.RawSetString(key, ud)
 			}
@@ -73,12 +70,9 @@ func addFields(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable) {
 					}
 					t = field.Type.Elem()
 				}
-				index := make([]int, len(elem.Index)+1)
-				copy(index, elem.Index)
-				index[len(elem.Index)] = i
 				queue.PushFront(element{
 					Type:  t,
-					Index: index,
+					Index: append(elem.Index[:len(elem.Index):len(elem.Index)], i),
 				})
 			}
 		}
