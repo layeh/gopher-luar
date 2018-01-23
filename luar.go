@@ -94,15 +94,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lval
 	}
 
-	val := reflect.ValueOf(value)
-	switch val.Kind() {
-	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.Slice:
-		if val.IsNil() {
-			return lua.LNil
-		}
-	}
-
-	switch val.Kind() {
+	switch val := reflect.ValueOf(value); val.Kind() {
 	case reflect.Bool:
 		return lua.LBool(val.Bool())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -111,12 +103,20 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 		return lua.LNumber(float64(val.Uint()))
 	case reflect.Float32, reflect.Float64:
 		return lua.LNumber(val.Float())
-	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
+	case reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice:
+		if val.IsNil() {
+			return lua.LNil
+		}
+		fallthrough
+	case reflect.Array, reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
 		ud.Metatable = getMetatableFromValue(L, val)
 		return ud
 	case reflect.Func:
+		if val.IsNil() {
+			return lua.LNil
+		}
 		return funcWrapper(L, val, false)
 	case reflect.String:
 		return lua.LString(val.String())
