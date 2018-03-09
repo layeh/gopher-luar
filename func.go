@@ -14,18 +14,11 @@ type LState struct {
 }
 
 var (
-	refTypeLStatePtr  reflect.Type
-	refTypeLuaLValue  reflect.Type
-	refTypeInt        reflect.Type
-	refTypeEmptyIface reflect.Type
-)
-
-func init() {
-	refTypeLStatePtr = reflect.TypeOf(&LState{})
-	refTypeLuaLValue = reflect.TypeOf((*lua.LValue)(nil)).Elem()
-	refTypeInt = reflect.TypeOf(int(0))
+	refTypeLStatePtr  = reflect.TypeOf(&LState{})
+	refTypeLuaLValue  = reflect.TypeOf((*lua.LValue)(nil)).Elem()
+	refTypeInt        = reflect.TypeOf(int(0))
 	refTypeEmptyIface = reflect.TypeOf((*interface{})(nil)).Elem()
-}
+)
 
 func getFunc(L *lua.LState) (ref reflect.Value, refType reflect.Type) {
 	ref = L.Get(lua.UpvalueIndex(1)).(*lua.LUserData).Value.(reflect.Value)
