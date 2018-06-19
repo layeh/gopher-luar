@@ -40,9 +40,6 @@ func ptrPow(L *lua.LState) int {
 	ref, _ := checkPtr(L, 1)
 	val := L.CheckAny(2)
 
-	if ref.IsNil() {
-		L.RaiseError("cannot dereference nil pointer")
-	}
 	elem := ref.Elem()
 	if !elem.CanSet() {
 		L.RaiseError("unable to set pointer value")
