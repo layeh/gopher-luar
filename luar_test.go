@@ -207,7 +207,7 @@ func Test_arrayconversion(t *testing.T) {
 	testReturn(t, L, `arr = arr ^ {10, 20, 11}; return arr[1], arr[2], arr[3]`, "10", "20", "11")
 }
 
-type Test_interface_struct struct{}
+type TestInterfaceStruct struct{}
 
 func Test_interface(t *testing.T) {
 	tbl := []struct {
@@ -263,7 +263,7 @@ func Test_interface(t *testing.T) {
 			L := lua.NewState()
 			defer L.Close()
 
-			var out interface{} = Test_interface_struct{}
+			var out interface{} = TestInterfaceStruct{}
 			L.SetGlobal("out", New(L, &out))
 
 			if cur.Var != nil {
