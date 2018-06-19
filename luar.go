@@ -293,22 +293,22 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 				}
 
 				return ret
-
-			default:
-				panic(fmt.Errorf("expecting %d return values, got %d", hint.NumOut(), top))
 			}
+
+			panic(fmt.Errorf("expecting %d return values, got %d", hint.NumOut(), top))
 		}
 		return reflect.MakeFunc(hint, fn), nil
 	case *lua.LNilType:
 		switch hint.Kind() {
 		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer, reflect.Uintptr:
 			return reflect.Zero(hint), nil
-		default:
-			return reflect.Value{}, conversionError{
-				Lua:  v,
-				Hint: hint,
-			}
 		}
+
+		return reflect.Value{}, conversionError{
+			Lua:  v,
+			Hint: hint,
+		}
+
 	case *lua.LState:
 		val := reflect.ValueOf(converted)
 		if !val.Type().ConvertibleTo(hint) {
@@ -318,6 +318,7 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 			}
 		}
 		return val.Convert(hint), nil
+
 	case lua.LString:
 		val := reflect.ValueOf(string(converted))
 		if !val.Type().ConvertibleTo(hint) {
@@ -327,6 +328,7 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 			}
 		}
 		return val.Convert(hint), nil
+
 	case *lua.LTable:
 		if existing := visited[converted]; existing.IsValid() {
 			return existing, nil
@@ -449,13 +451,13 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 			}
 
 			return t, nil
-
-		default:
-			return reflect.Value{}, conversionError{
-				Lua:  v,
-				Hint: hint,
-			}
 		}
+
+		return reflect.Value{}, conversionError{
+			Lua:  v,
+			Hint: hint,
+		}
+
 	case *lua.LUserData:
 		val := reflect.ValueOf(converted.Value)
 		if tryConvertPtr != nil && val.Kind() != reflect.Ptr && hint.Kind() == reflect.Ptr && val.Type() == hint.Elem() {
@@ -476,7 +478,7 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 			}
 		}
 		return val, nil
-	default:
-		panic("never reaches")
 	}
+
+	panic("never reaches")
 }
