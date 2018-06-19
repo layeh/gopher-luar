@@ -9,9 +9,8 @@ import (
 func checkPtr(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable) {
 	ud := L.CheckUserData(idx)
 	ref = reflect.ValueOf(ud.Value)
-	kind := reflect.Ptr
-	if ref.Kind() != kind {
-		L.ArgError(idx, "expecting "+kind.String())
+	if expecting := reflect.Ptr; ref.Kind() != expecting {
+		L.ArgError(idx, "expecting "+expecting.String())
 	}
 	mt = &Metatable{LTable: ud.Metatable.(*lua.LTable)}
 	return
