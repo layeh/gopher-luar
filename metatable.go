@@ -14,10 +14,14 @@ type Metatable struct {
 // MT returns the metatable for value's type. nil is returned if value's type
 // does not use a custom metatable.
 func MT(L *lua.LState, value interface{}) *Metatable {
-	switch val := reflect.ValueOf(value); val.Type().Kind() {
+	if value == nil {
+		return nil
+	}
+
+	switch typ := reflect.TypeOf(value); typ.Kind() {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
 		return &Metatable{
-			LTable: getMetatableFromValue(L, val),
+			LTable: getMetatable(L, typ),
 		}
 	}
 	return nil

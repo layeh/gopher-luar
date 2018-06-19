@@ -111,7 +111,7 @@ func New(L *lua.LState, value interface{}) lua.LValue {
 	case reflect.Array, reflect.Struct:
 		ud := L.NewUserData()
 		ud.Value = val.Interface()
-		ud.Metatable = getMetatableFromValue(L, val)
+		ud.Metatable = getMetatable(L, val.Type())
 		return ud
 	case reflect.Func:
 		if val.IsNil() {

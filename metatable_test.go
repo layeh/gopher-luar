@@ -17,6 +17,7 @@ func Test_metatable(t *testing.T) {
 		{"hello", false},
 		{123, false},
 		{1.23, false},
+		{nil, false},
 		{struct{}{}, true},
 		{&struct{}{}, true},
 		{[]string{}, true},

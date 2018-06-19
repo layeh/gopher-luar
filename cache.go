@@ -180,11 +180,6 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	return mt
 }
 
-func getMetatableFromValue(L *lua.LState, value reflect.Value) *lua.LTable {
-	vtype := value.Type()
-	return getMetatable(L, vtype)
-}
-
 func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
 	config := GetConfig(L)
 
