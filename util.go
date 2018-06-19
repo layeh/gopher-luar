@@ -18,8 +18,7 @@ func check(L *lua.LState, idx int) (ref reflect.Value, mt *Metatable) {
 
 func tostring(L *lua.LState) int {
 	ud := L.CheckUserData(1)
-	value := ud.Value
-	if stringer, ok := value.(fmt.Stringer); ok {
+	if stringer, ok := ud.Value.(fmt.Stringer); ok {
 		L.Push(lua.LString(stringer.String()))
 	} else {
 		L.Push(lua.LString(ud.String()))
