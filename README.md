@@ -5,3 +5,7 @@ custom type reflection for [gopher-lua](https://github.com/yuin/gopher-lua).
 ## License
 
 MPL 2.0
+
+## Author
+
+Tim Cooper (<tim.cooper@layeh.com>)
