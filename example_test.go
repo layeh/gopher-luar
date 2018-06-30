@@ -38,7 +38,6 @@ func Example_basic() {
 	}
 
 	fmt.Println("Lua set your token to:", u.Token())
-
 	// Output:
 	// Hello from Lua, Tim!
 	// Lua set your token to: 12345
