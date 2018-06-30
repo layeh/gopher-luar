@@ -1,4 +1,4 @@
-// Package luar provides custom type reflection to gopher-lua
+// Package luar simplifies data passing to and from gopher-lua.
 // (https://github.com/yuin/gopher-lua).
 //
 // Go to Lua conversions
