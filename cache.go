@@ -173,7 +173,6 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	}
 
 	mt.RawSetString("__tostring", L.NewFunction(tostring))
-	mt.RawSetString("__metatable", lua.LString("gopher-luar"))
 	mt.RawSetString("methods", methods)
 
 	config.regular[vtype] = mt
