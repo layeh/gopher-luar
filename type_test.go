@@ -40,3 +40,12 @@ func Test_type(t *testing.T) {
 		t.Fatalf("expecting len(everyone) = 2, got %d", len(everyone))
 	}
 }
+
+func Test_type_metatable(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	L.SetGlobal("newInt", NewType(L, int(0)))
+
+	testReturn(t, L, `return getmetatable(newInt) == "gopher-luar"`, "true")
+}

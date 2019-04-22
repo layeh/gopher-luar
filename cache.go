@@ -187,9 +187,10 @@ func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
 		return v
 	}
 
-	mt := L.CreateTable(0, 2)
+	mt := L.CreateTable(0, 3)
 	mt.RawSetString("__call", L.NewFunction(typeCall))
 	mt.RawSetString("__eq", L.NewFunction(typeEq))
+	mt.RawSetString("__metatable", lua.LString("gopher-luar"))
 
 	config.types = mt
 	return mt
