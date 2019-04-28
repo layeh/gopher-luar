@@ -14,7 +14,7 @@ type LState struct {
 }
 
 var (
-	refTypeLStatePtr  = reflect.TypeOf(&LState{})
+	refTypeLStatePtr  = reflect.TypeOf((*LState)(nil))
 	refTypeLuaLValue  = reflect.TypeOf((*lua.LValue)(nil)).Elem()
 	refTypeInt        = reflect.TypeOf(int(0))
 	refTypeEmptyIface = reflect.TypeOf((*interface{})(nil)).Elem()
