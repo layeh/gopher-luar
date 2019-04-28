@@ -39,6 +39,7 @@ func (p *StructTestPerson) IncreaseAge() {
 }
 
 func testReturn(t *testing.T, L *lua.LState, code string, values ...string) {
+	t.Helper()
 	top := L.GetTop()
 	if err := L.DoString(code); err != nil {
 		t.Fatalf("%s\n\n%s", err, debug.Stack())
@@ -72,6 +73,7 @@ func testReturn(t *testing.T, L *lua.LState, code string, values ...string) {
 }
 
 func testError(t *testing.T, L *lua.LState, code, error string) {
+	t.Helper()
 	err := L.DoString(code)
 	if err == nil {
 		t.Fatalf("expecting error, got nil\n\n%s", debug.Stack())
