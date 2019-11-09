@@ -50,6 +50,11 @@ func GetConfig(L *lua.LState) *Config {
 	return lConfig.Value.(*Config)
 }
 
+func CustomizeMetaTable(L *lua.LState, t reflect.Type, mt *lua.LTable) {
+	cfg := GetConfig(L)
+	cfg.regular[t] = mt
+}
+
 func defaultFieldNames(s reflect.Type, f reflect.StructField) []string {
 	const tagName = "luar"
 
