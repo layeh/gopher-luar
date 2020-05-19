@@ -306,3 +306,64 @@ func Test_struct_ptreq(t *testing.T) {
 	}
 	testReturn(t, L, `return p1 == p2`, "false")
 }
+
+type Test_nested_child1 struct {
+	Name string
+}
+
+type Test_nested_child2 struct {
+	Name string
+}
+
+type Test_nested_parent struct {
+	Test_nested_child1
+	Test_nested_child2
+}
+
+func Test_ambiguous_field(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	n := &Test_nested_parent{}
+
+	L.SetGlobal("c", New(L, n))
+	testError(t, L, `
+		c.Name = "Tim"
+	`, "unknown field Name")
+
+	if n.Test_nested_child1.Name != "" {
+		t.Errorf("expected Test_nested_child1.Name to be empty")
+	}
+	if n.Test_nested_child2.Name != "" {
+		t.Errorf("expected Test_nested_child2.Name to be empty")
+	}
+}
+
+type Test_nested_parent2 struct {
+	Test_nested_child1
+	Test_nested_child2
+	Name string
+}
+
+func Test_ambiguous_field2(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	n := &Test_nested_parent2{}
+
+	L.SetGlobal("c", New(L, n))
+	testReturn(t, L, `
+		c.Name = "Tim"
+		return c.Name
+	`, "Tim")
+
+	if n.Name != "Tim" {
+		t.Errorf("expected Name to be set to `Tim`")
+	}
+	if n.Test_nested_child1.Name != "" {
+		t.Errorf("expected Test_nested_child1.Name to be empty")
+	}
+	if n.Test_nested_child2.Name != "" {
+		t.Errorf("expected Test_nested_child2.Name to be empty")
+	}
+}

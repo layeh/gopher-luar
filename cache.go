@@ -1,7 +1,6 @@
 package luar
 
 import (
-	"container/list"
 	"reflect"
 
 	"github.com/yuin/gopher-lua"
@@ -24,60 +23,70 @@ func addMethods(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable, p
 	}
 }
 
-func addFields(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable) {
-	type element struct {
-		Type  reflect.Type
-		Index []int
+func collectFields(vtype reflect.Type, current []int) map[string]reflect.StructField {
+	m := make(map[string]reflect.StructField)
+
+	var subFields []map[string]reflect.StructField
+
+	for i, n := 0, vtype.NumField(); i < n; i++ {
+		field := vtype.Field(i)
+		if field.PkgPath != "" {
+			continue
+		}
+
+		field.Index = append(current[:len(current):len(current)], i)
+		m[field.Name] = field
+
+		if field.Anonymous {
+			t := field.Type
+			if t.Kind() != reflect.Struct {
+				if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+					continue
+				}
+				t = field.Type.Elem()
+			}
+			r := collectFields(t, append(current[:len(current):len(current)], i))
+			subFields = append(subFields, r)
+		}
 	}
 
-	queue := list.New()
-	queue.PushFront(element{
-		Type: vtype,
-	})
+	m2 := make(map[string]reflect.StructField)
+	for i := 0; i < len(subFields); i++ {
+		for name, value := range subFields[i] {
+			if _, ok := m2[name]; !ok {
+				m2[name] = value
+			} else {
+				m2[name] = reflect.StructField{}
+			}
+		}
+	}
 
+	for name, value := range m2 {
+		if len(value.Index) > 0 {
+			if _, ok := m[name]; !ok {
+				m[name] = value
+			}
+		}
+	}
+
+	return m
+}
+
+func addFields(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable) {
 	namesFn := c.FieldNames
 	if namesFn == nil {
 		namesFn = defaultFieldNames
 	}
 
-	for queue.Len() > 0 {
-		e := queue.Back()
-		elem := e.Value.(element)
-		vtype := elem.Type
-	fields:
-		for i := 0; i < vtype.NumField(); i++ {
-			field := vtype.Field(i)
-			if field.PkgPath != "" && !field.Anonymous {
-				continue
-			}
-			names := namesFn(vtype, field)
-			for _, key := range names {
-				if tbl.RawGetString(key) != lua.LNil {
-					continue fields
-				}
-			}
-
+	for _, field := range collectFields(vtype, nil) {
+		aliases := namesFn(vtype, field)
+		if len(aliases) > 0 {
 			ud := L.NewUserData()
-			ud.Value = append(elem.Index[:len(elem.Index):len(elem.Index)], i)
-			for _, key := range names {
-				tbl.RawSetString(key, ud)
-			}
-			if field.Anonymous {
-				t := field.Type
-				if field.Type.Kind() != reflect.Struct {
-					if field.Type.Kind() != reflect.Ptr || field.Type.Elem().Kind() != reflect.Struct {
-						continue
-					}
-					t = field.Type.Elem()
-				}
-				queue.PushFront(element{
-					Type:  t,
-					Index: append(elem.Index[:len(elem.Index):len(elem.Index)], i),
-				})
+			ud.Value = field.Index
+			for _, alias := range aliases {
+				tbl.RawSetString(alias, ud)
 			}
 		}
-
-		queue.Remove(e)
 	}
 }
 
