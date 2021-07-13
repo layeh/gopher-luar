@@ -30,7 +30,7 @@ func collectFields(vtype reflect.Type, current []int) map[string]reflect.StructF
 
 	for i, n := 0, vtype.NumField(); i < n; i++ {
 		field := vtype.Field(i)
-		if field.PkgPath != "" {
+		if field.PkgPath != "" && !field.Anonymous {
 			continue
 		}
 
