@@ -3,7 +3,7 @@ package luar
 import (
 	"testing"
 
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 )
 
 func Test_struct(t *testing.T) {
@@ -365,5 +365,30 @@ func Test_ambiguous_field2(t *testing.T) {
 	}
 	if n.Test_nested_child2.Name != "" {
 		t.Errorf("expected Test_nested_child2.Name to be empty")
+	}
+}
+
+type test_unexport_anonymous_child struct {
+	Name string
+}
+
+type Test_struct_unexport_anonymous_parent struct {
+	test_unexport_anonymous_child
+}
+
+func Test_struct_unexport_anonymous_field(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	n := &Test_struct_unexport_anonymous_parent{}
+
+	L.SetGlobal("c", New(L, n))
+	testReturn(t, L, `
+		c.Name = "Tim"
+		return c.Name
+	`, "Tim")
+
+	if n.Name != "Tim" {
+		t.Errorf("expected Name to be set to `Tim`")
 	}
 }
