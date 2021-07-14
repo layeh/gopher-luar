@@ -30,12 +30,11 @@ func collectFields(vtype reflect.Type, current []int) map[string]reflect.StructF
 
 	for i, n := 0, vtype.NumField(); i < n; i++ {
 		field := vtype.Field(i)
-		if field.PkgPath != "" && !field.Anonymous {
-			continue
-		}
 
-		field.Index = append(current[:len(current):len(current)], i)
-		m[field.Name] = field
+		if field.PkgPath == "" {
+			field.Index = append(current[:len(current):len(current)], i)
+			m[field.Name] = field
+		}
 
 		if field.Anonymous {
 			t := field.Type

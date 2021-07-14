@@ -391,4 +391,11 @@ func Test_struct_unexport_anonymous_field(t *testing.T) {
 	if n.Name != "Tim" {
 		t.Errorf("expected Name to be set to `Tim`")
 	}
+
+	// Ensure test_unexport_anonymous_child was not captured
+	mt := MT(L, *n)
+	fields := mt.RawGetString("fields").(*lua.LTable)
+	if field := fields.RawGetString("test_unexport_anonymous_child"); field != lua.LNil {
+		t.Errorf("expected test_unexport_anonymous_child to be nil, got %v", field)
+	}
 }
