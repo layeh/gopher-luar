@@ -2,6 +2,7 @@ package luar
 
 import (
 	"reflect"
+	"sync"
 
 	"github.com/yuin/gopher-lua"
 )
@@ -26,6 +27,7 @@ type Config struct {
 	//   - the method name and its name with a lowercase first letter
 	MethodNames func(t reflect.Type, m reflect.Method) []string
 
+	lock    sync.RWMutex
 	regular map[reflect.Type]*lua.LTable
 	types   *lua.LTable
 }

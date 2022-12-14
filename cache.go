@@ -92,7 +92,18 @@ func addFields(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable) {
 func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	config := GetConfig(L)
 
-	if v := config.regular[vtype]; v != nil {
+	config.lock.RLock()
+	v := config.regular[vtype]
+	config.lock.RUnlock()
+	if v != nil {
+		return v
+	}
+
+	config.lock.Lock()
+	v = config.regular[vtype]
+	defer config.lock.Unlock()
+
+	if v != nil {
 		return v
 	}
 
