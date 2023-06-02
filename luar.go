@@ -441,7 +441,7 @@ func lValueToReflectInner(L *lua.LState, v lua.LValue, hint reflect.Type, visite
 
 				lValue, err := lValueToReflectInner(L, value, field.Type, visited, nil)
 				if err != nil {
-					return reflect.Value{}, nil
+					return reflect.Value{}, err
 				}
 				t.FieldByIndex(field.Index).Set(lValue)
 			}
