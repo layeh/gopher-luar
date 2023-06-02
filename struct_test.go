@@ -399,3 +399,53 @@ func Test_struct_unexport_anonymous_field(t *testing.T) {
 		t.Errorf("expected test_unexport_anonymous_child to be nil, got %v", field)
 	}
 }
+
+type test_struct_convert_mismatch_type struct {
+	Str       string
+	Int       int
+	Bool      bool
+	Float32   float32
+	NestChild Test_nested_child1
+}
+
+func Test_struct_convert_mismatch_type(t *testing.T) {
+	{
+		// struct conversion in function argument
+		L := lua.NewState()
+		defer L.Close()
+		n := test_struct_convert_mismatch_type{}
+
+		fn := func(s *test_struct_convert_mismatch_type) {
+			n = *s
+		}
+		L.SetGlobal("fn", New(L, fn))
+		testError(t, L, `return fn({Str = 111})`, "bad argument")
+		testError(t, L, `return fn({Int = "foo"})`, "bad argument")
+		testError(t, L, `return fn({Float32 = "foo"})`, "bad argument")
+		testError(t, L, `return fn({Bool = "foo"})`, "bad argument")
+		testError(t, L, `return fn({NestChild = {Name = 1}})`, "bad argument")
+
+		if n.Float32 != 0 || n.Int != 0 ||
+			n.Bool != false || n.Str != "" || n.NestChild.Name != "" {
+			t.Errorf("field(s) are set when the type is mismatched: %+v", n)
+		}
+
+	}
+
+	{
+		// field assignment
+		L := lua.NewState()
+		defer L.Close()
+		n := &test_struct_convert_mismatch_type{}
+		L.SetGlobal("c", New(L, n))
+		testError(t, L, `c.Str = 1`, "bad argument")
+		testError(t, L, `c.Int = "foo"`, "bad argument")
+		testError(t, L, `c.Bool = "foo"`, "bad argument")
+		testError(t, L, `c.NestChild.Name = 1`, "bad argument")
+
+		if n.Float32 != 0 || n.Int != 0 ||
+			n.Bool != false || n.Str != "" || n.NestChild.Name != "" {
+			t.Errorf("field(s) are set when the type is mismatched: %+v", n)
+		}
+	}
+}
