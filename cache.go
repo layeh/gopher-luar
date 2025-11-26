@@ -3,7 +3,7 @@ package luar
 import (
 	"reflect"
 
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 )
 
 func addMethods(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable, ptrReceiver bool) {
@@ -19,6 +19,15 @@ func addMethods(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable, p
 		fn := funcWrapper(L, method.Func, ptrReceiver)
 		for _, name := range namesFn(vtype, method) {
 			tbl.RawSetString(name, fn)
+		}
+
+		if c.PreprocessMetatables {
+			for j := 0; j < method.Type.NumIn(); j++ {
+				preprocessMetatables(L, c, method.Type.In(j))
+			}
+			for j := 0; j < method.Type.NumOut(); j++ {
+				preprocessMetatables(L, c, method.Type.Out(j))
+			}
 		}
 	}
 }
@@ -86,6 +95,7 @@ func addFields(L *lua.LState, c *Config, vtype reflect.Type, tbl *lua.LTable) {
 				tbl.RawSetString(alias, ud)
 			}
 		}
+		preprocessMetatables(L, c, field.Type)
 	}
 }
 
@@ -95,6 +105,10 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	if v := config.regular[vtype]; v != nil {
 		return v
 	}
+	if config.processing[vtype] {
+		return nil
+	}
+	config.processing[vtype] = true
 
 	var (
 		mt      *lua.LTable
@@ -184,7 +198,14 @@ func getMetatable(L *lua.LState, vtype reflect.Type) *lua.LTable {
 	mt.RawSetString("__metatable", lua.LString("gopher-luar"))
 	mt.RawSetString("methods", methods)
 
+	if process := config.Metatable; process != nil {
+		if newmt := process(L, vtype, mt, false); newmt != nil {
+			mt = newmt
+		}
+	}
+
 	config.regular[vtype] = mt
+	delete(config.processing, vtype)
 	return mt
 }
 
@@ -200,6 +221,39 @@ func getTypeMetatable(L *lua.LState, t reflect.Type) *lua.LTable {
 	mt.RawSetString("__eq", L.NewFunction(typeEq))
 	mt.RawSetString("__metatable", lua.LString("gopher-luar"))
 
+	if process := config.Metatable; process != nil {
+		if newmt := process(L, t, mt, true); newmt != nil {
+			mt = newmt
+		}
+	}
+
 	config.types = mt
 	return mt
+}
+
+func preprocessMetatables(L *lua.LState, c *Config, t reflect.Type) {
+	if !c.PreprocessMetatables || !doesGetMetatableHandle(t) {
+		return
+	}
+	getMetatable(L, t)
+	// also process the underlying type for containers
+	if k := t.Kind(); k == reflect.Ptr || k == reflect.Slice ||
+		k == reflect.Array || k == reflect.Chan {
+		if doesGetMetatableHandle(t.Elem()) {
+			preprocessMetatables(L, c, t.Elem())
+		}
+	} else if k == reflect.Map {
+		if doesGetMetatableHandle(t.Key()) {
+			preprocessMetatables(L, c, t.Key())
+		}
+		if doesGetMetatableHandle(t.Elem()) {
+			preprocessMetatables(L, c, t.Elem())
+		}
+	}
+}
+
+func doesGetMetatableHandle(t reflect.Type) bool {
+	k := t.Kind()
+	return k == reflect.Struct || k == reflect.Ptr || k == reflect.Slice ||
+		k == reflect.Array || k == reflect.Chan || k == reflect.Map
 }
